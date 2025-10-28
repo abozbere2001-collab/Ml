@@ -420,7 +420,9 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
       
       // Setup interval for live updates
       const interval = setInterval(() => {
-          updateLiveData(selectedDateKey, controller.signal);
+          if (document.visibilityState === 'visible') { // Only update if tab is visible
+            updateLiveData(selectedDateKey, controller.signal);
+          }
       }, 60000); // 60 seconds
 
       return () => {
@@ -489,6 +491,8 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
     </div>
   );
 }
+
+    
 
     
 
