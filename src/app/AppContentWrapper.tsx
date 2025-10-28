@@ -336,6 +336,15 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
 
   const pageTransition = { type: 'tween', ease: 'anticipate', duration: 0.4 };
   const tabTransition = { type: 'tween', ease: 'easeIn', duration: 0.2 };
+  
+  const baseScreenProps = {
+    navigate,
+    goBack,
+    customNames,
+    favorites, // Make sure the most up-to-date favorites are passed
+    setFavorites, // Pass the setter function
+    onCustomNameChange: fetchCustomNames,
+  };
 
   return (
         <main className="h-screen w-screen bg-background flex flex-col">
@@ -365,15 +374,10 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
                                     if (!Component) return null;
                                     
                                     const screenProps = {
+                                        ...baseScreenProps,
                                         ...stackItem.props,
-                                        navigate,
-                                        goBack,
                                         canGoBack: stack.length > 1,
                                         isVisible,
-                                        favorites,
-                                        customNames,
-                                        setFavorites,
-                                        onCustomNameChange: fetchCustomNames,
                                     };
 
                                     return (
