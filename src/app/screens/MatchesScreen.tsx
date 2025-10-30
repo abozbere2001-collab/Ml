@@ -188,7 +188,6 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
                 scroller.scrollTo({ left: scroller.scrollLeft + scrollOffset, behavior: 'smooth' });
             }
         };
-        // Use a timeout to ensure the DOM is ready for scrolling, especially on initial load
         setTimeout(centerOnSelected, 100);
     }, [selectedDateKey]);
     
@@ -196,7 +195,7 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
 
     return (
         <div className="relative bg-card py-2 border-x border-b rounded-b-lg shadow-md flex flex-col items-center">
-            <h3 className="text-sm font-semibold mb-2 text-center">{selectedDayName}</h3>
+            <h3 className="text-sm font-semibold mb-2 text-center text-primary">{selectedDayName}</h3>
             <div className="flex items-center w-full px-1">
                 <Button 
                     variant="ghost" 

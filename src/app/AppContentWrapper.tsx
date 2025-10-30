@@ -214,26 +214,37 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
     fetchCustomNames();
   }, [fetchCustomNames]);
   
-  const handleSetFavorites = useCallback((updater: React.SetStateAction<Partial<Favorites>>) => {
-        setFavorites(prevFavorites => {
-            const newFavorites = typeof updater === 'function' ? updater(prevFavorites) : updater;
+ const handleSetFavorites = useCallback((updater: React.SetStateAction<Partial<Favorites>>) => {
+    let newFavorites: Partial<Favorites>;
+    
+    // The updater function from React's setState can be complex.
+    // We first resolve what the new state should be.
+    setFavorites(currentFavorites => {
+        if (typeof updater === 'function') {
+            newFavorites = updater(currentFavorites);
+        } else {
+            newFavorites = updater;
+        }
 
-            if (!user || user.isAnonymous) {
-                setLocalFavorites(newFavorites);
-            } else if (db) {
-                const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
-                setDoc(favDocRef, newFavorites, { merge: true }).catch(err => {
-                    console.error("Firestore update failed:", err);
-                    errorEmitter.emit('permission-error', new FirestorePermissionError({
-                        path: favDocRef.path,
-                        operation: 'write',
-                        requestResourceData: newFavorites,
-                    }));
-                });
-            }
-            return newFavorites;
-        });
-    }, [user, db]);
+        // Now that we have the resolved new state, perform side effects.
+        if (!user || user.isAnonymous) {
+            setLocalFavorites(newFavorites);
+        } else if (db) {
+            const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
+            setDoc(favDocRef, newFavorites, { merge: true }).catch(err => {
+                console.error("Firestore update failed:", err);
+                errorEmitter.emit('permission-error', new FirestorePermissionError({
+                    path: favDocRef.path,
+                    operation: 'write',
+                    requestResourceData: newFavorites,
+                }));
+            });
+        }
+        
+        // Return the new state for React to render.
+        return newFavorites;
+    });
+}, [user, db]);
 
 
   useEffect(() => {

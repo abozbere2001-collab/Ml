@@ -30,8 +30,8 @@ import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 
 
 // --- Cache Logic ---
-const COMPETITIONS_CACHE_KEY = 'goalstack_all_competitions_cache';
-const TEAMS_CACHE_KEY = 'goalstack_national_teams_cache';
+const COMPETITIONS_CACHE_KEY = 'goalstack_all_competitions_cache_v1';
+const TEAMS_CACHE_KEY = 'goalstack_national_teams_cache_v1';
 interface Cache<T> {
     data: T;
     lastFetched: number;
@@ -113,7 +113,7 @@ const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onC
 }
 
 
-export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps & { children: React.ReactNode, initialItemType?: ItemType, onCustomNameChange?: () => void, setFavorites: (favorites: Partial<Favorites>) => void }) {
+export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: { children: React.ReactNode, navigate: ScreenProps['navigate'], initialItemType?: ItemType, favorites: Partial<Favorites>, customNames: any, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites>>>, onCustomNameChange?: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
@@ -329,23 +329,24 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             }
         }
     
-        const newFavorites = JSON.parse(JSON.stringify(favorites || {}));
-        if (!newFavorites[itemType]) {
-            newFavorites[itemType] = {};
-        }
-
-        const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
-
-        if (isCurrentlyFavorited) {
-            delete newFavorites[itemType]![itemId];
-        } else {
-            const favData = itemType === 'leagues'
-                ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
-                : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
-            newFavorites[itemType]![itemId] = favData as any;
-        }
-
-        setFavorites(newFavorites);
+        setFavorites(prev => {
+            const newFavorites = JSON.parse(JSON.stringify(prev || {}));
+            if (!newFavorites[itemType]) {
+                newFavorites[itemType] = {};
+            }
+    
+            const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
+    
+            if (isCurrentlyFavorited) {
+                delete newFavorites[itemType]![itemId];
+            } else {
+                const favData = itemType === 'leagues'
+                    ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
+                    : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
+                newFavorites[itemType]![itemId] = favData as any;
+            }
+            return newFavorites;
+        });
     }, [user, setFavorites, toast, favorites]);
 
 
@@ -395,17 +396,19 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     } else if (purpose === 'crown' && user) {
         const teamId = Number(id);
         
-        const newFavorites = JSON.parse(JSON.stringify(favorites || {}));
-        if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
-        const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
+        setFavorites(prev => {
+            if (!prev) return {};
+            const newFavorites = JSON.parse(JSON.stringify(prev));
+            if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
+            const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
 
-        if (isCurrentlyCrowned) {
-            delete newFavorites.crownedTeams[teamId];
-        } else {
-            newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
-        }
-        
-        setFavorites(newFavorites);
+            if (isCurrentlyCrowned) {
+                delete newFavorites.crownedTeams[teamId];
+            } else {
+                newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
+            }
+            return newFavorites;
+        });
     }
     setRenameItem(null);
   };
@@ -514,5 +517,3 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     </Sheet>
   );
 }
-
-
