@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { initializeApp, getApps, getApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
+import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { FirebaseProvider } from './provider';
 
@@ -11,8 +11,7 @@ interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
-// Static Firebase config, which will be dynamically updated
-const staticFirebaseConfig: FirebaseOptions = {
+const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyDKQK4mfCGlSCwJS7oOdMhJa0SIJAv3nXM",
   authDomain: "nabd-d71ab.firebaseapp.com",
   projectId: "nabd-d71ab",
@@ -33,28 +32,26 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // This effect runs only on the client side, after the component has mounted
-    // and the `window` object is available.
-    
-    // Create a dynamic config object to avoid modifying the static one.
-    const dynamicConfig = { ...staticFirebaseConfig };
-    
-    // Dynamically set the authDomain to the current hostname.
-    // This is the key to solving the unauthorized-domain issue in ephemeral environments.
-    dynamicConfig.authDomain = window.location.hostname;
-
-    // Initialize Firebase only once.
-    const app = getApps().length === 0 ? initializeApp(dynamicConfig) : getApp();
+    // This effect runs only on the client side.
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const firestore = getFirestore(app);
+
+    // Key Change: Connect to the local Auth Emulator.
+    // This is the standard and most reliable way to bypass domain authorization issues in development environments.
+    // It tells the Firebase Auth SDK to talk to a local emulator instance instead of the live service,
+    // which doesn't perform domain checks.
+    // We check if it's already connected to prevent errors on hot-reloads.
+    if (process.env.NODE_ENV === 'development' && !(auth as any)._emulatorConfig) {
+        connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+    }
     
     setServices({ firebaseApp: app, auth, firestore });
-    setLoading(false); // Mark initialization as complete.
+    setLoading(false);
 
-  }, []); // The empty dependency array ensures this effect runs only once on mount.
+  }, []); // Empty dependency array ensures this runs only once on mount.
 
   // Render nothing until Firebase is fully initialized on the client.
-  // This prevents child components from trying to access Firebase services too early.
   if (loading || !services) {
     return null; 
   }
