@@ -1,17 +1,17 @@
 
 "use client";
 
-import React, { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
+import { initializeApp, getApps, getApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 import { FirebaseProvider } from './provider';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
-// Static Firebase config, moved from the deleted config.ts file
+// Static Firebase config, which will be dynamically updated
 const staticFirebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyDKQK4mfCGlSCwJS7oOdMhJa0SIJAv3nXM",
   authDomain: "nabd-d71ab.firebaseapp.com",
@@ -22,27 +22,37 @@ const staticFirebaseConfig: FirebaseOptions = {
   measurementId: "G-X5SY2K798F"
 };
 
+interface FirebaseServices {
+    firebaseApp: FirebaseApp;
+    auth: Auth;
+    firestore: Firestore;
+}
 
-// This is a re-implementation of the context provider to simplify initialization
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const services = useMemo(() => {
-    
-    // Create a dynamic config that always uses the current window's hostname for auth.
-    // This is the core fix for the `auth/unauthorized-domain` issue in ephemeral environments.
-    const getDynamicConfig = (): FirebaseOptions => {
-        const dynamicConfig = { ...staticFirebaseConfig };
-        if (typeof window !== 'undefined') {
-            dynamicConfig.authDomain = window.location.hostname;
-        }
-        return dynamicConfig;
-    }
+  const [services, setServices] = useState<FirebaseServices | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    const app = getApps().length ? getApp() : initializeApp(getDynamicConfig());
+  useEffect(() => {
+    // This effect runs only on the client side
+    const dynamicConfig = { ...staticFirebaseConfig };
+    
+    // Set the authDomain dynamically to the current hostname.
+    // This is the key to solving the unauthorized-domain issue in ephemeral environments.
+    dynamicConfig.authDomain = window.location.hostname;
+
+    const app = getApps().length === 0 ? initializeApp(dynamicConfig) : getApp();
     const auth = getAuth(app);
     const firestore = getFirestore(app);
     
-    return { firebaseApp: app, auth, firestore };
-  }, []);
+    setServices({ firebaseApp: app, auth, firestore });
+    setLoading(false);
+
+  }, []); // Empty dependency array ensures this runs only once on mount.
+
+  if (loading || !services) {
+    // You can render a loading spinner here if needed
+    return null; 
+  }
 
   return (
     <FirebaseProvider
