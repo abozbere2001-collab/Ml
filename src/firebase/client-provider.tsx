@@ -36,15 +36,6 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const firestore = getFirestore(app);
-
-    // Key Change: Connect to the local Auth Emulator.
-    // This is the standard and most reliable way to bypass domain authorization issues in development environments.
-    // It tells the Firebase Auth SDK to talk to a local emulator instance instead of the live service,
-    // which doesn't perform domain checks.
-    // We check if it's already connected to prevent errors on hot-reloads.
-    if (process.env.NODE_ENV === 'development' && !(auth as any)._emulatorConfig) {
-        connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-    }
     
     setServices({ firebaseApp: app, auth, firestore });
     setLoading(false);
