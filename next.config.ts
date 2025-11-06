@@ -57,6 +57,4 @@ const pwaConfig = withPWA({
   skipWaiting: true,
 });
 
-// Temporarily disable PWA to fix manifest issues in dev environment
-// export default pwaConfig(nextConfig);
-export default nextConfig;
+export default pwaConfig(nextConfig);
