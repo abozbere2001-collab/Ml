@@ -9,7 +9,7 @@ import { FirebaseClientProvider } from '@/firebase';
 export const metadata: Metadata = {
   title: 'نبض الملاعب',
   description: 'عالم كرة القدم بين يديك',
-  manifest: '/manifest.json',
+  manifest: '/MI/manifest.json',
 };
 
 const cairo = Cairo({
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
         <head>
-          <link rel="apple-touch-icon" href="/icon-192x192.png"></link>
+          <link rel="apple-touch-icon" href="/MI/icon-192x192.png"></link>
           <meta name="theme-color" content="#000000" />
         </head>
         <body className={`${cairo.variable} font-body antialiased`}>
