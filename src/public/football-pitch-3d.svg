@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="pitch-gradient-3d" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color: #4CAF50;" />
+      <stop offset="100%" style="stop-color: #388E3C;" />
+    </linearGradient>
+  </defs>
+  <g transform="skewY(-10) perspective(1000px) rotateX(20deg)">
+    <rect width="800" height="600" fill="url(#pitch-gradient-3d)" />
+    <rect x="50" y="50" width="700" height="500" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+    <line x1="400" y1="50" x2="400" y2="550" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+    <circle cx="400" cy="300" r="70" stroke="rgba(255,255,255,0.3)" stroke-width="3" fill="none" />
+    <circle cx="400" cy="300" r="3" fill="rgba(255,255,255,0.3)" />
+    <rect x="50" y="150" width="130" height="300" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+    <rect x="50" y="225" width="50" height="150" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+    <path d="M 180 240 A 60 60 0 0 1 180 360" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+    <rect x="620" y="150" width="130" height="300" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+    <rect x="700" y="225" width="50" height="150" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+    <path d="M 620 240 A 60 60 0 0 0 620 360" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+  </g>
+</svg>
