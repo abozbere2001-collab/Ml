@@ -1,21 +1,14 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth, useFirestore } from '@/firebase';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/firebase';
 import { AppContentWrapper } from './AppContentWrapper';
 import { AdProvider } from '@/components/AdProvider';
 import { Loader2 } from 'lucide-react';
 import { FavoriteSelectionScreen } from './screens/FavoriteSelectionScreen';
-import { doc, getDoc, setDoc, type Firestore } from 'firebase/firestore';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { errorEmitter } from '@/firebase/error-emitter';
 import { NabdAlMalaebLogo } from '@/components/icons/NabdAlMalaebLogo';
 import { WelcomeScreen, GUEST_MODE_KEY } from './screens/WelcomeScreen';
-import { handleNewUser } from '@/lib/firebase-client';
-import { type User } from 'firebase/auth';
-import { ProfileScreen } from './screens/ProfileScreen';
-import { OnboardingHints } from '@/components/OnboardingHints';
 
 export type ScreenKey = 'Welcome' | 'SignUp' | 'Matches' | 'Competitions' | 'AllCompetitions' | 'News' | 'Settings' | 'CompetitionDetails' | 'TeamDetails' | 'PlayerDetails' | 'AdminFavoriteTeamDetails' | 'Profile' | 'SeasonPredictions' | 'SeasonTeamSelection' | 'SeasonPlayerSelection' | 'AddEditNews' | 'ManageTopScorers' | 'MatchDetails' | 'NotificationSettings' | 'GeneralSettings' | 'ManagePinnedMatch' | 'PrivacyPolicy' | 'TermsOfService' | 'FavoriteSelection' | 'GoPro' | 'MyCountry' | 'Predictions';
 
@@ -30,7 +23,6 @@ export type ScreenProps = {
 const GUEST_ONBOARDING_COMPLETE_KEY = 'goalstack_guest_onboarding_complete';
 const NEW_USER_HINTS_SHOWN_KEY = 'goalstack_new_user_hints_shown';
 
-
 const LoadingSplashScreen = () => (
     <div className="flex flex-col items-center justify-center h-screen bg-background text-center">
         <NabdAlMalaebLogo className="h-24 w-24 mb-4" />
@@ -39,141 +31,25 @@ const LoadingSplashScreen = () => (
     </div>
 );
 
-
-const OnboardingFlow = ({ user, isGuest }: { user: User | null, isGuest: boolean }) => {
-    const { db } = useFirestore();
-    const [onboardingComplete, setOnboardingComplete] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [needsDisplayName, setNeedsDisplayName] = useState(false);
-    const [isNewUser, setIsNewUser] = useState(false);
-
+export default function Home() {
+    const { isUserLoading } = useAuth();
+    const [initialLoad, setInitialLoad] = useState(true);
 
     useEffect(() => {
-        const checkOnboarding = async () => {
-            setIsLoading(true);
-            if (isGuest) {
-                const guestOnboardingComplete = localStorage.getItem(GUEST_ONBOARDING_COMPLETE_KEY) === 'true';
-                setOnboardingComplete(guestOnboardingComplete);
-                if (!guestOnboardingComplete) setIsNewUser(true);
-                setIsLoading(false);
-                return;
-            }
+        const timer = setTimeout(() => {
+            setInitialLoad(false);
+        }, 1500); // Simulate a loading time to allow Firebase to initialize
 
-            if (!user || !db) {
-                setIsLoading(false);
-                return;
-            };
+        return () => clearTimeout(timer);
+    }, []);
 
-            const userDocRef = doc(db, 'users', user.uid);
-            try {
-                const userDoc = await getDoc(userDocRef);
-                const userData = userDoc.data();
-                const isComplete = userData?.onboardingComplete || false;
-                setOnboardingComplete(isComplete);
-                
-                if (!isComplete) setIsNewUser(true);
-                
-                if (user.isAnonymous) {
-                  setNeedsDisplayName(false);
-                } else {
-                  setNeedsDisplayName(!userData?.displayName || userData.displayName.startsWith('مستخدم_'));
-                }
-
-            } catch (error) {
-                console.error("Error checking onboarding status:", error);
-                setOnboardingComplete(false);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        checkOnboarding();
-    }, [user, db, isGuest]);
-
-    const handleOnboardingComplete = async () => {
-        setIsNewUser(true); // Mark as new user to show hints after this step
-        if (isGuest) {
-            localStorage.setItem(GUEST_ONBOARDING_COMPLETE_KEY, 'true');
-            setOnboardingComplete(true);
-            return;
-        }
-
-        if (!user || !db) return;
-        
-        const userDocRef = doc(db, 'users', user.uid);
-        try {
-            await setDoc(userDocRef, { onboardingComplete: true }, { merge: true });
-            setOnboardingComplete(true);
-            const userDoc = await getDoc(userDocRef);
-            if (!user.isAnonymous && (!userDoc.data()?.displayName || userDoc.data()?.displayName.startsWith('مستخدم_'))) {
-                setNeedsDisplayName(true);
-            }
-        } catch (error) {
-            const permissionError = new FirestorePermissionError({ path: userDocRef.path, operation: 'update', requestResourceData: { onboardingComplete: true } });
-            errorEmitter.emit('permission-error', permissionError);
-        }
-    };
-    
-    const handleDisplayNameSet = () => {
-        setNeedsDisplayName(false);
-        if (onboardingComplete && typeof window !== 'undefined') {
-            (window as any).appNavigate('Matches');
-        }
-    }
-    
-    const onHintsDismissed = () => {
-        if(typeof window !== 'undefined'){
-            sessionStorage.setItem(NEW_USER_HINTS_SHOWN_KEY, 'true');
-        }
-    }
-    
-    const showHints = useMemo(() => {
-        if (typeof window === 'undefined') return false;
-        return isNewUser && !sessionStorage.getItem(NEW_USER_HINTS_SHOWN_KEY);
-    }, [isNewUser]);
-
-    if (isLoading) {
+    if (isUserLoading || initialLoad) {
         return <LoadingSplashScreen />;
-    }
-
-    if (!onboardingComplete) {
-        return <FavoriteSelectionScreen onOnboardingComplete={handleOnboardingComplete} />;
-    }
-    
-    if (needsDisplayName) {
-        const pseudoNavigate = () => {};
-        const pseudoGoBack = () => handleDisplayNameSet();
-        return <ProfileScreen navigate={pseudoNavigate} goBack={handleDisplayNameSet} canGoBack={false} isNewUserFlow onFlowComplete={handleDisplayNameSet}/>;
     }
 
     return (
         <AdProvider>
-            <AppContentWrapper showHints={showHints} onHintsDismissed={onHintsDismissed} />
+            <AppContentWrapper showHints={false} onHintsDismissed={() => {}} />
         </AdProvider>
     );
-};
-
-
-export default function Home() {
-    const { user, isUserLoading } = useAuth();
-    const [isGuest, setIsGuest] = useState(false);
-    const [isCheckingGuest, setIsCheckingGuest] = useState(true);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const guestMode = localStorage.getItem(GUEST_MODE_KEY) === 'true';
-            setIsGuest(guestMode);
-        }
-        setIsCheckingGuest(false);
-    }, []);
-    
-    if (isUserLoading || isCheckingGuest) {
-        return <LoadingSplashScreen />;
-    }
-
-    if (!user && !isGuest) {
-        return <WelcomeScreen />;
-    }
-
-    // Pass isGuest flag to OnboardingFlow
-    return <OnboardingFlow user={user} isGuest={isGuest} />;
 }
