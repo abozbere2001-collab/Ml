@@ -15,29 +15,39 @@ interface OnboardingHintsProps {
 export function OnboardingHints({ onDismiss, activeTab }: OnboardingHintsProps) {
     const [visibleHints, setVisibleHints] = useState({ predictions: true, crown: true });
 
+    const allHintsDismissed = !visibleHints.predictions && !visibleHints.crown;
+
+    // This effect calls the parent onDismiss function ONLY when all hints are dismissed.
+    // This prevents updating the parent component during the render of this one.
+    useEffect(() => {
+        if (allHintsDismissed) {
+            onDismiss();
+        }
+    }, [allHintsDismissed, onDismiss]);
+
+    // This effect handles auto-dismissal timers.
     useEffect(() => {
         const predictionTimer = setTimeout(() => {
-            if(visibleHints.predictions) handleDismiss('predictions');
+            if(visibleHints.predictions) {
+                setVisibleHints(prev => ({ ...prev, predictions: false }));
+            }
         }, 8000); // Hide after 8 seconds
 
         const crownTimer = setTimeout(() => {
-            if(visibleHints.crown) handleDismiss('crown');
+            if(visibleHints.crown) {
+                setVisibleHints(prev => ({ ...prev, crown: false }));
+            }
         }, 12000); // Hide after 12 seconds
 
         return () => {
             clearTimeout(predictionTimer);
             clearTimeout(crownTimer);
         };
-    }, [visibleHints]);
+    }, [visibleHints.predictions, visibleHints.crown]);
+
 
     const handleDismiss = (hintKey: keyof typeof visibleHints) => {
-        setVisibleHints(prev => {
-            const newHints = { ...prev, [hintKey]: false };
-            if (!newHints.predictions && !newHints.crown) {
-                onDismiss();
-            }
-            return newHints;
-        });
+        setVisibleHints(prev => ({ ...prev, [hintKey]: false }));
     };
     
     const showPredictionsHint = activeTab === 'Predictions' && visibleHints.predictions;
