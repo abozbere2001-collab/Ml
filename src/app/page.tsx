@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 import { AppContentWrapper } from './AppContentWrapper';
 import { AdProvider } from '@/components/AdProvider';
 import { WelcomeScreen } from './screens/WelcomeScreen';
-import { FavoriteSelectionScreen } from './screens/FavoriteSelectionScreen';
 import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -19,33 +18,22 @@ export type ScreenProps = {
   customNames?: any; // To accept props from wrapper
 };
 
-const ONBOARDING_COMPLETE_KEY = 'goalstack_onboarding_complete_v2';
 const HINTS_DISMISSED_KEY = 'goalstack_hints_dismissed_v1';
 
 
 export default function Home() {
-    const { user, isUserLoading, profile } = useAuth();
-    const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean | null>(null);
+    const { user, isUserLoading } = useAuth();
     const [showHints, setShowHints] = useState<boolean>(false);
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const onboardingStatus = localStorage.getItem(ONBOARDING_COMPLETE_KEY) === 'true';
-            setIsOnboardingComplete(onboardingStatus);
-
-            const hintsDismissed = localStorage.getItem(HINTS_DISMISSED_KEY) === 'true';
-            // Show hints only if onboarding is complete AND they haven't been dismissed
-            setShowHints(onboardingStatus && !hintsDismissed);
-        }
+        // This ensures the component has mounted on the client
+        // and can safely access localStorage.
+        setIsClient(true);
+        const hintsDismissed = localStorage.getItem(HINTS_DISMISSED_KEY) === 'true';
+        setShowHints(!hintsDismissed);
     }, []);
 
-    const handleOnboardingComplete = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
-        }
-        setIsOnboardingComplete(true);
-        setShowHints(true); // Show hints right after onboarding
-    };
 
     const handleHintsDismissed = () => {
         if (typeof window !== 'undefined') {
@@ -54,8 +42,9 @@ export default function Home() {
         setShowHints(false);
     };
     
-    // While checking user auth state or onboarding status, show a loader
-    if (isUserLoading || isOnboardingComplete === null) {
+    // Render a loader until the client has mounted and auth state is known.
+    // This is the key to preventing hydration errors.
+    if (!isClient || isUserLoading) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-background">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -63,23 +52,15 @@ export default function Home() {
         );
     }
     
-    // If no user, show the Welcome screen
+    // If no user, show the Welcome screen. This is safe now.
     if (!user) {
         return <WelcomeScreen />;
     }
 
-    // If user exists but onboarding is not complete, show the favorite selection
-    if (!isOnboardingComplete && !profile?.onboardingComplete) {
-        return <FavoriteSelectionScreen onOnboardingComplete={handleOnboardingComplete} />;
-    }
-
-    // Otherwise, show the main app content
+    // Otherwise, show the main app content.
     return (
         <AdProvider>
             <AppContentWrapper showHints={showHints} onHintsDismissed={handleHintsDismissed} />
         </AdProvider>
     );
 }
-
-
-    
