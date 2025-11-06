@@ -51,14 +51,10 @@ const nextConfig: NextConfig = {
   }
 };
 
-const pwaConfig = {
+const pwaConfig = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-};
+});
 
-// Always wrap with PWA to ensure service worker is available in dev
-const config = withPWA(pwaConfig)(nextConfig);
-
-
-export default config;
+export default pwaConfig(nextConfig);
