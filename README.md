@@ -1,8 +1,3 @@
-# Firebase Studio
+# Nabd Al Malaeb
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
-# Ml
-# Ml
-# Ml
+This is a NextJS application created in Firebase Studio.
