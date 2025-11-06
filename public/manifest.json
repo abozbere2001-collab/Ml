@@ -1,7 +1,7 @@
 {
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
-  "description": "عالم كرة القدم بين يديك. تابع المباريات والأخبار والنتائج أولاً بأول.",
+  "description": "عالم كرة القدم بين يديك. تابع نتائج المباريات، أخبار الفرق، وإحصائيات اللاعبين.",
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -14,9 +14,8 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#000000",
-  "background_color": "#ffffff",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait"
+  "background_color": "#ffffff",
+  "theme_color": "#09090b"
 }
