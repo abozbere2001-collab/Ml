@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -103,8 +102,10 @@ export const ProfileButton = () => {
     };
     
     const navigateToLogin = () => {
-        localStorage.removeItem(GUEST_MODE_KEY);
-        window.location.reload();
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(GUEST_MODE_KEY);
+            window.location.reload();
+        }
     }
 
 
@@ -432,3 +433,5 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
         </main>
   );
 }
+
+    
