@@ -29,6 +29,7 @@ export default function RootLayout({
           <link rel="manifest" href="/MI/manifest.json" />
           <link rel="apple-touch-icon" href="/MI/icon-192x192.png"></link>
           <meta name="theme-color" content="#000000" />
+          <meta name="background-color" content="#000000" />
         </head>
         <body className={`${cairo.variable} font-body antialiased`}>
             <ThemeProvider
