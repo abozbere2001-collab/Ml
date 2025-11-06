@@ -47,7 +47,6 @@ import { PredictionsScreen } from './screens/PredictionsScreen';
 import { doc, onSnapshot, getDocs, collection, updateDoc, deleteField, writeBatch, setDoc } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites, GUEST_MODE_KEY } from '@/lib/local-favorites';
-import { AnimatePresence, motion } from 'framer-motion';
 import { OnboardingHints } from '@/components/OnboardingHints';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -150,7 +149,6 @@ export const ProfileButton = () => {
         </DropdownMenu>
     );
 };
-
 
 export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: boolean, onHintsDismissed: () => void }) {
   const { user, isUserLoading } = useAuth();
@@ -336,7 +334,11 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
   const isDataReady = customNames !== null && !isUserLoading;
 
   if (!isDataReady) {
-    return null;
+    return (
+        <div className="h-screen w-screen flex items-center justify-center bg-background">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
   }
 
   if (showSplashAd) {
@@ -344,22 +346,9 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
   }
   
   const activeStack = navigationState.stacks[navigationState.activeTab] || [];
-  
-  const pageVariants = {
-      initial: { x: '100%', opacity: 0 },
-      in: { x: 0, opacity: 1 },
-      out: { x: '-100%', opacity: 0 },
-  };
+  const CurrentScreen = activeStack.length > 0 ? screenConfig[activeStack[activeStack.length - 1].screen]?.component : null;
+  const currentScreenProps = activeStack.length > 0 ? activeStack[activeStack.length - 1].props : {};
 
-  const tabVariants = {
-      initial: { opacity: 0 },
-      in: { opacity: 1 },
-      out: { opacity: 0 },
-  }
-
-  const pageTransition = { type: 'tween', ease: 'anticipate', duration: 0.4 };
-  const tabTransition = { type: 'tween', ease: 'easeIn', duration: 0.2 };
-  
   const baseScreenProps = {
     navigate,
     goBack,
@@ -367,71 +356,47 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
     favorites,
     setFavorites: handleSetFavorites,
     onCustomNameChange: fetchCustomNames,
+    canGoBack: activeStack.length > 1,
+  };
+  
+  const screenProps = {
+    ...baseScreenProps,
+    ...currentScreenProps,
+    isVisible: true, // This is simplified now
   };
 
+
   return (
-        <main className="h-screen w-screen bg-background flex flex-col">
-        {showHints && <OnboardingHints onDismiss={onHintsDismissed} activeTab={navigationState.activeTab} />}
-        <div className="relative flex-1 flex flex-col overflow-hidden">
-             <AnimatePresence initial={false}>
-                {mainTabs.map(tabKey => {
-                    const stack = navigationState.stacks[tabKey];
-                    if (!stack || stack.length === 0) return null;
-                    const isActiveTab = navigationState.activeTab === tabKey;
-                    if (!isActiveTab) return null;
-
-                    return (
-                         <motion.div
-                            key={tabKey}
-                            className="absolute inset-0 flex flex-col"
-                            initial="initial"
-                            animate="in"
-                            exit="out"
-                            variants={tabVariants}
-                            transition={tabTransition}
-                        >
-                             <AnimatePresence initial={false}>
-                                {stack.map((stackItem, index) => {
-                                    const isVisible = index === stack.length - 1;
-                                    const Component = screenConfig[stackItem.screen]?.component;
-                                    if (!Component) return null;
-                                    
-                                    const screenProps = {
-                                        ...baseScreenProps,
-                                        ...stackItem.props,
-                                        canGoBack: stack.length > 1,
-                                        isVisible,
-                                    };
-
-                                    return (
-                                        <motion.div
-                                            key={stackItem.key}
-                                            className="absolute inset-0 flex flex-col bg-background"
-                                            initial="initial"
-                                            animate={isVisible ? "in" : "out"}
-                                            exit="out"
-                                            variants={pageVariants}
-                                            transition={pageTransition}
-                                            style={{
-                                                zIndex: index + 1,
-                                                pointerEvents: isVisible ? 'auto' : 'none',
-                                            }}
-                                        >
-                                            <Component {...screenProps} />
-                                        </motion.div>
-                                    )
-                                })}
-                             </AnimatePresence>
-                        </motion.div>
-                    )
-                })}
-            </AnimatePresence>
-        </div>
-        
-        {showBannerAd && <BannerAd />}
-        {mainTabs.includes(activeStack[activeStack.length - 1]?.screen) && <BottomNav activeScreen={navigationState.activeTab} onNavigate={(screen) => navigate(screen)} />}
-        </main>
+    <main className="h-screen w-screen bg-background flex flex-col">
+      {showHints && <OnboardingHints onDismiss={onHintsDismissed} activeTab={navigationState.activeTab} />}
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {mainTabs.map(tabKey => {
+            const stack = navigationState.stacks[tabKey];
+            const isTabActive = navigationState.activeTab === tabKey;
+            
+            return (
+                <div key={tabKey} className={cn("h-full w-full", isTabActive ? "flex flex-col" : "hidden")}>
+                    {stack.map((stackItem, index) => {
+                         const isScreenActive = index === stack.length - 1;
+                         const Component = screenConfig[stackItem.screen]?.component;
+                         if (!Component) return null;
+                         
+                         return (
+                            <div key={stackItem.key} className={cn("h-full w-full", isScreenActive ? "flex flex-col" : "hidden")}>
+                                <Component {...baseScreenProps} {...stackItem.props} isVisible={isScreenActive} canGoBack={stack.length > 1} />
+                            </div>
+                         )
+                    })}
+                </div>
+            )
+        })}
+      </div>
+      
+      {showBannerAd && <BannerAd />}
+      {mainTabs.includes(navigationState.stacks[navigationState.activeTab]?.slice(-1)[0]?.screen) && 
+        <BottomNav activeScreen={navigationState.activeTab} onNavigate={(screen) => navigate(screen)} />
+      }
+    </main>
   );
 }
-
-    

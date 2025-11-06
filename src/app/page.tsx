@@ -27,8 +27,6 @@ export default function Home() {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        // This ensures the component has mounted on the client
-        // and can safely access localStorage.
         setIsClient(true);
         const hintsDismissed = localStorage.getItem(HINTS_DISMISSED_KEY) === 'true';
         setShowHints(!hintsDismissed);
@@ -42,8 +40,6 @@ export default function Home() {
         setShowHints(false);
     };
     
-    // Render a loader until the client has mounted and auth state is known.
-    // This is the key to preventing hydration errors.
     if (!isClient || isUserLoading) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-background">
@@ -52,12 +48,10 @@ export default function Home() {
         );
     }
     
-    // If no user, show the Welcome screen. This is safe now.
     if (!user) {
         return <WelcomeScreen />;
     }
 
-    // Otherwise, show the main app content.
     return (
         <AdProvider>
             <AppContentWrapper showHints={showHints} onHintsDismissed={handleHintsDismissed} />
