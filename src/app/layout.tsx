@@ -26,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
         <head>
+          <link rel="manifest" href="/MI/manifest.json" />
           <link rel="apple-touch-icon" href="/MI/icon-192x192.png"></link>
           <meta name="theme-color" content="#000000" />
         </head>
