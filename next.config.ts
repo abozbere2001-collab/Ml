@@ -57,10 +57,8 @@ const pwaConfig = {
   skipWaiting: true,
 };
 
-// Only wrap with PWA in production
-const config = process.env.NODE_ENV === 'production' 
-  ? withPWA(pwaConfig)(nextConfig) 
-  : nextConfig;
+// Always wrap with PWA to ensure service worker is available in dev
+const config = withPWA(pwaConfig)(nextConfig);
 
 
 export default config;
