@@ -48,8 +48,8 @@ import { doc, onSnapshot, getDocs, collection } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites, GUEST_MODE_KEY } from '@/lib/local-favorites';
 import { OnboardingHints } from '@/components/OnboardingHints';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { errorEmitter } from '@/firebase/error-emitter';
+
+const HINTS_DISMISSED_KEY = 'goalstack_hints_dismissed_v1';
 
 const screenConfig: Record<string, { component: React.ComponentType<any>;}> = {
   Matches: { component: MatchesScreen },
@@ -107,7 +107,6 @@ export const ProfileButton = () => {
         }
     }
 
-
     if (!user) {
         return (
             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={navigateToLogin}>
@@ -150,11 +149,25 @@ export const ProfileButton = () => {
     );
 };
 
-export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: boolean, onHintsDismissed: () => void }) {
+export function AppContentWrapper() {
   const { user } = useAuth();
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<Favorites>>({});
   const [customNames, setCustomNames] = useState<{ [key: string]: Map<number | string, string> } | null>(null);
+  const [showHints, setShowHints] = useState<boolean>(false);
+  
+  useEffect(() => {
+      // Defer reading from localStorage until the client has mounted
+      const hintsDismissed = localStorage.getItem(HINTS_DISMISSED_KEY) === 'true';
+      setShowHints(!hintsDismissed);
+  }, []);
+  
+  const handleHintsDismissed = () => {
+      if (typeof window !== 'undefined') {
+          localStorage.setItem(HINTS_DISMISSED_KEY, 'true');
+      }
+      setShowHints(false);
+  };
   
   const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
     activeTab: 'Matches',
@@ -221,16 +234,13 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
             setLocalFavorites(newFavorites);
         } else if (db) {
             const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
-            // This setDoc should merge the entire new favorites object.
             try {
-                // Non-blocking write
                 fetch(`/api/favorites`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: user.uid, favorites: newFavorites }),
                 });
             } catch(e) {
-                // Fallback for environments where fetch might fail, though unlikely
                 console.error("Favorites API call failed:", e);
             }
         }
@@ -329,9 +339,6 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
       }
   }, [navigate]);
   
-  // This component now assumes `user` is loaded and `isUserLoading` is false.
-  // The primary loader is in `page.tsx` before this component is even mounted.
-  // We only show a loader here while fetching `customNames`.
   const isDataReady = customNames !== null;
 
   if (!isDataReady) {
@@ -363,13 +370,13 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
   const screenProps = {
     ...baseScreenProps,
     ...currentScreenProps,
-    isVisible: true, // This is simplified now
+    isVisible: true,
   };
 
 
   return (
     <main className="h-screen w-screen bg-background flex flex-col">
-      {showHints && <OnboardingHints onDismiss={onHintsDismissed} activeTab={navigationState.activeTab} />}
+      {showHints && <OnboardingHints onDismiss={handleHintsDismissed} activeTab={navigationState.activeTab} />}
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {mainTabs.map(tabKey => {
