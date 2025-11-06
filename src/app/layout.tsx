@@ -27,6 +27,8 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" suppressHydrationWarning>
         <head>
           <link rel="manifest" href="/manifest.json" />
+          <link rel="apple-touch-icon" href="/icon-192x192.png"></link>
+          <meta name="theme-color" content="#000000" />
         </head>
         <body className={`${cairo.variable} font-body antialiased`}>
             <ThemeProvider
