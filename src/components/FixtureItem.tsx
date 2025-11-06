@@ -5,14 +5,17 @@ import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { ScreenProps } from '@/app/page';
 import type { Fixture as FixtureType } from '@/lib/types';
-import { useAdmin } from '@/firebase/provider';
 import { LiveMatchStatus } from './LiveMatchStatus';
 import { Button } from './ui/button';
 import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PredictionOdds } from './PredictionOdds';
+import { useAdmin } from '@/firebase/provider';
 
-export const FixtureItem = React.memo(({ fixture, navigate, customStatus, isPinnedForPrediction, onPinToggle, isAdmin, showOdds }: { fixture: FixtureType, navigate: ScreenProps['navigate'], customStatus?: string | null, isPinnedForPrediction?: boolean, onPinToggle?: (fixture: FixtureType) => void, isAdmin?: boolean, showOdds?: boolean }) => {
+export const FixtureItem = React.memo(({ fixture, navigate, customStatus, isPinnedForPrediction, onPinToggle, showOdds }: { fixture: FixtureType, navigate: ScreenProps['navigate'], customStatus?: string | null, isPinnedForPrediction?: boolean, onPinToggle?: (fixture: FixtureType) => void, isAdmin?: boolean, showOdds?: boolean }) => {
+
+    const { isAdmin: isAdminFromHook } = useAdmin();
+    const finalIsAdmin = isAdmin !== undefined ? isAdmin : isAdminFromHook;
 
     const TeamDisplay = ({ team }: { team: FixtureType['teams']['home'] }) => (
         <div className="flex flex-col items-center gap-0.5 flex-1 justify-end truncate">
@@ -29,7 +32,7 @@ export const FixtureItem = React.memo(({ fixture, navigate, customStatus, isPinn
             key={fixture.fixture.id}
             className="relative rounded-lg bg-card border text-sm transition-all duration-300 flex flex-col justify-between"
         >
-            {isAdmin && onPinToggle && (
+            {finalIsAdmin && onPinToggle && (
                 <Button
                     variant="ghost"
                     size="icon"

@@ -2,7 +2,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth, useAdmin } from '@/firebase/provider';
+import { useAuth } from '@/firebase';
+import { useAdmin } from '@/firebase/provider';
 import { Button } from './ui/button';
 import { NabdAlMalaebLogo } from './icons/NabdAlMalaebLogo';
 import { X, Loader2 } from 'lucide-react';
@@ -24,7 +25,8 @@ const SPLASH_AD_SHOWN_SESSION_KEY = 'goalstack_splash_ad_shown_session';
 const BANNER_AD_DISMISSED_KEY = 'goalstack_banner_ad_dismissed_session';
 
 export const AdProvider = ({ children }: { children: React.ReactNode }) => {
-  const { isProUser } = useAuth();
+  const { user } = useAuth();
+  const isProUser = (user as any)?.isProUser;
   const { isAdmin } = useAdmin();
   const [shouldShowSplash, setShouldShowSplash] = useState(false);
   const [bannerAdDismissed, setBannerAdDismissed] = useState(() => {
@@ -160,5 +162,3 @@ export const BannerAd = () => {
         </div>
     )
 }
-
-    

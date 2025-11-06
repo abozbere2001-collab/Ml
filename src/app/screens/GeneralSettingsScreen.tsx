@@ -9,13 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Sun, Moon, Laptop, Gem, UserCog, Globe, Sparkles } from 'lucide-react';
-import { useAuth, useAdmin } from '@/firebase';
+import { useAuth } from '@/firebase';
+import { useAdmin } from '@/firebase/provider';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 export function GeneralSettingsScreen({ navigate, goBack, canGoBack, headerActions }: ScreenProps) {
   const { theme, setTheme } = useTheme();
-  const { isProUser } = useAuth();
+  const { user } = useAuth();
+  const isProUser = (user as any)?.isProUser;
   const { isAdmin, makeAdmin } = useAdmin();
   const { toast } = useToast();
 

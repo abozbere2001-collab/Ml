@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { ScreenProps } from '@/app/page';
 import { format, addDays, subDays, isToday } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { useAdmin, useAuth, useFirestore } from '@/firebase/provider';
+import { useAuth, useFirestore, useAdmin } from '@/firebase/provider';
 import { doc, onSnapshot, collection, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
 import { Loader2, Search, Star, Crown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
