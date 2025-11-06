@@ -1,9 +1,10 @@
 
 export const firebaseConfig = {
-  "projectId": "nabd-d71ab",
-  "appId": "1:665814234557:web:2510c598285a2287661131",
-  "apiKey": "AIzaSyAz-bV3_E4zcr9qWMnWT_4rA-2JqsSy_kw",
+  "apiKey": "AIzaSyDKQK4mfCGlSCwJS7oOdMhJa0SIJAv3nXM",
   "authDomain": "nabd-d71ab.firebaseapp.com",
+  "projectId": "nabd-d71ab",
   "storageBucket": "nabd-d71ab.appspot.com",
-  "messagingSenderId": "665814234557"
+  "messagingSenderId": "529236633123",
+  "appId": "1:529236633123:web:7d4945daae4d51038e3396",
+  "measurementId": "G-X5SY2K798F"
 };
