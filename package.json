@@ -4,7 +4,7 @@
   "version": "0.1.3",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src_ai/dev.ts",
     "build": "NODE_ENV=production next build",
