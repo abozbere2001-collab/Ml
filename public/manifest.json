@@ -2,24 +2,26 @@
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
   "description": "عالم كرة القدم بين يديك",
-  "start_url": "/MI/",
-  "scope": "/MI/",
-  "id": "/MI/",
+  "theme_color": "#000000",
+  "background_color": "#000000",
   "display_override": ["fullscreen", "standalone", "minimal-ui"],
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "scope": "/MI/",
+  "start_url": "/MI/",
+  "id": "/MI/",
   "icons": [
     {
       "src": "/MI/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/MI/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
