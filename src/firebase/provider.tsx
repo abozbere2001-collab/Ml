@@ -17,39 +17,24 @@ interface FirebaseProviderProps {
   auth: Auth;
 }
 
-// Internal state for user authentication
-interface UserAuthState {
+// Combined state for the Firebase context
+export interface FirebaseContextState {
+  firebaseApp: FirebaseApp | null;
+  firestore: Firestore | null;
+  auth: Auth | null; 
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
   isProUser: boolean;
   isAdmin: boolean;
   profile: UserProfile | null;
-}
-
-// Combined state for the Firebase context
-export interface FirebaseContextState extends UserAuthState {
-  areServicesAvailable: boolean; // True if core services (app, firestore, auth instance) are provided
-  firebaseApp: FirebaseApp | null;
-  firestore: Firestore | null;
-  auth: Auth | null; // The Auth service instance
 }
 
 // Return type for useFirebase()
-export interface FirebaseServicesAndUser extends UserAuthState {
+export interface FirebaseServicesAndUser extends Omit<FirebaseContextState, 'firebaseApp' | 'firestore' | 'auth'> {
   firebaseApp: FirebaseApp;
   firestore: Firestore;
   auth: Auth;
-}
-
-// Return type for useUser() - specific to user auth state
-export interface UserHookResult {
-  user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
-  isProUser: boolean;
-  isAdmin: boolean;
-  profile: UserProfile | null;
 }
 
 // React Context
@@ -64,76 +49,74 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firestore,
   auth,
 }) => {
-  const [userAuthState, setUserAuthState] = useState<UserAuthState>({
-    user: null,
-    isUserLoading: true, // Start loading until first auth event
-    userError: null,
-    isProUser: false,
-    isAdmin: false,
-    profile: null,
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(true); // Start loading until first auth event
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isProUser, setIsProUser] = useState(false);
+
 
   useEffect(() => {
     if (!auth || !firestore) {
-      setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth or Firestore service not provided."), isProUser: false, isAdmin: false, profile: null });
+      setIsUserLoading(false);
       return;
     }
 
-    setUserAuthState(prev => ({ ...prev, isUserLoading: true }));
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (firebaseUser) => {
-        if (firebaseUser) {
-          const profileDocRef = doc(firestore, 'users', firebaseUser.uid);
-          const adminDocRef = doc(firestore, 'admins', firebaseUser.uid);
+      if (firebaseUser) {
+        try {
+            const adminDocRef = doc(firestore, 'admins', firebaseUser.uid);
+            const profileDocRef = doc(firestore, 'users', firebaseUser.uid);
+            
+            const [adminSnap, profileSnap] = await Promise.all([
+                getDoc(adminDocRef),
+                getDoc(profileDocRef)
+            ]);
+            
+            setIsAdmin(adminSnap.exists());
 
-          Promise.all([getDoc(profileDocRef), getDoc(adminDocRef)])
-            .then(([profileSnap, adminSnap]) => {
-              const profileData = profileSnap.exists() ? (profileSnap.data() as UserProfile) : null;
-              setUserAuthState({
-                user: firebaseUser,
-                isUserLoading: false,
-                userError: null,
-                isProUser: profileData?.isProUser ?? false,
-                isAdmin: adminSnap.exists(),
-                profile: profileData,
-              });
-            })
-            .catch(error => {
-              console.error("Error fetching user profile or admin status:", error);
-              setUserAuthState({
-                user: firebaseUser,
-                isUserLoading: false,
-                userError: error,
-                isProUser: false,
-                isAdmin: false,
-                profile: null,
-              });
-            });
-        } else {
-          // No user, reset state
-          setUserAuthState({ user: null, isUserLoading: false, userError: null, isProUser: false, isAdmin: false, profile: null });
+            if (profileSnap.exists()) {
+                const profileData = profileSnap.data() as UserProfile;
+                setProfile(profileData);
+                setIsProUser(profileData.isProUser || false);
+            } else {
+                setProfile(null);
+                setIsProUser(false);
+            }
+
+        } catch (e) {
+            console.error("Error fetching user data", e);
+            setProfile(null);
+            setIsAdmin(false);
+            setIsProUser(false);
         }
-      },
-      (error) => {
-        console.error("FirebaseProvider: onAuthStateChanged error:", error);
-        setUserAuthState({ user: null, isUserLoading: false, userError: error, isProUser: false, isAdmin: false, profile: null });
+
+      } else {
+        // No user, reset all user-related state
+        setProfile(null);
+        setIsAdmin(false);
+        setIsProUser(false);
       }
-    );
+
+      setIsUserLoading(false);
+    });
+
     return () => unsubscribe();
   }, [auth, firestore]);
 
-  const contextValue = useMemo((): FirebaseContextState => {
-    const servicesAvailable = !!(firebaseApp && firestore && auth);
-    return {
-      areServicesAvailable: servicesAvailable,
-      firebaseApp: servicesAvailable ? firebaseApp : null,
-      firestore: servicesAvailable ? firestore : null,
-      auth: servicesAvailable ? auth : null,
-      ...userAuthState,
-    };
-  }, [firebaseApp, firestore, auth, userAuthState]);
+  const contextValue = useMemo((): FirebaseContextState => ({
+    firebaseApp,
+    firestore,
+    auth,
+    user,
+    isUserLoading,
+    profile,
+    isAdmin,
+    isProUser,
+    userError: null, // This can be enhanced later if needed
+  }), [firebaseApp, firestore, auth, user, isUserLoading, profile, isAdmin, isProUser]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -146,7 +129,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
   if (context === undefined) throw new Error('useFirebase must be used within a FirebaseProvider.');
-  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
+  if (!context.firebaseApp || !context.firestore || !context.auth) {
     throw new Error('Firebase core services not available. Check FirebaseProvider props.');
   }
   return {
@@ -197,8 +180,6 @@ export const useAdmin = () => {
       const adminDocRef = doc(context.firestore, 'admins', context.user.uid);
       try {
         await setDoc(adminDocRef, { grantedAt: new Date() });
-        // Manually update local state to reflect change immediately
-        // This is a bit of a hack, the provider should ideally refetch
       } catch (error) {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
                 path: adminDocRef.path,
@@ -227,6 +208,7 @@ export const useFirestore = (): { db: Firestore | null } => {
 
 export const useFirebaseApp = (): FirebaseApp => {
   const { firebaseApp } = useFirebase();
+  if (!firebaseApp) throw new Error("Firebase App not available");
   return firebaseApp;
 };
 
@@ -241,7 +223,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
   return memoized;
 }
 
-export const useUser = (): UserHookResult => {
+export const useUser = () => {
   const context = useContext(FirebaseContext);
   if (context === undefined) throw new Error('useUser must be used within a FirebaseProvider.');
   return {
