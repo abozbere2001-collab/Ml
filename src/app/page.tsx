@@ -24,10 +24,8 @@ const HINTS_DISMISSED_KEY = 'goalstack_hints_dismissed_v1';
 export default function Home() {
     const { user, isUserLoading } = useAuth();
     const [showHints, setShowHints] = useState<boolean>(false);
-    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        setIsClient(true);
         const hintsDismissed = localStorage.getItem(HINTS_DISMISSED_KEY) === 'true';
         setShowHints(!hintsDismissed);
     }, []);
@@ -40,7 +38,9 @@ export default function Home() {
         setShowHints(false);
     };
     
-    if (!isClient || isUserLoading) {
+    // The main loading indicator is now handled by the FirebaseClientProvider.
+    // This component will only render its content *after* isUserLoading is false.
+    if (isUserLoading) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-background">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -48,10 +48,12 @@ export default function Home() {
         );
     }
     
+    // Once loading is complete, decide which screen to show.
     if (!user) {
         return <WelcomeScreen />;
     }
 
+    // If there is a user, show the main app content.
     return (
         <AdProvider>
             <AppContentWrapper showHints={showHints} onHintsDismissed={handleHintsDismissed} />

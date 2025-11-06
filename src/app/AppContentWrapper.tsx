@@ -26,7 +26,7 @@ import TermsOfServiceScreen from './terms-of-service/page';
 import { GoProScreen } from './screens/GoProScreen';
 import type { ScreenKey } from './page';
 
-import { useAd, SplashScreenAd, BannerAd } from '@/components/AdProvider';
+import { useAd, SplashScreenAd } from '@/components/AdProvider';
 import { useAuth, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,7 +44,7 @@ import { cn } from '@/lib/utils';
 import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
 import { IraqScreen } from './screens/IraqScreen';
 import { PredictionsScreen } from './screens/PredictionsScreen';
-import { doc, onSnapshot, getDocs, collection, updateDoc, deleteField, writeBatch, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, getDocs, collection } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites, GUEST_MODE_KEY } from '@/lib/local-favorites';
 import { OnboardingHints } from '@/components/OnboardingHints';
@@ -151,7 +151,7 @@ export const ProfileButton = () => {
 };
 
 export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: boolean, onHintsDismissed: () => void }) {
-  const { user, isUserLoading } = useAuth();
+  const { user } = useAuth();
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<Favorites>>({});
   const [customNames, setCustomNames] = useState<{ [key: string]: Map<number | string, string> } | null>(null);
@@ -168,7 +168,7 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
     },
   });
 
-  const { showSplashAd, showBannerAd } = useAd();
+  const { showSplashAd } = useAd();
   const keyCounter = useRef(1);
 
   const fetchCustomNames = useCallback(async () => {
@@ -222,15 +222,17 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
         } else if (db) {
             const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
             // This setDoc should merge the entire new favorites object.
-            // Be cautious if you only want to update a single field.
-            setDoc(favDocRef, newFavorites, { merge: true }).catch(err => {
-                console.error("Firestore update failed:", err);
-                errorEmitter.emit('permission-error', new FirestorePermissionError({
-                    path: favDocRef.path,
-                    operation: 'write',
-                    requestResourceData: newFavorites,
-                }));
-            });
+            try {
+                // Non-blocking write
+                fetch(`/api/favorites`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.uid, favorites: newFavorites }),
+                });
+            } catch(e) {
+                // Fallback for environments where fetch might fail, though unlikely
+                console.error("Favorites API call failed:", e);
+            }
         }
         
         return newFavorites;
@@ -252,10 +254,6 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
       window.removeEventListener('localFavoritesChanged', localFavsListener);
     };
 
-    if (isUserLoading) {
-      return;
-    }
-
     cleanup();
 
     if (user && db && !user.isAnonymous) {
@@ -276,7 +274,7 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
     }
 
     return () => cleanup();
-  }, [user, db, isUserLoading]);
+  }, [user, db]);
 
 
   const goBack = useCallback(() => {
@@ -331,7 +329,10 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
       }
   }, [navigate]);
   
-  const isDataReady = customNames !== null && !isUserLoading;
+  // This component now assumes `user` is loaded and `isUserLoading` is false.
+  // The primary loader is in `page.tsx` before this component is even mounted.
+  // We only show a loader here while fetching `customNames`.
+  const isDataReady = customNames !== null;
 
   if (!isDataReady) {
     return (
@@ -393,7 +394,6 @@ export function AppContentWrapper({ showHints, onHintsDismissed }: { showHints: 
         })}
       </div>
       
-      {showBannerAd && <BannerAd />}
       {mainTabs.includes(navigationState.stacks[navigationState.activeTab]?.slice(-1)[0]?.screen) && 
         <BottomNav activeScreen={navigationState.activeTab} onNavigate={(screen) => navigate(screen)} />
       }
