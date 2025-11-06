@@ -1,9 +1,10 @@
 
 import type {NextConfig} from 'next';
 
+const isProd = process.env.NODE_ENV === 'production';
 const repo = 'MI';
-const assetPrefix = `/${repo}/`;
-const basePath = `/${repo}`;
+const assetPrefix = isProd ? `/${repo}/` : '';
+const basePath = isProd ? `/${repo}` : '';
 
 const nextConfig: NextConfig = {
   /* config options here */
