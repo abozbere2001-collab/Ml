@@ -2,8 +2,7 @@
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
   "description": "عالم كرة القدم بين يديك",
-  "start_url": "/Ml/?source=pwa",
-  "scope": "/Ml/",
+  "start_url": "/Ml/",
   "id": "/Ml/",
   "display": "standalone",
   "background_color": "#000000",
@@ -13,24 +12,20 @@
     {
       "src": "/Ml/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/Ml/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/Ml/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/Ml/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "monochrome"
     }
   ]
 }
