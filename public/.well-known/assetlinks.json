@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "io.github.abozbere2001_collab.twa",
-      "sha256_cert_fingerprints": ["ضع هنا بصمة توقيع التطبيق"]
+      "sha256_cert_fingerprints": ["18397D15A0F7AEF2792BAB3F80155E3911A4E8554A3EFE27A63C552355E21FD4"]
     }
   }
 ]
