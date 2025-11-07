@@ -102,8 +102,8 @@ const TeamFixturesDisplay = ({ teamId, navigate }: { teamId: number; navigate: S
             };
             setLoading(true);
             try {
-                const url = `/api/football/fixtures?team=${teamId}&season=${CURRENT_SEASON}`;
-                const res = await fetch(url);
+                const url = `https://v3.football.api-sports.io/fixtures?team=${teamId}&season=${CURRENT_SEASON}`;
+                const res = await fetch(url, { headers: { 'x-rapidapi-key': process.env.NEXT_PUBLIC_API_FOOTBALL_KEY || '' } });
                 if (!isMounted) return;
                 if (!res.ok) throw new Error(`API fetch failed with status: ${res.status}`);
                 
@@ -221,6 +221,7 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
 
 
  const handleRemoveCrowned = useCallback((teamIdToRemove: number) => {
+    if (!setFavorites) return;
     const newFavorites = JSON.parse(JSON.stringify(favorites || {}));
     if (newFavorites.crownedTeams?.[teamIdToRemove]) {
         delete newFavorites.crownedTeams[teamIdToRemove];

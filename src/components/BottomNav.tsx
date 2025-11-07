@@ -15,7 +15,7 @@ export function BottomNav({ activeScreen, onNavigate }: BottomNavProps) {
   
   const navItems: { key: ScreenKey; label: string; icon: React.ElementType }[] = [
     { key: 'Matches', label: "المباريات", icon: Shield },
-    { key: 'MyCountry', label: "ملعبي", icon: Home },
+    { key: 'MyCountry', label: "ملعبي", icon: Crown },
     { key: 'Predictions', label: "التوقعات", icon: Trophy },
     { key: 'Competitions', label: "اختياراتي", icon: Star },
     { key: 'News', label: "أخبار", icon: Newspaper },
