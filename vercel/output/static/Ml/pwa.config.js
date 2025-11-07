@@ -15,7 +15,7 @@ const pwaConfig = {
   // Add a manifest 'id' property. This is crucial for PWABuilder to generate a stable package name.
   // The value should be the root path of your application on its domain.
   manifest: {
-    id: "/",
+    id: "/Ml/",
     start_url: ".",
     display: "standalone",
     icons: [
