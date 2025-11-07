@@ -146,12 +146,14 @@ service cloud.firestore {
     /**
      * @description Rules for admin user data.
      * @path /admins/{adminId}
+     * @allow (get) Any user can read their own admin status.
      * @allow (create, update, delete) Only admins can manage other admin data.
-     * @deny (get, list) Normal users can't read or list admins.
-     * @principle Restricts access to admin data to only admin users.
+     * @deny (list) Listing admins is not allowed.
+     * @principle Restricts access to admin data to only admin users, but allows self-check.
      */
     match /admins/{adminId} {
-      allow get, list: if false;
+      allow get: if isOwner(adminId);
+      allow list: if false;
       allow create: if isAdmin();
       allow update: if isAdmin() && resource != null;
       allow delete: if isAdmin() && resource != null;
