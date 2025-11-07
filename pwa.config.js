@@ -16,6 +16,8 @@ const pwaConfig = {
   // The value should be the root path of your application on its domain.
   manifest: {
     id: "/",
+    start_url: ".",
+    display: "standalone",
     icons: [
       {
         src: `${basePath}/icon-192x192.png`,
@@ -23,7 +25,7 @@ const pwaConfig = {
         type: "image/png"
       },
       {
-        src: `${basePath}/icon-192x192.png`,
+        src: `${basePath}/icon-512x512.png`,
         sizes: "512x512",
         type: "image/png"
       },
