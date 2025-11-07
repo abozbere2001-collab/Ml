@@ -34,9 +34,6 @@ service cloud.firestore {
     // Admin & Predictions
     // ---------------------------------
     match /admins/{adminId} {
-      // Let any signed in user check if a UID is an admin
-      // This is safe as it only reveals a boolean status.
-      // Write access is restricted to admins only.
       allow get: if isSignedIn();
       allow list, write: if isAdmin();
     }

@@ -27,7 +27,7 @@ import { GoProScreen } from './screens/GoProScreen';
 import type { ScreenKey } from './page';
 
 import { useAd, SplashScreenAd } from '@/components/AdProvider';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useAdmin } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -44,11 +44,9 @@ import { cn } from '@/lib/utils';
 import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
 import { IraqScreen } from './screens/IraqScreen';
 import { PredictionsScreen } from './screens/PredictionsScreen';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, getDocs, collection } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
-
-const HINTS_DISMISSED_KEY = 'goalstack_hints_dismissed_v1';
 
 const screenConfig: Record<string, { component: React.ComponentType<any>;}> = {
   Matches: { component: MatchesScreen },
@@ -88,6 +86,7 @@ type StackItem = {
 
 export const ProfileButton = () => {
     const { user } = useAuth();
+    const { isAdmin } = useAdmin();
 
     const handleSignOut = async () => {
         await signOut();
@@ -112,7 +111,7 @@ export const ProfileButton = () => {
             </Button>
         );
     }
-
+    
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -121,6 +120,7 @@ export const ProfileButton = () => {
                         <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
                         <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
                     </Avatar>
+                     {isAdmin && <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -151,6 +151,7 @@ export function AppContentWrapper() {
   const { user } = useAuth();
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<Favorites> | null>(null);
+  const [customNames, setCustomNames] = useState<any>(null);
   
   const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
     activeTab: 'Matches',
@@ -167,75 +168,69 @@ export function AppContentWrapper() {
   const { showSplashAd } = useAd();
   const keyCounter = useRef(1);
 
- const handleSetFavorites = useCallback((updater: React.SetStateAction<Partial<Favorites> | null>) => {
-    setFavorites(currentFavorites => {
-        const newFavorites = typeof updater === 'function' ? updater(currentFavorites) : updater;
+  const handleSetFavorites = useCallback((updater: React.SetStateAction<Partial<Favorites> | null>) => {
+    const newFavorites = typeof updater === 'function' ? updater(favorites) : updater;
+    setFavorites(newFavorites);
 
-        if (!user || !db) {
-            setLocalFavorites(newFavorites || {});
-        } else if (db && newFavorites) {
-            const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
-            try {
-                // Use the new favorites state directly
-                setDoc(favDocRef, newFavorites, { merge: true });
-            } catch(e) {
-                console.error("Favorites API call failed:", e);
-            }
-        }
-        
-        return newFavorites;
-    });
-}, [user, db]);
+    if (!user || !db) {
+        setLocalFavorites(newFavorites || {});
+    } else if (db && newFavorites) {
+        const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
+        setDoc(favDocRef, newFavorites, { merge: true }).catch(e => console.error("Favorites API call failed:", e));
+    }
+  }, [user, db, favorites]);
 
+  const fetchAllCustomNames = useCallback(async () => {
+    if (!db) {
+        setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map(), players: new Map(), coaches: new Map() });
+        return;
+    }
+    try {
+        const [leagues, teams, players, coaches, countries, continents] = await Promise.all([
+            getDocs(collection(db, "leagueCustomizations")),
+            getDocs(collection(db, "teamCustomizations")),
+            getDocs(collection(db, "playerCustomizations")),
+            getDocs(collection(db, "coachCustomizations")),
+            getDocs(collection(db, "countryCustomizations")),
+            getDocs(collection(db, "continentCustomizations")),
+        ]);
+
+        const newNames = {
+            leagues: new Map(leagues.docs.map(doc => [Number(doc.id), doc.data().customName])),
+            teams: new Map(teams.docs.map(doc => [Number(doc.id), doc.data().customName])),
+            players: new Map(players.docs.map(doc => [Number(doc.id), doc.data().customName])),
+            coaches: new Map(coaches.docs.map(doc => [Number(doc.id), doc.data().customName])),
+            countries: new Map(countries.docs.map(doc => [doc.id, doc.data().customName])),
+            continents: new Map(continents.docs.map(doc => [doc.id, doc.data().customName])),
+        };
+        setCustomNames(newNames);
+
+    } catch (error) {
+        console.warn("Failed to fetch all custom names:", error);
+        setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map(), players: new Map(), coaches: new Map() });
+    }
+  }, [db]);
 
   useEffect(() => {
+    fetchAllCustomNames();
+    
     if (!db) {
-      // Handle case where firestore is not available
       setFavorites(getLocalFavorites());
       return;
     }
   
-    let unsubscribe: (() => void) | undefined;
-  
     if (user) {
-      // Logged-in user: listen to Firestore
       const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
-      unsubscribe = onSnapshot(
-        favDocRef,
-        (docSnap) => {
-          if (docSnap.exists()) {
-            setFavorites(docSnap.data() as Favorites);
-          } else {
-            // Document doesn't exist, maybe it's a new user.
-            // We can set an empty object.
-            setFavorites({});
-          }
-        },
-        (error) => {
-          console.error("Error listening to remote favorites:", error);
-          setFavorites({}); // Fallback to empty on error
-        }
-      );
+      getDoc(favDocRef).then(docSnap => {
+        setFavorites(docSnap.exists() ? docSnap.data() as Favorites : {});
+      }).catch(e => {
+        console.error("Error fetching remote favorites:", e);
+        setFavorites({}); // Fallback to empty on error
+      });
     } else {
-      // Guest user: use local storage and listen for changes
-      const handleStorageChange = () => {
-        setFavorites(getLocalFavorites());
-      };
-      
-      setFavorites(getLocalFavorites()); // Initial load
-      window.addEventListener('localFavoritesChanged', handleStorageChange);
-      
-      unsubscribe = () => {
-        window.removeEventListener('localFavoritesChanged', handleStorageChange);
-      };
+      setFavorites(getLocalFavorites());
     }
-  
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [user, db]);
+  }, [user, db, fetchAllCustomNames]);
 
 
   const goBack = useCallback(() => {
@@ -294,8 +289,7 @@ export function AppContentWrapper() {
     return <SplashScreenAd />;
   }
 
-  // Render a loading state until favorites are loaded
-  if (favorites === null) {
+  if (favorites === null || customNames === null) {
     return (
         <div className="h-screen w-screen flex items-center justify-center bg-background">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -310,6 +304,8 @@ export function AppContentWrapper() {
     goBack,
     favorites,
     setFavorites: handleSetFavorites,
+    customNames,
+    onCustomNameChange: fetchAllCustomNames,
   };
 
   return (
