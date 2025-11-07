@@ -3,95 +3,72 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --------------------------
-    // صلاحيات المدير العام
-    // --------------------------
+    // القاعدة العليا: صلاحيات كاملة للمدير العام المحدد
+    // This rule grants full read/write access to the specified admin email.
     match /{document=**} {
       allow read, write: if request.auth != null && request.auth.token.email == "sagralnarey@gmail.com";
     }
 
-    // Helper Functions
+    // --- الوظائف المساعدة ---
     function isSignedIn() {
       return request.auth != null;
     }
     function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-    function isAdmin() {
-      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    // User Data: Only accessible by the owner
+    // --- قواعد المستخدمين العاديين ---
+
+    // بيانات المستخدم: يمكن للمالك فقط الوصول إليها
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
-    }
-    match /users/{userId}/favorites/{docId} {
       allow read, write: if isOwner(userId);
     }
     match /users/{userId}/{document=**} {
       allow read, write: if isOwner(userId);
     }
-
-    // Admins: Only admins can manage other admins. Users can check their own status.
-    match /admins/{adminId} {
-      allow get: if isOwner(adminId);
-      allow list, write: if isAdmin();
-    }
     
-    // Predictions: Publicly readable, but only owners can predict, and only admins can manage fixtures.
+    // التوقعات: يمكن للجميع القراءة، ولكن المالك فقط يمكنه كتابة توقعه
     match /predictionFixtures/{fixtureId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
-      allow get: if true;
+      allow get, list: if true;
       allow write: if isOwner(userId);
     }
     match /leaderboard/{userId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
 
-    // Public Read / Admin Write Collections
+    // الأخبار وتخصيصات الأسماء: يمكن للجميع القراءة
     match /news/{newsId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /leagueCustomizations/{leagueId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /teamCustomizations/{teamId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /playerCustomizations/{playerId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /coachCustomizations/{coachId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /countryCustomizations/{countryId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /continentCustomizations/{continentId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /matchCustomizations/{matchId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /iraqiLeagueTopScorers/{scorerId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
     match /pinnedIraqiMatches/{matchId} {
       allow get, list: if true;
-      allow write: if isAdmin();
     }
   }
 }
