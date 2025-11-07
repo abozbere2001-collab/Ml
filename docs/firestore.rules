@@ -175,6 +175,16 @@ service cloud.firestore {
     }
 	
 	/**
+     * @description Rules for user's favorite data subcollection.
+     * @path /users/{userId}/favorites/data
+     * @allow (read, write) Authenticated user can access their own favorites data.
+     * @principle Enforces document ownership for the specific 'data' document within favorites.
+     */
+    match /users/{userId}/favorites/data {
+      allow read, write: if isOwner(userId);
+    }
+	
+	/**
      * @description Rules for top competitions.
      * @path /topCompetitions/{competitionId}
      * @allow (get, list) Any user can read competition data.
@@ -320,3 +330,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
