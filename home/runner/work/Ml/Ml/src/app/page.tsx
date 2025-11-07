@@ -53,11 +53,15 @@ export default function Home() {
     
     // This effect is to listen to navigation changes from the AppContentWrapper
     React.useEffect(() => {
-        const handleNavChange = (event: CustomEvent) => {
-            setActiveTab(event.detail.activeTab);
+        const handleNavChange = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            // Schedule the state update to avoid updating during another component's render
+            setTimeout(() => {
+                setActiveTab(customEvent.detail.activeTab);
+            }, 0);
         };
-        window.addEventListener('navigationChange', handleNavChange as EventListener);
-        return () => window.removeEventListener('navigationChange', handleNavChange as EventListener);
+        window.addEventListener('navigationChange', handleNavChange);
+        return () => window.removeEventListener('navigationChange', handleNavChange);
     }, []);
 
     if (isUserLoading || !isClient) {
