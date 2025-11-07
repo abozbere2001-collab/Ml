@@ -12,12 +12,13 @@ const pwaConfig = {
   scope: basePath,
   sw: 'sw.js',
   buildExcludes: [/app-build-manifest\.json$/],
-  // Add a manifest 'id' property. This is crucial for PWABuilder to generate a stable package name.
-  // The value should be the root path of your application on its domain.
   manifest: {
     id: "/",
     start_url: ".",
     display: "standalone",
+    name: "نبض الملاعب",
+    short_name: "نبض الملاعب",
+    description: "عالم كرة القدم بين يديك",
     icons: [
       {
         src: `${basePath}/icon-192x192.png`,
@@ -30,8 +31,8 @@ const pwaConfig = {
         type: "image/png"
       },
       {
-        src: `${basePath}/icon-192x192.png`,
-        sizes: "192x192",
+        src: `${basePath}/icon-512x512.png`,
+        sizes: "512x512",
         type: "image/png",
         purpose: "any maskable"
       }

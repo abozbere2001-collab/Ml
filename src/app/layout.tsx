@@ -43,7 +43,6 @@ export default function RootLayout({
           <meta name="theme-color" content="#000000" />
 
           <link rel="apple-touch-icon" href={`${basePath}/icon-192x192.png`} />
-          <link rel="manifest" href={`${basePath}/manifest.json`} />
         </head>
         <body className={`${cairo.variable} font-body antialiased`}>
             <ThemeProvider
