@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -224,66 +223,52 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
     const [isUpdatingPoints, setIsUpdatingPoints] = useState(false);
 
     useEffect(() => {
-        if (isCheckingAdmin) return;
+        if (isCheckingAdmin || !db) return;
         
-        if (!db) {
-            setLoadingMatches(false);
-            setPinnedMatches([]);
-            return;
-        }
+        const fetchMatches = async () => {
+            setLoadingMatches(true);
+            const q = query(collection(db, 'predictionFixtures'));
+            try {
+                const snapshot = await getDocs(q);
+                const matches = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...(doc.data() as PredictionMatch),
+                })).filter(m => m && m.fixtureData && m.fixtureData.fixture);
+                setPinnedMatches(matches);
+            } catch (err) {
+                console.error("Error fetching prediction fixtures", err);
+            } finally {
+                setLoadingMatches(false);
+            }
+        };
         
-        setLoadingMatches(true);
-        const q = query(collection(db, 'predictionFixtures'));
-        const unsub = onSnapshot(q, (snapshot) => {
-            const matches = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...(doc.data() as PredictionMatch),
-            })).filter(m => m && m.fixtureData && m.fixtureData.fixture);
-            setPinnedMatches(matches);
-            setLoadingMatches(false);
-        }, (err) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: 'predictionFixtures',
-                operation: 'list'
-            }));
-            setLoadingMatches(false);
-        });
-
-        return () => unsub();
+        fetchMatches();
     }, [db, isAdmin, isCheckingAdmin]);
 
-
     useEffect(() => {
-        if (!db || !user ) {
-            setLoadingUserPredictions(false);
-            return;
-        };
-        setLoadingUserPredictions(true);
-        
-        if (pinnedMatches.length === 0) {
-            setAllUserPredictions({});
+        if (!db || !user || pinnedMatches.length === 0) {
             setLoadingUserPredictions(false);
             return;
         }
 
-        const unsubscribes = pinnedMatches.map(match => {
-            const predictionRef = doc(db, 'predictionFixtures', match.id, 'userPredictions', user.uid);
-            return onSnapshot(predictionRef, (predDoc) => {
-                if (predDoc.exists()) {
-                    setAllUserPredictions(prev => ({ ...prev, [match.id]: predDoc.data() as Prediction }));
-                } else {
-                    setAllUserPredictions(prev => {
-                        const newPreds = {...prev};
-                        delete newPreds[match.id];
-                        return newPreds;
-                    });
-                }
-            }, e => console.warn(`Could not listen to prediction for match ${match.id}`, e));
-        });
+        const fetchPredictions = async () => {
+            setLoadingUserPredictions(true);
+            const predictions: { [key: string]: Prediction } = {};
+            const promises = pinnedMatches.map(match => {
+                const predictionRef = doc(db, 'predictionFixtures', match.id, 'userPredictions', user.uid);
+                return getDoc(predictionRef).then(predDoc => {
+                    if (predDoc.exists()) {
+                        predictions[match.id] = predDoc.data() as Prediction;
+                    }
+                });
+            });
 
-        setLoadingUserPredictions(false);
-
-        return () => unsubscribes.forEach(unsub => unsub());
+            await Promise.all(promises);
+            setAllUserPredictions(predictions);
+            setLoadingUserPredictions(false);
+        };
+        
+        fetchPredictions();
 
     }, [db, user, pinnedMatches]);
     
@@ -325,7 +310,6 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
     const handleSavePrediction = useCallback(async (fixtureId: number, homeGoalsStr: string, awayGoalsStr: string) => {
         if (!user || homeGoalsStr === '' || awayGoalsStr === '' || !db) return;
         
-        // This is where the UI values are received. homeGoalsStr is from the home team's input field.
         const homePrediction = parseInt(homeGoalsStr, 10);
         const awayPrediction = parseInt(awayGoalsStr, 10);
 
@@ -333,12 +317,11 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
     
         const predictionRef = doc(db, 'predictionFixtures', String(fixtureId), 'userPredictions', user.uid);
         
-        // As per the requirement, we store the predictions swapped because of the UI layout.
         const predictionData: Prediction = {
             userId: user.uid,
             fixtureId,
-            homeGoals: awayPrediction, // Away team's prediction goes into homeGoals
-            awayGoals: homePrediction, // Home team's prediction goes into awayGoals
+            homeGoals: awayPrediction, 
+            awayGoals: homePrediction,
             points: allUserPredictions[String(fixtureId)]?.points || 0,
             timestamp: new Date().toISOString()
         };

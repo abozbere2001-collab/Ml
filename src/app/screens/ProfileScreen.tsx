@@ -13,7 +13,7 @@ import { useAuth, useFirestore } from '@/firebase/provider';
 import { updateUserDisplayName } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Copy } from 'lucide-react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -33,17 +33,24 @@ export function ProfileScreen({ navigate, goBack, canGoBack, headerActions, isNe
         return;
     };
     
-    setLoading(true);
-    const unsub = onSnapshot(doc(db, 'users', user.uid), (doc) => {
-        if (doc.exists()) {
-            const data = doc.data() as UserProfile;
-            setProfile(data);
-            setDisplayName(data.displayName || '');
+    const fetchProfile = async () => {
+        setLoading(true);
+        const docRef = doc(db, 'users', user.uid);
+        try {
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data() as UserProfile;
+                setProfile(data);
+                setDisplayName(data.displayName || '');
+            }
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
-    });
+    };
 
-    return () => unsub();
+    fetchProfile();
 
   }, [user, db]);
 

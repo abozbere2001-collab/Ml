@@ -8,7 +8,7 @@ import type { ScreenProps } from '@/app/page';
 import { format, addDays, subDays, isToday } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useAuth, useFirestore, useAdmin } from '@/firebase/provider';
-import { doc, onSnapshot, collection, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDocs, collection, setDoc, deleteDoc } from 'firebase/firestore';
 import { Loader2, Search, Star, Crown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -261,34 +261,34 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
 
     useEffect(() => {
         if (!db) return;
-        const names: any = {
-            leagues: new Map(),
-            teams: new Map(),
+        const fetchNames = async () => {
+            const names: any = { leagues: new Map(), teams: new Map() };
+            const [leaguesSnap, teamsSnap] = await Promise.all([
+                getDocs(collection(db, 'leagueCustomizations')),
+                getDocs(collection(db, 'teamCustomizations'))
+            ]);
+            leaguesSnap.forEach(doc => names.leagues.set(Number(doc.id), doc.data().customName));
+            teamsSnap.forEach(doc => names.teams.set(Number(doc.id), doc.data().customName));
+            setCustomNames(names);
         };
-        const leagueSub = onSnapshot(collection(db, 'leagueCustomizations'), (snap) => {
-            snap.forEach(doc => names.leagues.set(Number(doc.id), doc.data().customName));
-            setCustomNames({...names});
-        });
-        const teamSub = onSnapshot(collection(db, 'teamCustomizations'), (snap) => {
-            snap.forEach(doc => names.teams.set(Number(doc.id), doc.data().customName));
-            setCustomNames({...names});
-        });
-
-        return () => { leagueSub(); teamSub(); };
+        fetchNames();
     }, [db]);
 
 
   useEffect(() => {
     if (!db || !isAdmin) return;
-    const q = collection(db, "predictionFixtures");
-    const unsub = onSnapshot(q, (snapshot) => {
-        const newPinnedSet = new Set<number>();
-        snapshot.forEach(doc => newPinnedSet.add(Number(doc.id)));
-        setPinnedPredictionMatches(newPinnedSet);
-    }, (error) => {
-        console.error("Permission error listening to predictions:", error);
-    });
-    return () => unsub();
+    const fetchPinned = async () => {
+        const q = collection(db, "predictionFixtures");
+        try {
+            const snapshot = await getDocs(q);
+            const newPinnedSet = new Set<number>();
+            snapshot.forEach(doc => newPinnedSet.add(Number(doc.id)));
+            setPinnedPredictionMatches(newPinnedSet);
+        } catch (error) {
+            console.error("Permission error listening to predictions:", error);
+        }
+    };
+    fetchPinned();
   }, [db, isAdmin]);
 
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
@@ -314,6 +314,11 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
     if (isPinned) {
         deleteDoc(docRef).then(() => {
             toast({ title: "تم إلغاء التثبيت", description: "تمت إزالة المباراة من التوقعات." });
+            setPinnedPredictionMatches(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(fixtureId);
+                return newSet;
+            });
         }).catch(err => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'delete' }));
         });
@@ -321,6 +326,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         const data: PredictionMatch = { fixtureData: fixture };
         setDoc(docRef, data).then(() => {
             toast({ title: "تم التثبيت", description: "أصبحت المباراة متاحة الآن للتوقع." });
+            setPinnedPredictionMatches(prev => new Set(prev).add(fixtureId));
         }).catch(err => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: data }));
         });

@@ -44,7 +44,7 @@ import { cn } from '@/lib/utils';
 import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
 import { IraqScreen } from './screens/IraqScreen';
 import { PredictionsScreen } from './screens/PredictionsScreen';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 
@@ -177,11 +177,7 @@ export function AppContentWrapper() {
             const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
             try {
                 // Use the new favorites state directly
-                fetch(`/api/favorites`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user.uid, favorites: newFavorites }),
-                });
+                setDoc(favDocRef, newFavorites, { merge: true });
             } catch(e) {
                 console.error("Favorites API call failed:", e);
             }
@@ -193,40 +189,29 @@ export function AppContentWrapper() {
 
 
   useEffect(() => {
-    let favsUnsub: (() => void) | null = null;
-    const localFavsListener = () => {
-        setFavorites(getLocalFavorites());
-    };
-
-    const cleanup = () => {
-      if (favsUnsub) {
-        favsUnsub();
-        favsUnsub = null;
-      }
-      window.removeEventListener('localFavoritesChanged', localFavsListener);
-    };
-
-    cleanup();
-    setFavorites(null); // Reset on user change
-
-    if (user && db && !user.isAnonymous) {
-      const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
-      favsUnsub = onSnapshot(
-        favDocRef,
-        (doc) => {
-          setFavorites(doc.exists() ? (doc.data() as Favorites) : {});
-        },
-        (error) => {
-          console.error("Error listening to remote favorites:", error);
-          setFavorites({});
+    const fetchRemoteFavorites = async () => {
+        if (user && db && !user.isAnonymous) {
+            const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
+            try {
+                const docSnap = await getDoc(favDocRef);
+                if (docSnap.exists()) {
+                    setFavorites(docSnap.data() as Favorites);
+                } else {
+                    setFavorites({});
+                }
+            } catch (error) {
+                console.error("Error fetching remote favorites:", error);
+                setFavorites({}); // Set empty on error
+            }
         }
-      );
+    };
+    
+    if (user && !user.isAnonymous) {
+      fetchRemoteFavorites();
     } else {
       setFavorites(getLocalFavorites());
-      window.addEventListener('localFavoritesChanged', localFavsListener);
+      // No need for a listener for local storage, we update state directly.
     }
-
-    return () => cleanup();
   }, [user, db]);
 
 

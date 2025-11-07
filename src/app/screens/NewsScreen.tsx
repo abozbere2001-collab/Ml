@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -55,12 +54,17 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
       setLoading(false);
     }).catch(error => {
       console.error("Error fetching news:", error);
-      const permissionError = new FirestorePermissionError({ path: 'news', operation: 'list' });
-      errorEmitter.emit('permission-error', permissionError);
+      // We don't use the permission error emitter here because public read should be allowed.
+      // A failure here is more likely a network issue or misconfiguration.
+      toast({
+          variant: "destructive",
+          title: "فشل تحميل الأخبار",
+          description: "حدث خطأ أثناء محاولة جلب الأخبار. يرجى المحاولة مرة أخرى."
+      });
       setLoading(false);
     });
 
-  }, [db]);
+  }, [db, toast]);
   
   const handleDelete = (articleId: string) => {
     if (!db) return;
