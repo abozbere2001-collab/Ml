@@ -1,13 +1,10 @@
 
-
 "use client";
 import { Star, Newspaper, MoreHorizontal, Shield, UserCircle2, Flag, Home, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ScreenKey } from '@/app/page';
 import { FootballIcon } from './icons/FootballIcon';
-import React, { useState, useEffect } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Crown } from 'lucide-react';
+import React from 'react';
 
 interface BottomNavProps {
   activeScreen: ScreenKey;
