@@ -11,7 +11,7 @@ import { doc, setDoc, getDoc, Firestore, writeBatch, serverTimestamp, updateDoc 
 import type { UserProfile, UserScore, Favorites } from './types';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { getLocalFavorites, clearLocalFavorites, GUEST_MODE_KEY } from './local-favorites';
+import { getLocalFavorites, clearLocalFavorites } from './local-favorites';
 import { getDatabase, ref, set } from 'firebase/database';
 
 
@@ -80,12 +80,6 @@ export const handleNewUser = async (user: User, firestore: Firestore) => {
 
 
 export const signOut = (): Promise<void> => {
-    // Also clear guest mode flag on sign out.
-    if (typeof window !== 'undefined' && localStorage.getItem(GUEST_MODE_KEY)) {
-        localStorage.removeItem(GUEST_MODE_KEY);
-        window.location.reload();
-        return Promise.resolve();
-    }
     const auth = getAuth();
     return firebaseSignOut(auth);
 };

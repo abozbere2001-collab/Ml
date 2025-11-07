@@ -1,9 +1,7 @@
 
-
 import type { Favorites } from './types';
 
 export const LOCAL_FAVORITES_KEY = 'goalstack_local_favorites_v2'; // Incremented version
-export const GUEST_MODE_KEY = 'goalstack_guest_mode_active';
 
 // This function now only handles starred favorites for guests.
 export const getLocalFavorites = (): Partial<Favorites> => {
@@ -69,4 +67,3 @@ export const clearLocalFavorites = () => {
     window.localStorage.removeItem(LOCAL_FAVORITES_KEY);
      window.dispatchEvent(new CustomEvent('localFavoritesChanged'));
 };
-

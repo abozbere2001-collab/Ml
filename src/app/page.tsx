@@ -8,7 +8,6 @@ import { WelcomeScreen } from './screens/WelcomeScreen';
 import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { FavoriteSelectionScreen } from './screens/FavoriteSelectionScreen';
-import { GUEST_MODE_KEY } from '@/lib/local-favorites';
 
 export type ScreenKey = 'Welcome' | 'SignUp' | 'Matches' | 'Competitions' | 'AllCompetitions' | 'News' | 'Settings' | 'CompetitionDetails' | 'TeamDetails' | 'PlayerDetails' | 'AdminFavoriteTeamDetails' | 'Profile' | 'SeasonPredictions' | 'SeasonTeamSelection' | 'SeasonPlayerSelection' | 'AddEditNews' | 'ManageTopScorers' | 'MatchDetails' | 'NotificationSettings' | 'GeneralSettings' | 'ManagePinnedMatch' | 'PrivacyPolicy' | 'TermsOfService' | 'FavoriteSelection' | 'GoPro' | 'MyCountry' | 'Predictions';
 
@@ -29,11 +28,9 @@ export default function Home() {
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
             const onboardingStatus = localStorage.getItem(ONBOARDING_COMPLETE_KEY);
-            // Onboarding is considered incomplete only if the flag is explicitly 'false' or not set at all.
-            // Guest users who have interacted with the app might have favorites but haven't "completed" onboarding.
             setIsOnboardingComplete(onboardingStatus === 'true');
         }
-    }, [user]); // Rerun check if user changes, e.g., logs in.
+    }, [user]);
 
     const handleOnboardingComplete = () => {
         if (typeof window !== 'undefined') {
@@ -42,7 +39,6 @@ export default function Home() {
         setIsOnboardingComplete(true);
     };
     
-    // Render a loader until the client has mounted and auth state is known.
     if (isUserLoading) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-background">
@@ -51,17 +47,14 @@ export default function Home() {
         );
     }
     
-    // If there is no user (neither signed-in nor guest), show the welcome screen.
     if (!user) {
         return <WelcomeScreen />;
     }
 
-    // If there is a user but they haven't completed the favorite selection process, show it.
     if (!isOnboardingComplete && !user.isAnonymous) {
         return <FavoriteSelectionScreen onOnboardingComplete={handleOnboardingComplete} />;
     }
 
-    // If the user is logged in and onboarding is complete, show the main app.
     return (
         <AdProvider>
             <AppContentWrapper />

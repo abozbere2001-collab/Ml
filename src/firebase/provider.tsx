@@ -3,15 +3,14 @@
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, getDoc } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { GUEST_MODE_KEY } from '@/lib/local-favorites';
 
 export interface FirebaseContextState {
   firebaseApp: FirebaseApp | null;
   firestore: Firestore | null;
-  auth: Auth | null; 
+  auth: Auth | null;
   user: User | null;
   isUserLoading: boolean;
 }
@@ -28,26 +27,9 @@ export const FirebaseProvider: React.FC<{
   const [isUserLoading, setIsUserLoading] = useState(true);
 
   useEffect(() => {
-    const isGuestMode = typeof window !== 'undefined' && localStorage.getItem(GUEST_MODE_KEY) === 'true';
-
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        // If a real user is signed in, set them and we're done.
-        setUser(firebaseUser);
-        setIsUserLoading(false);
-      } else if (isGuestMode) {
-        // If no user is signed in, but we are in guest mode, sign in anonymously.
-        signInAnonymously(auth).catch((error) => {
-          console.error("Anonymous sign-in failed:", error);
-          // If anon sign-in fails, stop loading and proceed without a user.
-          setIsUserLoading(false);
-        });
-        // The user will be set in the next onAuthStateChanged tick.
-      } else {
-        // No user and not in guest mode.
-        setUser(null);
-        setIsUserLoading(false);
-      }
+      setUser(firebaseUser);
+      setIsUserLoading(false);
     });
 
     return () => unsubscribe();
