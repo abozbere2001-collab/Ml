@@ -2,19 +2,13 @@
 import type {NextConfig} from 'next';
 
 const isProd = process.env.NODE_ENV === 'production';
-
-// Automatically determine the repository name from GitHub Actions environment variables
-const repo = isProd && process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '';
-
-const assetPrefix = isProd && repo ? `/${repo}/` : '';
-const basePath = isProd && repo ? `/${repo}` : '';
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 const withPWA = require('next-pwa')({
   dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  scope: basePath,
-  publicExcludes: ['!noprecache/**/*', '!robots.txt'], // Ensure all public assets are available
+  disable: !isProd,
+  base: basePath, // This tells PWA plugin about the base path.
+  sw: `${basePath}/sw.js`, // This tells where to generate the service worker.
 });
 
 const nextConfig: NextConfig = {
@@ -22,7 +16,7 @@ const nextConfig: NextConfig = {
   // This is not required for production builds.
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
   output: 'export',
-  assetPrefix: assetPrefix,
+  assetPrefix: basePath,
   basePath: basePath,
   typescript: {
     ignoreBuildErrors: true,

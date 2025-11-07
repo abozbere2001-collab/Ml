@@ -6,12 +6,12 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Cairo } from 'next/font/google';
 import { FirebaseClientProvider } from '@/firebase';
 
-const repoName = process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '';
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 export const metadata: Metadata = {
   title: 'نبض الملاعب',
   description: 'عالم كرة القدم بين يديك',
-  manifest: repoName ? `/${repoName}/manifest.json` : '/manifest.json',
+  manifest: `${basePath}/manifest.json`,
 };
 
 const cairo = Cairo({
@@ -25,8 +25,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const manifestPath = repoName ? `/${repoName}/manifest.json` : '/manifest.json';
-  const iconPath = repoName ? `/${repoName}/icon-192x192.png` : '/icon-192x192.png';
+  const manifestPath = `${basePath}/manifest.json`;
+  const iconPath = `${basePath}/icon-192x192.png`;
 
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>

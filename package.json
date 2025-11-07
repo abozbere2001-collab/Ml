@@ -7,6 +7,7 @@
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src_ai/dev.ts",
     "build": "NODE_ENV=production next build",
+    "build:gh": "NEXT_PUBLIC_BASE_PATH=/Ml NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
