@@ -13,23 +13,8 @@ const withPWA = withPWAInit({
   disable: !isProd,
   publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
   scope: basePath,
-  customWorkerDir: 'src/worker',
   sw: 'sw.js',
   buildExcludes: [/app-build-manifest\.json$/],
-  pwa: {
-    // This part is crucial for TWA behavior
-    manifest: {
-      "share_target": {
-        "action": "/_next/data",
-        "method": "GET",
-        "params": {
-          "title": "title",
-          "text": "text",
-          "url": "url"
-        }
-      },
-    },
-  },
 });
 
 const nextConfig: NextConfig = {
@@ -73,6 +58,21 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  // The 'pwa' property should be a part of the nextConfig object itself.
+  pwa: {
+    // This part is crucial for TWA behavior
+    manifest: {
+      "share_target": {
+        "action": "/_next/data",
+        "method": "GET",
+        "params": {
+          "title": "title",
+          "text": "text",
+          "url": "url"
+        }
+      },
+    },
   },
   env: {
     NEXT_PUBLIC_API_FOOTBALL_KEY: "e931ffb3ccda478e60b74c6e36913c90",
