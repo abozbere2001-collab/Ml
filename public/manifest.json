@@ -2,37 +2,48 @@
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
   "description": "عالم كرة القدم بين يديك",
-  "start_url": "/Ml/",
+  "dir": "rtl",
+  "lang": "ar",
   "id": "/Ml/",
-  "display": "fullscreen",
-  "orientation": "portrait-primary",
+  "start_url": "/Ml/",
+  "scope": "/Ml/",
+  "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/Ml/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/Ml/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/Ml/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "/Ml/screenshot-1.png",
+      "src": "/Ml/screenshot1.png",
       "sizes": "1080x1920",
       "type": "image/png",
-      "label": "شاشة المباريات الرئيسية"
+      "form_factor": "narrow",
+      "label": "شاشة المباريات"
     },
     {
-      "src": "/Ml/screenshot-2.png",
+      "src": "/Ml/screenshot2.png",
       "sizes": "1080x1920",
       "type": "image/png",
+      "form_factor": "narrow",
       "label": "تفاصيل المباراة"
     }
   ]
