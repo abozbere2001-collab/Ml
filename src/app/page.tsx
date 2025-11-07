@@ -26,7 +26,7 @@ export default function Home() {
     const [isOnboardingComplete, setIsOnboardingComplete] = React.useState(true);
 
     React.useEffect(() => {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && user) {
             const onboardingStatus = localStorage.getItem(ONBOARDING_COMPLETE_KEY);
             setIsOnboardingComplete(onboardingStatus === 'true');
         }

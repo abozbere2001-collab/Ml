@@ -81,6 +81,7 @@ export const handleNewUser = async (user: User, firestore: Firestore) => {
 
 export const signOut = (): Promise<void> => {
     const auth = getAuth();
+    clearLocalFavorites();
     return firebaseSignOut(auth);
 };
 

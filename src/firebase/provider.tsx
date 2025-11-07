@@ -13,6 +13,7 @@ export interface FirebaseContextState {
   auth: Auth | null;
   user: User | null;
   isUserLoading: boolean;
+  setProUser: (isPro: boolean) => Promise<void>;
 }
 
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
@@ -35,12 +36,25 @@ export const FirebaseProvider: React.FC<{
     return () => unsubscribe();
   }, [auth]);
 
+  const setProUser = async (isPro: boolean) => {
+    if (user && firestore) {
+      const userRef = doc(firestore, 'users', user.uid);
+      await setDoc(userRef, { isProUser: isPro }, { merge: true });
+      // Force a token refresh to get the latest custom claims if any
+      await user.getIdToken(true);
+      // Re-set user to trigger re-renders
+      setUser({ ...user }); 
+    }
+  };
+
+
   const contextValue = useMemo((): FirebaseContextState => ({
     firebaseApp,
     firestore,
     auth,
     user,
     isUserLoading,
+    setProUser,
   }), [firebaseApp, firestore, auth, user, isUserLoading]);
 
   return (
@@ -66,6 +80,7 @@ export const useAuth = () => {
     return {
         user: context.user,
         isUserLoading: context.isUserLoading,
+        setProUser: context.setProUser,
     };
 };
 
