@@ -19,6 +19,7 @@ const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
 export function AdminFavoriteTeamScreen({ navigate, goBack, canGoBack, teamId, teamName }: ScreenProps & { teamId: number; teamName: string; }) {
     const [allFixtures, setAllFixtures] = useState<Fixture[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const { toast } = useToast();
     const listRef = useRef<HTMLDivElement>(null);
     const firstUpcomingMatchRef = useRef<HTMLDivElement>(null);
@@ -26,22 +27,28 @@ export function AdminFavoriteTeamScreen({ navigate, goBack, canGoBack, teamId, t
     useEffect(() => {
         const fetchFixtures = async () => {
             if (!teamId || !API_KEY) {
+                setError("مفتاح API غير موجود أو الفريق غير محدد.");
                 setLoading(false);
-                return
+                return;
             };
             setLoading(true);
+            setError(null);
             try {
                 const url = `https://${API_FOOTBALL_HOST}/fixtures?team=${teamId}&season=${CURRENT_SEASON}`;
                 const res = await fetch(url, { headers: { 'x-rapidapi-key': API_KEY } });
-                if (!res.ok) throw new Error(`API fetch failed with status: ${res.status}`);
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || `API fetch failed with status: ${res.status}`);
+                }
                 
                 const data = await res.json();
                 const fixtures: Fixture[] = data.response || [];
                 // Sort all fixtures chronologically
                 fixtures.sort((a, b) => a.fixture.timestamp - b.fixture.timestamp);
                 setAllFixtures(fixtures);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching fixtures:", error);
+                setError(error.message || "فشل في جلب المباريات.");
                 toast({
                     variant: "destructive",
                     title: "خطأ في الشبكة",
@@ -77,6 +84,13 @@ export function AdminFavoriteTeamScreen({ navigate, goBack, canGoBack, teamId, t
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
+                ) : error ? (
+                    <Card className="mt-4">
+                        <CardContent className="p-6 text-center text-destructive">
+                           <p>خطأ في تحميل المباريات.</p>
+                           <p className="text-xs">{error}</p>
+                        </CardContent>
+                    </Card>
                 ) : allFixtures.length > 0 ? (
                     <div className="space-y-2">
                         {allFixtures.map((fixture, index) => {

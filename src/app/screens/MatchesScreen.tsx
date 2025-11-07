@@ -22,6 +22,7 @@ import { hardcodedTranslations } from '@/lib/hardcoded-translations';
 import { POPULAR_LEAGUES } from '@/lib/popular-data';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { NabdAlMalaebLogo } from '@/components/icons/NabdAlMalaebLogo';
 
 const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
 const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
@@ -38,6 +39,7 @@ const popularLeagueIds = new Set(POPULAR_LEAGUES.slice(0, 15).map(l => l.id));
 const FixturesList = React.memo((props: { 
     fixtures: FixtureType[], 
     loading: boolean,
+    error: string | null,
     hasAnyFavorites: boolean,
     favoritedLeagueIds: number[],
     favoritedTeamIds: number[],
@@ -88,6 +90,15 @@ const FixturesList = React.memo((props: {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
+    }
+    
+    if (props.error) {
+        return (
+            <div className="flex flex-col items-center justify-center text-center text-destructive h-64 p-4">
+                <p>خطأ في تحميل المباريات.</p>
+                <p className="text-xs">{props.error}</p>
+            </div>
+        )
     }
     
     const totalFixturesToShow = favoriteTeamMatches.length + otherFixtures.length;
@@ -256,6 +267,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   
   const [matchesCache, setMatchesCache] = useState<Map<string, FixtureType[]>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
     
   const [pinnedPredictionMatches, setPinnedPredictionMatches] = useState(new Set<number>());
 
@@ -283,16 +295,16 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   useEffect(() => {
     if (!db || !isAdmin) return;
     const q = collection(db, "predictionFixtures");
-    getDocs(q).then(snapshot => {
-      const newPinnedSet = new Set<number>();
-      snapshot.forEach(doc => newPinnedSet.add(Number(doc.id)));
-      setPinnedPredictionMatches(newPinnedSet);
-    }).catch(error => {
-      // Don't emit permission error for regular users.
-      if (isAdmin) {
+    // Only fetch if user is admin
+    if (isAdmin) {
+      getDocs(q).then(snapshot => {
+        const newPinnedSet = new Set<number>();
+        snapshot.forEach(doc => newPinnedSet.add(Number(doc.id)));
+        setPinnedPredictionMatches(newPinnedSet);
+      }).catch(error => {
           console.error("Permission error listening to predictions as admin:", error);
-      }
-    });
+      });
+    }
   }, [db, isAdmin]);
 
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
@@ -310,7 +322,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
 
 
   const handlePinToggle = useCallback((fixture: FixtureType) => {
-    if (!db) return;
+    if (!db || !isAdmin) return;
     const fixtureId = fixture.fixture.id;
     const isPinned = pinnedPredictionMatches.has(fixtureId);
     const docRef = doc(db, 'predictionFixtures', String(fixtureId));
@@ -335,17 +347,22 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
             errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: data }));
         });
     }
-  }, [db, pinnedPredictionMatches, toast]);
+  }, [db, pinnedPredictionMatches, toast, isAdmin]);
 
     const fetchAndProcessData = useCallback(async (dateKey: string, abortSignal: AbortSignal) => {
         setLoading(true);
+        setError(null);
 
         try {
             const res = await fetch(`https://v3.football.api-sports.io/fixtures?date=${dateKey}`, { 
                 signal: abortSignal,
                 headers: { 'x-rapidapi-key': API_KEY || '' },
              });
-            if (!res.ok) throw new Error(`API fetch failed with status ${res.status}`);
+            if (!res.ok) {
+                 const errorData = await res.json();
+                 const errorMessage = errorData?.message || `API fetch failed with status ${res.status}`;
+                 throw new Error(errorMessage);
+            }
             
             const data = await res.json();
             if (abortSignal.aborted) return;
@@ -366,7 +383,8 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         } catch (error: any) {
             if (error.name !== 'AbortError') {
                 console.error(`Failed to fetch data for ${dateKey}:`, error);
-                setMatchesCache(prev => new Map(prev).set(dateKey, [])); // Cache empty array on error
+                setError(error.message);
+                setMatchesCache(prev => new Map(prev).set(dateKey, []));
             }
         } finally {
             if (!abortSignal.aborted) setLoading(false);
@@ -425,6 +443,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
           fetchAndProcessData(selectedDateKey, controller.signal);
       } else {
           setLoading(false);
+          setError(null);
       }
       
       const interval = setInterval(() => {
@@ -465,7 +484,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   return (
     <div className="flex h-full flex-col bg-background">
         <ScreenHeader 
-            title="" 
+            title="نبض الملاعب" 
             canGoBack={false}
             onBack={() => {}} 
             actions={
@@ -495,6 +514,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
                 <FixturesList 
                     fixtures={allFixturesForDay}
                     loading={loading}
+                    error={error}
                     favoritedLeagueIds={favoritedLeagueIds}
                     favoritedTeamIds={favoritedTeamIds}
                     hasAnyFavorites={hasAnyFavorites}

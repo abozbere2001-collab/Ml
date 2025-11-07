@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
@@ -45,6 +44,10 @@ import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 import { format, isToday } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { POPULAR_LEAGUES, POPULAR_TEAMS } from '@/lib/popular-data';
+
+const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
+const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
+
 
 type RenameType = 'league' | 'team' | 'player' | 'continent' | 'country' | 'coach' | 'status' | 'crown';
 interface RenameState {
@@ -100,6 +103,7 @@ export function CompetitionDetailScreen({ navigate, goBack, canGoBack, title: in
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string|null>(null);
   const [displayTitle, setDisplayTitle] = useState(initialTitle);
   
   const [renameItem, setRenameItem] = useState<RenameState | null>(null);
@@ -121,27 +125,36 @@ export function CompetitionDetailScreen({ navigate, goBack, canGoBack, title: in
     let isMounted = true;
     
     const loadInitialData = async () => {
-        if (!leagueId) {
+        if (!leagueId || !API_KEY) {
+            setError("مفتاح API غير موجود أو البطولة غير محددة.");
             setLoading(false);
             return;
         }
 
         setLoading(true);
+        setError(null);
         
         try {
+            const headers = { 'x-rapidapi-key': API_KEY };
             const [standingsRes, scorersRes, fixturesRes, teamsRes] = await Promise.all([
-                fetch(`/api/football/standings?league=${leagueId}&season=${season}`),
-                fetch(`/api/football/players/topscorers?league=${leagueId}&season=${season}`),
-                fetch(`/api/football/fixtures?league=${leagueId}&season=${season}`),
-                fetch(`/api/football/teams?league=${leagueId}&season=${season}`)
+                fetch(`https://${API_FOOTBALL_HOST}/standings?league=${leagueId}&season=${season}`, { headers }),
+                fetch(`https://${API_FOOTBALL_HOST}/players/topscorers?league=${leagueId}&season=${season}`, { headers }),
+                fetch(`https://${API_FOOTBALL_HOST}/fixtures?league=${leagueId}&season=${season}`, { headers }),
+                fetch(`https://${API_FOOTBALL_HOST}/teams?league=${leagueId}&season=${season}`, { headers })
             ]);
 
             if (!isMounted) return;
 
-            const standingsData = await standingsRes.json();
-            const scorersData = await scorersRes.json();
-            const fixturesData = await fixturesRes.json();
-            const teamsData = await teamsRes.json();
+            const results = await Promise.all([standingsRes, scorersRes, fixturesRes, teamsRes].map(async (res, i) => {
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    const endpoint = ['standings', 'topscorers', 'fixtures', 'teams'][i];
+                    throw new Error(`[${endpoint}] ${errorData.message || res.statusText}`);
+                }
+                return res.json();
+            }));
+
+            const [standingsData, scorersData, fixturesData, teamsData] = results;
 
             const newStandings = standingsData.response[0]?.league?.standings[0] || [];
             const newTopScorers = scorersData.response || [];
@@ -153,9 +166,12 @@ export function CompetitionDetailScreen({ navigate, goBack, canGoBack, title: in
             setTeams(newTeams);
             setFixtures(sortedFixtures);
 
-        } catch(e) {
+        } catch(e: any) {
              console.error("Failed to fetch competition details:", e);
-            if(isMounted) toast({ variant: 'destructive', title: 'خطأ', description: 'فشل في تحميل بيانات البطولة.' });
+             if(isMounted) {
+                setError(e.message || 'فشل في تحميل بيانات البطولة.');
+                toast({ variant: 'destructive', title: 'خطأ', description: 'فشل في تحميل بيانات البطولة.' });
+             }
         } finally {
             if (isMounted) setLoading(false);
         }
@@ -459,6 +475,14 @@ const getDisplayName = useCallback((type: 'team' | 'player' | 'league', id: numb
         />}
        <div className="flex-1 overflow-y-auto p-1">
         <CompetitionHeaderCard league={{ name: displayTitle, logo }} teamsCount={teams.length} />
+        {error ? (
+             <Card>
+                <CardContent className="p-6 text-center text-destructive">
+                    <p>خطأ في تحميل تفاصيل البطولة.</p>
+                    <p className="text-xs">{error}</p>
+                </CardContent>
+            </Card>
+        ) : (
         <Tabs defaultValue="matches" className="w-full">
            <div className="sticky top-0 bg-background z-10 px-1 pt-1">
              <div className="bg-card rounded-b-lg border-x border-b shadow-md">
@@ -623,17 +647,8 @@ const getDisplayName = useCallback((type: 'team' | 'player' | 'league', id: numb
             ) : <p className="pt-4 text-center text-muted-foreground">الفرق غير متاحة.</p>}
         </TabsContent>
         </Tabs>
+        )}
       </div>
     </div>
   );
 }
-
-    
-
-    
-
-
-
-
-    
-

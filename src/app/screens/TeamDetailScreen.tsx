@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
@@ -74,6 +73,7 @@ const TeamHeader = ({ team, venue, isAdmin, onRename }: { team: Team, venue: Tea
 const TeamPlayersTab = ({ teamId, navigate, customNames, onCustomNameChange }: { teamId: number, navigate: ScreenProps['navigate'], customNames: any, onCustomNameChange: () => Promise<void> }) => {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const { isAdmin } = useAdmin();
     const { toast } = useToast();
     const { db } = useFirestore();
@@ -89,6 +89,7 @@ const TeamPlayersTab = ({ teamId, navigate, customNames, onCustomNameChange }: {
     useEffect(() => {
         const fetchPlayers = async () => {
             setLoading(true);
+            setError(null);
             try {
                 const res = await fetch(`https://${API_FOOTBALL_HOST}/players?team=${teamId}&season=${CURRENT_SEASON}`, {
                     headers: {
@@ -96,12 +97,17 @@ const TeamPlayersTab = ({ teamId, navigate, customNames, onCustomNameChange }: {
                         'x-rapidapi-key': API_KEY || '',
                     },
                 });
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || `API fetch failed with status: ${res.status}`);
+                }
                 const data = await res.json();
                 if (data.response) {
                     const fetchedPlayers = data.response.map((p: any) => p.player);
                     setPlayers(fetchedPlayers);
                 }
-            } catch (error) {
+            } catch (error: any) {
+                setError(error.message || "فشل في جلب قائمة اللاعبين.");
                 toast({ variant: 'destructive', title: "خطأ", description: "فشل في جلب قائمة اللاعبين." });
             } finally {
                 setLoading(false);
@@ -136,6 +142,15 @@ const TeamPlayersTab = ({ teamId, navigate, customNames, onCustomNameChange }: {
         return <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
     }
     
+    if (error) {
+         return (
+            <div className="text-center p-8 text-destructive">
+                <p>خطأ في تحميل اللاعبين.</p>
+                <p className="text-xs">{error}</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-2">
             {renameItem && <RenameDialog isOpen={!!renameItem} onOpenChange={(isOpen) => !isOpen && setRenameItem(null)} item={{...renameItem, type: 'player', purpose: 'rename'}} onSave={(type, id, name) => handleSaveRename(type as 'player', Number(id), name)} />}
@@ -177,6 +192,7 @@ const TeamDetailsTabs = ({ teamId, leagueId, navigate, onPinToggle, pinnedPredic
     const [standings, setStandings] = useState<Standing[]>([]);
     const [stats, setStats] = useState<TeamStatistics | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     
     const listRef = useRef<HTMLDivElement>(null);
     const dateRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -200,6 +216,7 @@ const TeamDetailsTabs = ({ teamId, leagueId, navigate, onPinToggle, pinnedPredic
         const fetchData = async () => {
             if (!teamId) return;
             setLoading(true);
+            setError(null);
 
             try {
                 const headers = {
@@ -214,8 +231,13 @@ const TeamDetailsTabs = ({ teamId, leagueId, navigate, onPinToggle, pinnedPredic
 
                 if (!isMounted) return;
                 
-                if (!fixturesRes.ok || !statsRes.ok) {
-                    throw new Error("API call failed");
+                 if (!fixturesRes.ok) {
+                    const errorData = await fixturesRes.json();
+                    throw new Error(errorData.message || `Fixtures API call failed`);
+                }
+                 if (!statsRes.ok) {
+                    const errorData = await statsRes.json();
+                    throw new Error(errorData.message || `Stats API call failed`);
                 }
 
                 const fixturesData = await fixturesRes.json();
@@ -233,17 +255,22 @@ const TeamDetailsTabs = ({ teamId, leagueId, navigate, onPinToggle, pinnedPredic
 
                 if (effectiveLeagueId) {
                     const standingsRes = await fetch(`https://${API_FOOTBALL_HOST}/standings?league=${effectiveLeagueId}&season=${CURRENT_SEASON}`, { headers });
-                    if (!standingsRes.ok) throw new Error("Standings API call failed");
-                    const standingsData = await standingsRes.json();
-                    if (isMounted) {
-                        setStandings(standingsData.response?.[0]?.league?.standings?.[0] || []);
+                    if (standingsRes.ok) {
+                        const standingsData = await standingsRes.json();
+                        if (isMounted) {
+                            setStandings(standingsData.response?.[0]?.league?.standings?.[0] || []);
+                        }
+                    } else {
+                         console.warn("Standings API call failed, continuing without standings.");
+                         if(isMounted) setStandings([]);
                     }
                 } else {
                     if (isMounted) setStandings([]);
                 }
 
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching team details tabs:", error);
+                setError(error.message || "فشل في تحميل تفاصيل الفريق.");
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -319,6 +346,15 @@ const TeamDetailsTabs = ({ teamId, leagueId, navigate, onPinToggle, pinnedPredic
 
     if (loading || customNames === null) {
          return <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+    }
+    
+    if (error) {
+        return (
+            <div className="text-center p-8 text-destructive">
+                <p>خطأ في تحميل تفاصيل الفريق.</p>
+                <p className="text-xs">{error}</p>
+            </div>
+        );
     }
 
     const sortedDates = Object.keys(groupedFixtures).sort();
@@ -435,6 +471,7 @@ export function TeamDetailScreen({ navigate, goBack, canGoBack, teamId, leagueId
     const { toast } = useToast();
     const [teamData, setTeamData] = useState<TeamData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [renameItem, setRenameItem] = useState<{ id: number; name: string; note?: string; type: 'team' | 'crown'; purpose: 'rename' | 'crown' | 'note'; originalData: any; originalName?: string; } | null>(null);
     const [pinnedPredictionMatches, setPinnedPredictionMatches] = useState(new Set<number>());
     const [activeTab, setActiveTab] = useState('details');
@@ -446,6 +483,7 @@ export function TeamDetailScreen({ navigate, goBack, canGoBack, teamId, leagueId
 
         const getTeamInfo = async () => {
             setLoading(true);
+            setError(null);
             try {
                 const teamRes = await fetch(`https://${API_FOOTBALL_HOST}/teams?id=${teamId}`, {
                      headers: {
@@ -453,7 +491,10 @@ export function TeamDetailScreen({ navigate, goBack, canGoBack, teamId, leagueId
                         'x-rapidapi-key': API_KEY || '',
                     },
                 });
-                if (!teamRes.ok) throw new Error("Team API fetch failed");
+                if (!teamRes.ok) {
+                    const errorData = await teamRes.json();
+                    throw new Error(errorData.message || "Team API fetch failed");
+                }
                 
                 const data = await teamRes.json();
                 if (isMounted) {
@@ -461,12 +502,15 @@ export function TeamDetailScreen({ navigate, goBack, canGoBack, teamId, leagueId
                         const teamInfo = data.response[0];
                         setTeamData(teamInfo);
                     } else {
-                         throw new Error("Team not found in API response");
+                         throw new Error("لم يتم العثور على الفريق.");
                     }
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching team info:", error);
-                if (isMounted) toast({ variant: 'destructive', title: 'خطأ', description: 'فشل في تحميل بيانات الفريق.' });
+                if (isMounted) {
+                    setError(error.message || 'فشل في تحميل بيانات الفريق.');
+                    toast({ variant: 'destructive', title: 'خطأ', description: 'فشل في تحميل بيانات الفريق.' });
+                }
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -540,7 +584,7 @@ export function TeamDetailScreen({ navigate, goBack, canGoBack, teamId, leagueId
     }, [customNames]);
 
 
-    if(loading || !teamData || !favorites || !customNames) {
+    if(loading || !favorites || !customNames) {
         return (
             <div className="flex h-full flex-col bg-background">
                 <ScreenHeader title="جاري التحميل..." onBack={goBack} canGoBack={canGoBack} />
@@ -550,6 +594,17 @@ export function TeamDetailScreen({ navigate, goBack, canGoBack, teamId, leagueId
                     <div className="mt-4 p-4">
                         <Skeleton className="h-64 w-full" />
                     </div>
+                </div>
+            </div>
+        );
+    }
+
+     if (error || !teamData) {
+        return (
+            <div className="flex h-full flex-col bg-background">
+                <ScreenHeader title="خطأ" onBack={goBack} canGoBack={canGoBack} />
+                <div className="flex-1 flex items-center justify-center text-center p-4">
+                    <p className="text-destructive">{error || 'لم يتم العثور على بيانات الفريق.'}</p>
                 </div>
             </div>
         );

@@ -10,14 +10,14 @@ interface ScreenHeaderProps {
   canGoBack: boolean;
   onBack: () => void;
   actions?: React.ReactNode;
-  secondaryActions?: React.ReactNode;
 }
 
-export function ScreenHeader({ title, canGoBack, onBack, actions, secondaryActions }: ScreenHeaderProps) {
+export function ScreenHeader({ title, canGoBack, onBack, actions }: ScreenHeaderProps) {
   
   const screensWithoutCentralTitle = [
     "المزيد", "الملف الشخصي", "كل البطولات", "إشعارات", 
-    "الإعدادات العامة", "سياسة الخصوصية", "شروط الخدمة", "النسخة الاحترافية"
+    "الإعدادات العامة", "سياسة الخصوصية", "شروط الخدمة", "النسخة الاحترافية",
+    "نبض الملاعب"
   ];
 
   const showCentralTitle = !screensWithoutCentralTitle.includes(title);
@@ -46,7 +46,7 @@ export function ScreenHeader({ title, canGoBack, onBack, actions, secondaryActio
 
       {showCentralTitle && (
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-          <span className="font-bold text-sm font-headline text-primary">نبض الملاعب</span>
+          <span className="font-bold text-sm font-headline text-primary">{title}</span>
         </div>
       )}
 
@@ -56,4 +56,3 @@ export function ScreenHeader({ title, canGoBack, onBack, actions, secondaryActio
     </header>
   );
 }
-
