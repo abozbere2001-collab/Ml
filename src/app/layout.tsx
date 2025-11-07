@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'نبض الملاعب',
   },
+  manifest: `${basePath}/manifest.json`,
 };
 
 const cairo = Cairo({

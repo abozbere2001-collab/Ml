@@ -12,6 +12,8 @@ const pwaConfig = {
   scope: basePath,
   sw: 'sw.js',
   buildExcludes: [/app-build-manifest\.json$/],
+  // Add a manifest 'id' property. This is crucial for PWABuilder to generate a stable package name.
+  // The value should be the root path of your application on its domain.
   manifest: {
     id: basePath || "/",
     start_url: ".",
