@@ -27,7 +27,9 @@ jobs:
         run: npm install
 
       - name: Build project for GitHub Pages
-        run: npm run build:gh
+        env:
+          NEXT_PUBLIC_BASE_PATH: /Ml
+        run: npm run build
       
       - name: Setup Pages
         uses: actions/configure-pages@v4

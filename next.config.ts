@@ -2,15 +2,16 @@
 import type {NextConfig} from 'next';
 
 const isProd = process.env.NODE_ENV === 'production';
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const assetPrefix = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
 
 const nextConfig: NextConfig = {
   // This is required to allow the Next.js dev server to be accessed from the cloud workstation preview.
   // This is not required for production builds.
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
   output: 'export',
-  assetPrefix: basePath,
-  basePath: basePath,
+  assetPrefix: assetPrefix,
+  // basePath is removed as it complicates GitHub Pages deployment with custom domains later.
+  // The folder structure will be handled by the deployment script.
   typescript: {
     ignoreBuildErrors: true,
   },
