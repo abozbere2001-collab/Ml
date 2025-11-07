@@ -28,6 +28,9 @@ import { POPULAR_TEAMS, POPULAR_LEAGUES } from '@/lib/popular-data';
 import { hardcodedTranslations } from '@/lib/hardcoded-translations';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 
+const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
+const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
+
 // --- Cache Logic ---
 const COMPETITIONS_CACHE_KEY = 'goalstack_all_competitions_cache_v1';
 const TEAMS_CACHE_KEY = 'goalstack_national_teams_cache_v1';
@@ -195,7 +198,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   };
 
   const handleSearch = useCallback(async (query: string) => {
-    if (!query) {
+    if (!query || !API_KEY) {
       setSearchResults([]);
       return;
     }
@@ -230,7 +233,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             });
             
             if(matchedTeamIds.length > 0) {
-                const teamPromises = matchedTeamIds.map(id => fetch(`/api/football/teams?id=${id}`).then(res => res.json()));
+                const teamPromises = matchedTeamIds.map(id => fetch(`https://${API_FOOTBALL_HOST}/teams?id=${id}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.json()));
                 const teamResults = await Promise.all(teamPromises);
                 teamResults.forEach(data => {
                     if (data.response?.[0]) {
@@ -258,8 +261,8 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
 
     // 3. Search API for additional results
     const apiSearchPromises = [
-      fetch(`/api/football/teams?search=${encodeURIComponent(query)}`).then(res => res.ok ? res.json() : { response: [] }),
-      fetch(`/api/football/leagues?search=${encodeURIComponent(query)}`).then(res => res.ok ? res.json() : { response: [] })
+      fetch(`https://${API_FOOTBALL_HOST}/teams?search=${encodeURIComponent(query)}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.ok ? res.json() : { response: [] }),
+      fetch(`https://${API_FOOTBALL_HOST}/leagues?search=${encodeURIComponent(query)}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.ok ? res.json() : { response: [] })
     ];
     
     try {

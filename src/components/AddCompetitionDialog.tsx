@@ -22,6 +22,9 @@ import { Loader2 } from 'lucide-react';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 
+const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
+const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
+
 interface AddCompetitionDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -34,14 +37,14 @@ export function AddCompetitionDialog({ isOpen, onOpenChange }: AddCompetitionDia
   const { toast } = useToast();
 
   const handleAdd = async () => {
-    if (!leagueId.trim() || !db) {
-      toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال معرف البطولة.' });
+    if (!leagueId.trim() || !db || !API_KEY) {
+      toast({ variant: 'destructive', title: 'خطأ', description: 'يرجى إدخال معرف البطولة والتأكد من وجود مفتاح API.' });
       return;
     }
     setLoading(true);
     try {
       // Fetch league details from API to save in our DB
-      const res = await fetch(`/api/football/leagues?id=${leagueId}`);
+      const res = await fetch(`https://${API_FOOTBALL_HOST}/leagues?id=${leagueId}`, { headers: { 'x-rapidapi-key': API_KEY } });
       if (!res.ok) throw new Error('Failed to fetch from API');
       const data = await res.json();
       

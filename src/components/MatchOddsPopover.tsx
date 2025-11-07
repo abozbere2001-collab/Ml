@@ -62,13 +62,13 @@ export function MatchOddsPopover({ fixtureId }: { fixtureId: number }) {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        if (!isOpen || odds || loading) return;
+        if (!isOpen || odds || loading || !API_KEY) return;
 
         setLoading(true);
 
         const headers = {
             'x-rapidapi-host': API_FOOTBALL_HOST,
-            'x-rapidapi-key': API_KEY || '',
+            'x-rapidapi-key': API_KEY,
         };
 
         Promise.all([

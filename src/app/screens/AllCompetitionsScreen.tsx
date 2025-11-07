@@ -26,6 +26,9 @@ import { cn } from '@/lib/utils';
 import { collection } from 'firebase/firestore';
 import { POPULAR_LEAGUES, POPULAR_TEAMS } from '@/lib/popular-data';
 
+const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
+const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
+
 // --- TYPE DEFINITIONS ---
 interface FullLeague {
   league: { id: number; name: string; type: string; logo: string; };
@@ -156,11 +159,16 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
             return;
         }
 
+        if (!API_KEY) {
+            toast({ variant: 'destructive', title: "خطأ", description: "مفتاح API غير موجود." });
+            return;
+        }
+
         setLoadingClubData(true);
         toast({ title: 'جاري جلب بيانات البطولات...', description: 'قد تستغرق هذه العملية دقيقة في المرة الأولى.' });
         
         try {
-            const res = await fetch(`/api/football/leagues`);
+            const res = await fetch(`https://${API_FOOTBALL_HOST}/leagues`, { headers: { 'x-rapidapi-key': API_KEY } });
             if (!res.ok) throw new Error("Failed to fetch leagues");
             const data = await res.json();
             const leaguesData: FullLeague[] = data.response || [];
@@ -229,11 +237,16 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
             return;
         }
 
+        if (!API_KEY) {
+            toast({ variant: 'destructive', title: "خطأ", description: "مفتاح API غير موجود." });
+            return;
+        }
+
         setLoadingNationalTeams(true);
         toast({ title: 'جاري جلب بيانات المنتخبات...', description: 'قد تستغرق هذه العملية دقيقة في المرة الأولى.' });
     
         try {
-            const res = await fetch(`/api/football/teams?country=`);
+            const res = await fetch(`https://${API_FOOTBALL_HOST}/teams?country=`, { headers: { 'x-rapidapi-key': API_KEY } });
             if(!res.ok) throw new Error("Failed to fetch teams");
 
             const data = await res.json();
