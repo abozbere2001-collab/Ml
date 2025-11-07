@@ -17,39 +17,8 @@ import { hardcodedTranslations } from '@/lib/hardcoded-translations';
 import { collection, getDocs } from 'firebase/firestore';
 
 // --- MAIN SCREEN COMPONENT ---
-export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites }: ScreenProps & {setFavorites: (favorites: Partial<Favorites> | null) => void}) {
+export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & {setFavorites: (favorites: Partial<Favorites> | null) => void, customNames: any, onCustomNameChange: () => void}) {
     const { user, db } = useAuth();
-    const [customNames, setCustomNames] = useState<any>(null);
-
-    const fetchAllCustomNames = useCallback(async () => {
-        if (!db) {
-            setCustomNames({ leagues: new Map(), teams: new Map() });
-            return;
-        }
-        try {
-            const [leaguesSnap, teamsSnap] = await Promise.all([
-                getDocs(collection(db, 'leagueCustomizations')),
-                getDocs(collection(db, 'teamCustomizations')),
-            ]);
-
-            const newNames = {
-                leagues: new Map<number, string>(),
-                teams: new Map<number, string>(),
-            };
-            leaguesSnap.forEach(doc => newNames.leagues.set(Number(doc.id), doc.data().customName));
-            teamsSnap.forEach(doc => newNames.teams.set(Number(doc.id), doc.data().customName));
-            
-            setCustomNames(newNames);
-
-        } catch (error) {
-            console.warn("Failed to fetch custom names.", error);
-            setCustomNames({ leagues: new Map(), teams: new Map() });
-        }
-    }, [db]);
-
-    useEffect(() => {
-        fetchAllCustomNames();
-    }, [fetchAllCustomNames]);
     
      const getDisplayName = useCallback((type: 'league' | 'team', id: number, defaultName: string) => {
         if (!customNames) return defaultName;
@@ -103,7 +72,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                 canGoBack={canGoBack} 
                 actions={
                   <div className="flex items-center gap-1">
-                      <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={fetchAllCustomNames}>
+                      <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                           <Button variant="ghost" size="icon" className="h-7 w-7">
                               <Search className="h-5 w-5" />
                           </Button>
@@ -118,7 +87,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                         <ScrollArea className="w-full whitespace-nowrap">
                             <div className="flex w-max space-x-4 px-4 flex-row-reverse">
                                  <div className="flex flex-col items-center gap-2 w-20 h-[84px] text-center">
-                                      <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={fetchAllCustomNames}>
+                                      <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                                         <div className="flex flex-col items-center justify-center h-14 w-14 bg-card rounded-full cursor-pointer hover:bg-accent/50 transition-colors">
                                             <Plus className="h-6 w-6 text-primary" />
                                         </div>
@@ -151,7 +120,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                             <TabsContent value="teams" className="mt-4 px-3">
                                 <div className="grid grid-cols-4 gap-4">
                                      <div className="h-[76px] w-full">
-                                         <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={fetchAllCustomNames}>
+                                         <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                                             <div className="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
                                                 <div className="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
                                                     <Plus className="h-6 w-6 text-primary" />
@@ -175,7 +144,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                             <TabsContent value="competitions" className="mt-4 px-3">
                                 <div className="grid grid-cols-4 gap-4">
                                     <div className="h-[76px] w-full">
-                                        <SearchSheet navigate={navigate} initialItemType="leagues" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={fetchAllCustomNames}>
+                                        <SearchSheet navigate={navigate} initialItemType="leagues" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                                             <div className="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
                                                 <div className="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
                                                     <Plus className="h-6 w-6 text-primary" />
@@ -199,7 +168,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                             <TabsContent value="players" className="mt-4 px-3">
                                 <div className="grid grid-cols-4 gap-4">
                                      <div className="h-[76px] w-full">
-                                        <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={fetchAllCustomNames}>
+                                        <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                                             <div className="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
                                                 <div className="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
                                                     <Plus className="h-6 w-6 text-primary" />

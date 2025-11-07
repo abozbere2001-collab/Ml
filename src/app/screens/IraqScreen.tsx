@@ -183,7 +183,7 @@ const TeamFixturesDisplay = ({ teamId, navigate }: { teamId: number; navigate: S
     );
 };
 
-export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & {setFavorites: (favorites: any) => void, onCustomNameChange?: () => void}) {
+export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps) {
   const { user } = useAuth();
   const { db } = useFirestore();
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);

@@ -8,7 +8,7 @@ import type { ScreenProps } from '@/app/page';
 import { format, addDays, subDays, isToday } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useAuth, useFirestore, useAdmin } from '@/firebase/provider';
-import { doc, getDocs, collection, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDocs, collection, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { Loader2, Search, Star, Crown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -256,12 +256,11 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
 }
 
 // Main Screen Component
-export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorites, setFavorites }: ScreenProps & { isVisible: boolean, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>> }) {
+export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & { isVisible: boolean, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>, customNames: any, onCustomNameChange: () => void }) {
   const { user } = useAuth();
   const { db, isAdmin, isCheckingAdmin } = useAdmin();
   const { toast } = useToast();
   const [showOdds, setShowOdds] = useState(false);
-  const [customNames, setCustomNames] = useState<any>(null);
   
   const [selectedDateKey, setSelectedDateKey] = useState<string>(formatDateKey(new Date()));
   
@@ -270,48 +269,25 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   const [error, setError] = useState<string | null>(null);
     
   const [pinnedPredictionMatches, setPinnedPredictionMatches] = useState(new Set<number>());
-
-  const fetchAllCustomNames = useCallback(async () => {
-    if (!db) {
-        setCustomNames({ leagues: new Map(), teams: new Map() });
-        return;
-    }
-    try {
-        const [leaguesSnap, teamsSnap] = await Promise.all([
-            getDocs(collection(db, 'leagueCustomizations')),
-            getDocs(collection(db, 'teamCustomizations'))
-        ]);
-        const names: any = { leagues: new Map(), teams: new Map() };
-        leaguesSnap.forEach(doc => names.leagues.set(Number(doc.id), doc.data().customName));
-        teamsSnap.forEach(doc => names.teams.set(Number(doc.id), doc.data().customName));
-        setCustomNames(names);
-    } catch (e: any) {
-        console.error("Failed to fetch custom names:", e);
-        const permissionError = new FirestorePermissionError({
-            path: 'customizations collections',
-            operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        setCustomNames({ leagues: new Map(), teams: new Map() });
-    }
-}, [db]);
-
-useEffect(() => {
-    fetchAllCustomNames();
-}, [fetchAllCustomNames]);
-
+  
 
   useEffect(() => {
     if (!db || !isAdmin) return;
-    const q = collection(db, "predictionFixtures");
     
-    getDocs(q).then(snapshot => {
+    const q = collection(db, "predictionFixtures");
+    const unsub = onSnapshot(q, (snapshot) => {
         const newPinnedSet = new Set<number>();
         snapshot.forEach(doc => newPinnedSet.add(Number(doc.id)));
         setPinnedPredictionMatches(newPinnedSet);
-    }).catch(error => {
-        console.error("Permission error fetching predictions for admin:", error);
+    }, (err) => {
+        if ((err as any).code === 'permission-denied') {
+            console.warn("Permission denied for predictionFixtures listener. This is expected for non-admins.");
+        } else {
+            console.error("Error fetching predictions for admin:", err);
+        }
     });
+
+    return () => unsub();
   }, [db, isAdmin]);
 
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
@@ -337,11 +313,6 @@ useEffect(() => {
     if (isPinned) {
         deleteDoc(docRef).then(() => {
             toast({ title: "تم إلغاء التثبيت", description: "تمت إزالة المباراة من التوقعات." });
-            setPinnedPredictionMatches(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(fixtureId);
-                return newSet;
-            });
         }).catch(err => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'delete' }));
         });
@@ -349,7 +320,6 @@ useEffect(() => {
         const data: PredictionMatch = { fixtureData: fixture };
         setDoc(docRef, data).then(() => {
             toast({ title: "تم التثبيت", description: "أصبحت المباراة متاحة الآن للتوقع." });
-            setPinnedPredictionMatches(prev => new Set(prev).add(fixtureId));
         }).catch(err => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'create', requestResourceData: data }));
         });
@@ -502,7 +472,7 @@ useEffect(() => {
                   >
                     <span className="text-xs font-mono select-none">1x2</span>
                   </div>
-                   <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites}>
+                   <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                       <Button variant="ghost" size="icon" className="h-7 w-7">
                           <Search className="h-5 w-5" />
                       </Button>

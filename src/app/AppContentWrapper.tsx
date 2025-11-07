@@ -152,6 +152,8 @@ export function AppContentWrapper() {
   const { user } = useAuth();
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<Favorites> | null>(null);
+  const [customNames, setCustomNames] = useState<any>(null);
+
   
   const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
     activeTab: 'Matches',
@@ -167,6 +169,41 @@ export function AppContentWrapper() {
 
   const { showSplashAd } = useAd();
   const keyCounter = useRef(1);
+
+    const fetchAllCustomNames = useCallback(async () => {
+        if (!db) {
+            setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map() });
+            return;
+        }
+        try {
+            const collections = ['leagueCustomizations', 'teamCustomizations', 'playerCustomizations', 'coachCustomizations', 'countryCustomizations', 'continentCustomizations', 'matchCustomizations'];
+            const promises = collections.map(c => getDocs(collection(db, c)));
+            const snapshots = await Promise.all(promises);
+
+            const newNames = {
+                leagues: new Map(snapshots[0].docs.map(doc => [Number(doc.id), doc.data().customName])),
+                teams: new Map(snapshots[1].docs.map(doc => [Number(doc.id), doc.data().customName])),
+                players: new Map(snapshots[2].docs.map(doc => [Number(doc.id), doc.data().customName])),
+                coaches: new Map(snapshots[3].docs.map(doc => [Number(doc.id), doc.data().customName])),
+                countries: new Map(snapshots[4].docs.map(doc => [doc.id, doc.data().customName])),
+                continents: new Map(snapshots[5].docs.map(doc => [doc.id, doc.data().customName])),
+                matches: new Map(snapshots[6].docs.map(doc => [doc.id, doc.data().customStatus])),
+            };
+            setCustomNames(newNames);
+
+        } catch (error: any) {
+            if (error.code === 'permission-denied') {
+                const permissionError = new FirestorePermissionError({
+                    path: 'customizations collections',
+                    operation: 'list',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            }
+            console.error("Failed to fetch custom names, using empty maps.", error);
+            setCustomNames({ leagues: new Map(), teams: new Map(), players: new Map(), coaches: new Map(), countries: new Map(), continents: new Map(), matches: new Map() });
+        }
+    }, [db]);
+
 
   const handleSetFavorites = useCallback((updater: React.SetStateAction<Partial<Favorites> | null>) => {
     const newFavorites = typeof updater === 'function' ? updater(favorites) : updater;
@@ -188,6 +225,11 @@ export function AppContentWrapper() {
   }, [user, db, favorites]);
 
   
+  useEffect(() => {
+    fetchAllCustomNames();
+  }, [fetchAllCustomNames]);
+
+
   useEffect(() => {
     if (!db) {
       setFavorites(getLocalFavorites());
@@ -267,7 +309,7 @@ export function AppContentWrapper() {
     return <SplashScreenAd />;
   }
 
-  if (favorites === null) {
+  if (favorites === null || customNames === null) {
     return (
         <div className="h-screen w-screen flex items-center justify-center bg-background">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -282,6 +324,8 @@ export function AppContentWrapper() {
     goBack,
     favorites,
     setFavorites: handleSetFavorites,
+    customNames,
+    onCustomNameChange: fetchAllCustomNames,
   };
 
   return (

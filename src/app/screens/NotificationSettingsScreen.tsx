@@ -18,41 +18,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Newspaper } from 'lucide-react';
 import { hardcodedTranslations } from '@/lib/hardcoded-translations';
 
-export function NotificationSettingsScreen({ navigate, goBack, canGoBack, headerActions, favorites }: ScreenProps) {
+export function NotificationSettingsScreen({ navigate, goBack, canGoBack, headerActions, favorites, customNames }: ScreenProps) {
   const { user, db } = useAuth();
-  const [customNames, setCustomNames] = useState<any>(null);
-
-  const fetchAllCustomNames = useCallback(async () => {
-    if (!db) {
-        setCustomNames({ leagues: new Map(), teams: new Map() });
-        return;
-    }
-    try {
-        const [leaguesSnap, teamsSnap] = await Promise.all([
-            getDocs(collection(db, 'leagueCustomizations')),
-            getDocs(collection(db, 'teamCustomizations')),
-        ]);
-
-        const newNames = {
-            leagues: new Map<number, string>(),
-            teams: new Map<number, string>(),
-        };
-        leaguesSnap.forEach(doc => newNames.leagues.set(Number(doc.id), doc.data().customName));
-        teamsSnap.forEach(doc => newNames.teams.set(Number(doc.id), doc.data().customName));
-        
-        setCustomNames(newNames);
-
-    } catch (error) {
-        console.warn("Failed to fetch custom names.", error);
-        setCustomNames({ leagues: new Map(), teams: new Map() });
-    }
-  }, [db]);
-
-  useEffect(() => {
-      fetchAllCustomNames();
-  }, [fetchAllCustomNames]);
-
-
+  
   const getDisplayName = useCallback((type: 'league' | 'team', id: number, defaultName: string) => {
     if (!customNames) return defaultName;
     const key = `${type}s` as 'leagues' | 'teams';

@@ -31,7 +31,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { SearchSheet } from '@/components/SearchSheet';
 import { ProfileButton } from '../AppContentWrapper';
 
-export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorites }: ScreenProps & {setFavorites: (favorites: any) => void}) {
+export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & {setFavorites: (favorites: any) => void, customNames: any, onCustomNameChange: () => void}) {
   const { isAdmin } = useAdmin();
   const { db } = useFirestore();
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -91,7 +91,7 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
         canGoBack={canGoBack} 
         actions={
           <div className="flex items-center gap-1">
-              <SearchSheet navigate={navigate} favorites={favorites} customNames={{}} setFavorites={setFavorites} onCustomNameChange={useCallback(async () => {}, [])}>
+              <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                   <Button variant="ghost" size="icon">
                       <Search className="h-5 w-5" />
                   </Button>
