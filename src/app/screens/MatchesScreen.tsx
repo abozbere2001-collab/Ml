@@ -245,11 +245,12 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
 }
 
 // Main Screen Component
-export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps & { isVisible: boolean, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites>>>, onCustomNameChange: () => Promise<void> }) {
+export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorites, setFavorites }: ScreenProps & { isVisible: boolean, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites>>> }) {
   const { user } = useAuth();
   const { db, isAdmin } = useAdmin();
   const { toast } = useToast();
   const [showOdds, setShowOdds] = useState(false);
+  const [customNames, setCustomNames] = useState<any>(null);
   
   const [selectedDateKey, setSelectedDateKey] = useState<string>(formatDateKey(new Date()));
   
@@ -257,6 +258,25 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   const [loading, setLoading] = useState(true);
     
   const [pinnedPredictionMatches, setPinnedPredictionMatches] = useState(new Set<number>());
+
+    useEffect(() => {
+        if (!db) return;
+        const names: any = {
+            leagues: new Map(),
+            teams: new Map(),
+        };
+        const leagueSub = onSnapshot(collection(db, 'leagueCustomizations'), (snap) => {
+            snap.forEach(doc => names.leagues.set(Number(doc.id), doc.data().customName));
+            setCustomNames({...names});
+        });
+        const teamSub = onSnapshot(collection(db, 'teamCustomizations'), (snap) => {
+            snap.forEach(doc => names.teams.set(Number(doc.id), doc.data().customName));
+            setCustomNames({...names});
+        });
+
+        return () => { leagueSub(); teamSub(); };
+    }, [db]);
+
 
   useEffect(() => {
     if (!db || !isAdmin) return;
@@ -421,6 +441,16 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   
   const allFixturesForDay = matchesCache.get(selectedDateKey) || [];
 
+  if (customNames === null) {
+      return (
+        <div className="flex h-full flex-col bg-background">
+            <ScreenHeader title="" canGoBack={false} onBack={() => {}} />
+            <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        </div>
+      );
+  }
     
   return (
     <div className="flex h-full flex-col bg-background">
@@ -436,7 +466,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
                   >
                     <span className="text-xs font-mono select-none">1x2</span>
                   </div>
-                  <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
+                  <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites}>
                       <Button variant="ghost" size="icon" className="h-7 w-7">
                           <Search className="h-5 w-5" />
                       </Button>

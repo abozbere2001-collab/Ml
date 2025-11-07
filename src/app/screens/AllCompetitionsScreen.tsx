@@ -122,10 +122,9 @@ const getLeagueImportance = (leagueName: string): number => {
 
 
 // --- MAIN SCREEN COMPONENT ---
-export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps & {setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites>>>, onCustomNameChange: () => Promise<void>}) {
+export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites }: ScreenProps & {setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites>>>}) {
     const { isAdmin } = useAdmin();
-    const { user } = useAuth();
-    const { db } = useFirestore();
+    const { user, db } = useAuth();
     const { toast } = useToast();
     
     const [renameItem, setRenameItem] = useState<RenameState | null>(null);
@@ -135,6 +134,43 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     const [nationalTeams, setNationalTeams] = useState<Team[] | null>(null);
     const [loadingClubData, setLoadingClubData] = useState(false);
     const [loadingNationalTeams, setLoadingNationalTeams] = useState(false);
+    const [customNames, setCustomNames] = useState<any>(null);
+
+    const fetchAllCustomNames = useCallback(async () => {
+        if (!db) {
+            setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map() });
+            return;
+        }
+        try {
+            const [leaguesSnap, countriesSnap, continentsSnap, teamsSnap] = await Promise.all([
+                getDocs(collection(db, 'leagueCustomizations')),
+                getDocs(collection(db, 'countryCustomizations')),
+                getDocs(collection(db, 'continentCustomizations')),
+                getDocs(collection(db, 'teamCustomizations')),
+            ]);
+
+            const newNames = {
+                leagues: new Map<number, string>(),
+                countries: new Map<string, string>(),
+                continents: new Map<string, string>(),
+                teams: new Map<number, string>(),
+            };
+            leaguesSnap.forEach(doc => newNames.leagues.set(Number(doc.id), doc.data().customName));
+            countriesSnap.forEach(doc => newNames.countries.set(doc.id, doc.data().customName));
+            continentsSnap.forEach(doc => newNames.continents.set(doc.id, doc.data().customName));
+            teamsSnap.forEach(doc => newNames.teams.set(Number(doc.id), doc.data().customName));
+            
+            setCustomNames(newNames);
+
+        } catch (error) {
+            console.warn("Failed to fetch custom names, using empty maps.", error);
+            setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map() });
+        }
+    }, [db]);
+
+    useEffect(() => {
+        fetchAllCustomNames();
+    }, [fetchAllCustomNames]);
     
     const getName = useCallback((type: 'league' | 'team' | 'country' | 'continent', id: string | number, defaultName: string) => {
         if (!customNames || !id) return defaultName || '';
@@ -342,7 +378,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     
             const op = (newName && newName.trim() && newName !== originalName) ? setDoc(docRef, data) : deleteDoc(docRef);
     
-            op.then(() => onCustomNameChange())
+            op.then(() => fetchAllCustomNames())
             .catch(serverError => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'write', requestResourceData: data }));
             });
@@ -523,7 +559,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 canGoBack={canGoBack} 
                 actions={
                   <div className="flex items-center gap-1">
-                      <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
+                      <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites}>
                           <Button variant="ghost" size="icon">
                               <Search className="h-5 w-5" />
                           </Button>
@@ -585,7 +621,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
             <AddCompetitionDialog isOpen={isAddOpen} onOpenChange={(isOpen) => {
                 setAddOpen(isOpen);
                 if(!isOpen) {
-                    onCustomNameChange();
+                    fetchAllCustomNames();
                 }
             }} />
         </div>

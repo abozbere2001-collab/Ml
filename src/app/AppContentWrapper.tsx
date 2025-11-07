@@ -151,7 +151,6 @@ export function AppContentWrapper() {
   const { user } = useAuth();
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<Favorites>>({});
-  const [customNames, setCustomNames] = useState<{ [key: string]: Map<number | string, string> } | null>(null);
   
   const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
     activeTab: 'Matches',
@@ -168,48 +167,6 @@ export function AppContentWrapper() {
   const { showSplashAd } = useAd();
   const keyCounter = useRef(1);
 
-  const fetchCustomNames = useCallback(async () => {
-    if (!db) {
-        setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map(), players: new Map(), coaches: new Map() });
-        return;
-    }
-    try {
-        const [leaguesSnap, countriesSnap, continentsSnap, teamsSnap, playersSnap, coachesSnap] = await Promise.all([
-            getDocs(collection(db, 'leagueCustomizations')),
-            getDocs(collection(db, 'countryCustomizations')),
-            getDocs(collection(db, 'continentCustomizations')),
-            getDocs(collection(db, 'teamCustomizations')),
-            getDocs(collection(db, 'playerCustomizations')),
-            getDocs(collection(db, 'coachCustomizations')),
-        ]);
-
-        const newNames = {
-            leagues: new Map<number | string, string>(),
-            countries: new Map<number | string, string>(),
-            continents: new Map<number | string, string>(),
-            teams: new Map<number | string, string>(),
-            players: new Map<number | string, string>(),
-            coaches: new Map<number | string, string>()
-        };
-        leaguesSnap.forEach(doc => newNames.leagues.set(Number(doc.id), doc.data().customName));
-        countriesSnap.forEach(doc => newNames.countries.set(doc.id, doc.data().customName));
-        continentsSnap.forEach(doc => newNames.continents.set(doc.id, doc.data().customName));
-        teamsSnap.forEach(doc => newNames.teams.set(Number(doc.id), doc.data().customName));
-        playersSnap.forEach(doc => newNames.players.set(Number(doc.id), doc.data().customName));
-        coachesSnap.forEach(doc => newNames.coaches.set(Number(doc.id), doc.data().customName));
-        
-        setCustomNames(newNames);
-
-    } catch (error) {
-        console.warn("Failed to fetch custom names, using empty maps.", error);
-        setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map(), players: new Map(), coaches: new Map() });
-    }
-  }, [db]);
-  
-  useEffect(() => {
-    fetchCustomNames();
-  }, [fetchCustomNames]);
-  
  const handleSetFavorites = useCallback((updater: React.SetStateAction<Partial<Favorites>>) => {
     setFavorites(currentFavorites => {
         const newFavorites = typeof updater === 'function' ? updater(currentFavorites) : updater;
@@ -322,16 +279,6 @@ export function AppContentWrapper() {
           (window as any).appNavigate = navigate;
       }
   }, [navigate]);
-  
-  const isDataReady = customNames !== null;
-
-  if (!isDataReady) {
-    return (
-        <div className="h-screen w-screen flex items-center justify-center bg-background">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-    );
-  }
 
   if (showSplashAd) {
     return <SplashScreenAd />;
@@ -344,10 +291,8 @@ export function AppContentWrapper() {
   const baseScreenProps = {
     navigate,
     goBack,
-    customNames,
     favorites,
     setFavorites: handleSetFavorites,
-    onCustomNameChange: fetchCustomNames,
     canGoBack: activeStack.length > 1,
   };
   
