@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const manifestPath = repoName ? `/${repoName}/manifest.json` : '/manifest.json';
-  const iconPath = repoName ? `/${repoName}/icon-192x192.png` : '/icon-192x192.png';
+  const iconPath = repoName ? `/${repoName}/icons/icon-192x192.png` : '/icons/icon-192x192.png';
 
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
