@@ -44,7 +44,7 @@ import { cn } from '@/lib/utils';
 import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
 import { IraqScreen } from './screens/IraqScreen';
 import { PredictionsScreen } from './screens/PredictionsScreen';
-import { doc, onSnapshot, getDocs, collection } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 
@@ -150,7 +150,7 @@ export const ProfileButton = () => {
 export function AppContentWrapper() {
   const { user } = useAuth();
   const { db } = useFirestore();
-  const [favorites, setFavorites] = useState<Partial<Favorites>>({});
+  const [favorites, setFavorites] = useState<Partial<Favorites> | null>(null);
   
   const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
     activeTab: 'Matches',
@@ -167,15 +167,16 @@ export function AppContentWrapper() {
   const { showSplashAd } = useAd();
   const keyCounter = useRef(1);
 
- const handleSetFavorites = useCallback((updater: React.SetStateAction<Partial<Favorites>>) => {
+ const handleSetFavorites = useCallback((updater: React.SetStateAction<Partial<Favorites> | null>) => {
     setFavorites(currentFavorites => {
         const newFavorites = typeof updater === 'function' ? updater(currentFavorites) : updater;
 
         if (!user || user.isAnonymous) {
-            setLocalFavorites(newFavorites);
-        } else if (db) {
+            setLocalFavorites(newFavorites || {});
+        } else if (db && newFavorites) {
             const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
             try {
+                // Use the new favorites state directly
                 fetch(`/api/favorites`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -206,6 +207,7 @@ export function AppContentWrapper() {
     };
 
     cleanup();
+    setFavorites(null); // Reset on user change
 
     if (user && db && !user.isAnonymous) {
       const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
@@ -283,23 +285,23 @@ export function AppContentWrapper() {
   if (showSplashAd) {
     return <SplashScreenAd />;
   }
+
+  // Render a loading state until favorites are loaded
+  if (favorites === null) {
+    return (
+        <div className="h-screen w-screen flex items-center justify-center bg-background">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
+  }
   
   const activeStack = navigationState.stacks[navigationState.activeTab] || [];
-  const CurrentScreen = activeStack.length > 0 ? screenConfig[activeStack[activeStack.length - 1].screen]?.component : null;
-  const currentScreenProps = activeStack.length > 0 ? activeStack[activeStack.length - 1].props : {};
 
   const baseScreenProps = {
     navigate,
     goBack,
     favorites,
     setFavorites: handleSetFavorites,
-    canGoBack: activeStack.length > 1,
-  };
-  
-  const screenProps = {
-    ...baseScreenProps,
-    ...currentScreenProps,
-    isVisible: true,
   };
 
   return (

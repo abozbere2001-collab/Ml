@@ -204,7 +204,7 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
     );
 }
 
-export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, customNames, setFavorites }: ScreenProps & {setFavorites: (favorites: any) => void}) {
+export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites }: ScreenProps & {setFavorites: (favorites: any) => void}) {
     const { user } = useAuth();
     const { isAdmin, db, isCheckingAdmin } = useAdmin();
     const { toast } = useToast();
@@ -491,7 +491,7 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, cust
                 canGoBack={canGoBack}
                 actions={
                   <div className="flex items-center gap-1">
-                      <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites}>
+                      <SearchSheet navigate={navigate} favorites={favorites} customNames={{}} setFavorites={setFavorites}>
                           <Button variant="ghost" size="icon">
                               <Search className="h-5 w-5" />
                           </Button>

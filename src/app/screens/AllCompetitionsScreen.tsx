@@ -122,7 +122,7 @@ const getLeagueImportance = (leagueName: string): number => {
 
 
 // --- MAIN SCREEN COMPONENT ---
-export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites }: ScreenProps & {setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites>>>}) {
+export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites }: ScreenProps & {setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>}) {
     const { isAdmin } = useAdmin();
     const { user, db } = useAuth();
     const { toast } = useToast();
@@ -331,7 +331,8 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         const itemId = item.id;
         
         setFavorites(prev => {
-            const newFavorites = JSON.parse(JSON.stringify(prev || {}));
+            if (!prev) return null;
+            const newFavorites = JSON.parse(JSON.stringify(prev));
             if (!newFavorites[itemType]) {
                 newFavorites[itemType] = {};
             }
@@ -386,7 +387,8 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         } else if (purpose === 'crown' && user) {
             const teamId = Number(id);
             setFavorites(prev => {
-                const newFavorites = JSON.parse(JSON.stringify(prev || {}));
+                if (!prev) return null;
+                const newFavorites = JSON.parse(JSON.stringify(prev));
                 if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
                 const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
                 

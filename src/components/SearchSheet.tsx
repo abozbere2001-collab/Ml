@@ -28,6 +28,7 @@ import { POPULAR_TEAMS, POPULAR_LEAGUES } from '@/lib/popular-data';
 import { hardcodedTranslations } from '@/lib/hardcoded-translations';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 
+
 const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
 const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
 
@@ -115,7 +116,7 @@ const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onC
 }
 
 
-export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: { children: React.ReactNode, navigate: ScreenProps['navigate'], initialItemType?: ItemType, favorites: Partial<Favorites>, customNames: any, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites>>>, onCustomNameChange?: () => void }) {
+export function SearchSheet({ children, navigate, initialItemType, favorites, customNames: initialCustomNames, setFavorites, onCustomNameChange }: { children: React.ReactNode, navigate: ScreenProps['navigate'], initialItemType?: ItemType, favorites: Partial<Favorites> | null, customNames: any, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>, onCustomNameChange?: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
@@ -132,14 +133,14 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   const [renameItem, setRenameItem] = useState<{ id: string | number; name: string; note?: string; type: RenameType; purpose: 'rename' | 'note' | 'crown'; originalData?: any; originalName?: string; } | null>(null);
 
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
-    if (!customNames) return defaultName;
-    const customMap = type === 'team' ? customNames.teams : customNames.leagues;
+    if (!initialCustomNames) return defaultName;
+    const customMap = type === 'team' ? initialCustomNames.teams : initialCustomNames.leagues;
     return customMap?.get(id) || hardcodedTranslations[`${type}s`]?.[id] || defaultName;
-  }, [customNames]);
+  }, [initialCustomNames]);
 
 
   const localSearchIndex = useMemo(() => {
-    if (!customNames) return [];
+    if (!initialCustomNames) return [];
     
     const index: SearchableItem[] = [];
     const seen = new Set<string>();
@@ -183,7 +184,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }
 
     return index;
-  }, [customNames, getDisplayName]);
+  }, [initialCustomNames, getDisplayName]);
 
 
   const handleOpenChange = (open: boolean) => {
@@ -332,7 +333,8 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         }
     
         setFavorites(prev => {
-            const newFavorites = JSON.parse(JSON.stringify(prev || {}));
+            if (!prev) return null;
+            const newFavorites = JSON.parse(JSON.stringify(prev));
             if (!newFavorites[itemType]) {
                 newFavorites[itemType] = {};
             }
@@ -349,7 +351,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             }
             return newFavorites;
         });
-    }, [user, setFavorites, toast, favorites]);
+    }, [user, setFavorites, toast]);
 
 
   const handleOpenCrownDialog = (team: Item) => {
@@ -399,7 +401,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         const teamId = Number(id);
         
         setFavorites(prev => {
-            if (!prev) return {};
+            if (!prev) return null;
             const newFavorites = JSON.parse(JSON.stringify(prev));
             if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
             const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
@@ -416,7 +418,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   };
   
   const popularItems = useMemo(() => {
-    if (!customNames) return [];
+    if (!initialCustomNames) return [];
     const seen = new Set<string>();
 
     return [...POPULAR_TEAMS, ...POPULAR_LEAGUES].map(item => {
@@ -435,10 +437,10 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         };
     }).filter(Boolean) as SearchableItem[];
 
-  }, [getDisplayName, customNames]);
+  }, [getDisplayName, initialCustomNames]);
 
   const renderContent = () => {
-    if (!customNames || !favorites) {
+    if (!initialCustomNames || !favorites) {
       return <div className="flex justify-center items-center h-full"><Loader2 className="h-6 w-6 animate-spin" /></div>;
     }
 

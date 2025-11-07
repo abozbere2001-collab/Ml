@@ -15,10 +15,42 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { hardcodedTranslations } from '@/lib/hardcoded-translations';
+import { collection, getDocs } from 'firebase/firestore';
 
 // --- MAIN SCREEN COMPONENT ---
-export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, customNames, setFavorites }: ScreenProps & {setFavorites: (favorites: Partial<Favorites>) => void}) {
-    const { user } = useAuth();
+export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites }: ScreenProps & {setFavorites: (favorites: Partial<Favorites> | null) => void}) {
+    const { user, db } = useAuth();
+    const [customNames, setCustomNames] = useState<any>(null);
+
+    const fetchAllCustomNames = useCallback(async () => {
+        if (!db) {
+            setCustomNames({ leagues: new Map(), teams: new Map() });
+            return;
+        }
+        try {
+            const [leaguesSnap, teamsSnap] = await Promise.all([
+                getDocs(collection(db, 'leagueCustomizations')),
+                getDocs(collection(db, 'teamCustomizations')),
+            ]);
+
+            const newNames = {
+                leagues: new Map<number, string>(),
+                teams: new Map<number, string>(),
+            };
+            leaguesSnap.forEach(doc => newNames.leagues.set(Number(doc.id), doc.data().customName));
+            teamsSnap.forEach(doc => newNames.teams.set(Number(doc.id), doc.data().customName));
+            
+            setCustomNames(newNames);
+
+        } catch (error) {
+            console.warn("Failed to fetch custom names.", error);
+            setCustomNames({ leagues: new Map(), teams: new Map() });
+        }
+    }, [db]);
+
+    useEffect(() => {
+        fetchAllCustomNames();
+    }, [fetchAllCustomNames]);
     
      const getDisplayName = useCallback((type: 'league' | 'team', id: number, defaultName: string) => {
         if (!customNames) return defaultName;
@@ -41,7 +73,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, cus
         ...team,
         name: getDisplayName('team', team.teamId, team.name)
       }));
-    }, [favorites.teams, customNames, getDisplayName]);
+    }, [favorites, customNames, getDisplayName]);
 
     const favoriteLeagues = useMemo(() => {
         if (!favorites?.leagues || !customNames) return [];
@@ -49,9 +81,9 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, cus
             ...comp,
             name: getDisplayName('league', comp.leagueId, comp.name)
         }));
-    }, [favorites.leagues, customNames, getDisplayName]);
+    }, [favorites, customNames, getDisplayName]);
 
-    const favoritePlayers = useMemo(() => favorites?.players ? Object.values(favorites.players) : [], [favorites.players]);
+    const favoritePlayers = useMemo(() => favorites?.players ? Object.values(favorites.players) : [], [favorites?.players]);
     
     const handleLoginClick = () => {
         if ((window as any).appNavigate) {

@@ -23,7 +23,7 @@ import {
 import { SearchSheet } from '@/components/SearchSheet';
 import { ProfileButton } from '../AppContentWrapper';
 
-export function SettingsScreen({ navigate, goBack, canGoBack, favorites, customNames, setFavorites }: ScreenProps & {setFavorites: (favorites: any) => void}) {
+export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavorites }: ScreenProps & {setFavorites: (favorites: any) => void}) {
   const { toast } = useToast();
   
   const mainSettingsItems = [
@@ -62,7 +62,7 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, customN
         canGoBack={canGoBack} 
         actions={
           <div className="flex items-center gap-1">
-              <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites}>
+              <SearchSheet navigate={navigate} favorites={favorites} customNames={{}} setFavorites={setFavorites}>
                   <Button variant="ghost" size="icon">
                       <Search className="h-5 w-5" />
                   </Button>
