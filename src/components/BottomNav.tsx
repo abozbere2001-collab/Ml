@@ -1,6 +1,7 @@
 
+
 "use client";
-import { Star, Newspaper, MoreHorizontal, Shield, UserCircle2, Flag, Home, Trophy } from 'lucide-react';
+import { Star, Newspaper, MoreHorizontal, Shield, UserCircle2, Flag, Home, Trophy, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ScreenKey } from '@/app/page';
 import { FootballIcon } from './icons/FootballIcon';
