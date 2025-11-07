@@ -204,7 +204,7 @@ export function AppContentWrapper() {
             } catch (error: any) {
                 // This error is expected for non-admins on certain collections. We can ignore it.
                 if (error.code !== 'permission-denied') {
-                    console.error(`Failed to fetch ${collectionName}:`, error);
+                    console.warn(`Could not fetch ${collectionName}:`, error.message);
                 }
                 newNames[key] = new Map(); // Initialize with an empty map on failure
             }
@@ -368,3 +368,5 @@ export function AppContentWrapper() {
     </main>
   );
 }
+
+    
