@@ -59,21 +59,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // The 'pwa' property should be a part of the nextConfig object itself.
-  pwa: {
-    // This part is crucial for TWA behavior
-    manifest: {
-      "share_target": {
-        "action": "/_next/data",
-        "method": "GET",
-        "params": {
-          "title": "title",
-          "text": "text",
-          "url": "url"
-        }
-      },
-    },
-  },
   env: {
     NEXT_PUBLIC_API_FOOTBALL_KEY: "e931ffb3ccda478e60b74c6e36913c90",
     NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyDKQK4mfCGlSCwJS7oOdMhJa0SIJAv3nXM",

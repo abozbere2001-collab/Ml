@@ -13,23 +13,8 @@ const withPWA = withPWAInit({
   disable: !isProd,
   publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
   scope: basePath,
-  customWorkerDir: 'src/worker',
   sw: 'sw.js',
   buildExcludes: [/app-build-manifest\.json$/],
-  pwa: {
-    // This part is crucial for TWA behavior
-    manifest: {
-      "share_target": {
-        "action": "/_next/data",
-        "method": "GET",
-        "params": {
-          "title": "title",
-          "text": "text",
-          "url": "url"
-        }
-      },
-    },
-  },
 });
 
 const nextConfig: NextConfig = {
