@@ -1,6 +1,6 @@
 
 import type {Metadata} from 'next';
-import './globals.css';
+import '@/app/globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from '@/components/theme-provider';
 import { Cairo } from 'next/font/google';
@@ -40,7 +40,7 @@ export default function RootLayout({
           <meta name="apple-mobile-web-app-title" content="نبض الملاعب" />
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="theme-color" content="#29ABE2" />
+          <meta name="theme-color" content="#000000" />
           <link rel="manifest" href={`${basePath}/manifest.json`} />
           <link rel="apple-touch-icon" href={`${basePath}/icon-192x192.png`} />
         </head>
