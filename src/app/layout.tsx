@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   title: 'نبض الملاعب',
   description: 'عالم كرة القدم بين يديك',
   manifest: `${basePath}/manifest.json`,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'نبض الملاعب',
+  },
 };
 
 const cairo = Cairo({

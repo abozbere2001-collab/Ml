@@ -1,17 +1,17 @@
 
 import type {NextConfig} from 'next';
-import withPWA from 'next-pwa';
+import withPWAInit from 'next-pwa';
 
 const isProd = process.env.NODE_ENV === 'production';
 const assetPrefix = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
 const basePath = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
 
-const pwaConfig = withPWA({
+const withPWA = withPWAInit({
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: !isProd,
-  scope: basePath,
+  publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
 });
 
 const nextConfig: NextConfig = {
@@ -69,4 +69,4 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default pwaConfig(nextConfig);
+export default withPWA(nextConfig);
