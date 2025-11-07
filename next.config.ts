@@ -1,8 +1,18 @@
 
 import type {NextConfig} from 'next';
+import withPWA from 'next-pwa';
 
 const isProd = process.env.NODE_ENV === 'production';
 const assetPrefix = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
+const basePath = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
+
+const pwaConfig = withPWA({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: !isProd,
+  scope: basePath,
+});
 
 const nextConfig: NextConfig = {
   // This is required to allow the Next.js dev server to be accessed from the cloud workstation preview.
@@ -10,8 +20,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
   output: 'export',
   assetPrefix: assetPrefix,
-  // basePath is removed as it complicates GitHub Pages deployment with custom domains later.
-  // The folder structure will be handled by the deployment script.
+  basePath: basePath,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -60,4 +69,4 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+export default pwaConfig(nextConfig);

@@ -29,9 +29,16 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
         <head>
-          <link rel="manifest" href="/Ml/manifest.json" />
-          <link rel="apple-touch-icon" href="/Ml/icon-192x192.png"></link>
+          <meta name="application-name" content="نبض الملاعب" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <meta name="apple-mobile-web-app-title" content="نبض الملاعب" />
+          <meta name="format-detection" content="telephone=no" />
+          <meta name="mobile-web-app-capable" content="yes" />
           <meta name="theme-color" content="#000000" />
+
+          <link rel="apple-touch-icon" href={`${basePath}/icon-192x192.png`} />
+          <link rel="manifest" href={`${basePath}/manifest.json`} />
         </head>
         <body className={`${cairo.variable} font-body antialiased`}>
             <ThemeProvider
