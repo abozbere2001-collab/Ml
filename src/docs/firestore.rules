@@ -4,7 +4,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ---------------------------------
     // Helper Functions
+    // ---------------------------------
     function isSignedIn() {
       return request.auth != null;
     }
@@ -16,53 +18,50 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
-
-    // --- User Data ---
-    // Users can read and write to their own profile document.
+    
+    // ---------------------------------
+    // User-Specific Data
+    // ---------------------------------
     match /users/{userId} {
       allow read, write: if isOwner(userId);
     }
 
-    // Users can read and write to the 'data' document in their own 'favorites' subcollection.
     match /users/{userId}/favorites/data {
         allow read, write: if isOwner(userId);
     }
     
-    // --- Admin ---
-    // Admins can read, list, and write to the admins collection.
-    // Regular users can only read their own admin status document.
+    // ---------------------------------
+    // Admin & Predictions
+    // ---------------------------------
     match /admins/{adminId} {
-      allow get: if isOwner(adminId);
+      allow get: if isOwner(adminId); // Allow user to check their own admin status
       allow list, write: if isAdmin();
     }
     
-    // --- Publicly Readable, Admin Writable Data ---
-    // Anyone can read news, admins can write.
+    match /predictionFixtures/{fixtureId} {
+      allow get, list: if true; // Publicly readable
+      allow write: if isAdmin(); // Only admins can pin matches
+    }
+
+    match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
+      allow read: if true; // All predictions for a fixture are public
+      allow create, update: if isOwner(userId); // Users can manage their own prediction
+      allow delete: if isOwner(userId) || isAdmin(); // User or admin can delete
+    }
+    
+    match /leaderboard/{userId} {
+        allow read: if true; // Leaderboard is public
+        allow write: if isAdmin(); // Leaderboard is updated by a trusted process (admin)
+    }
+
+    // ---------------------------------
+    // Public Read / Admin Write Collections
+    // ---------------------------------
     match /news/{newsId} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
     
-    // Anyone can read prediction fixtures, admins can write.
-    match /predictionFixtures/{fixtureId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
-    }
-
-    // Users can create/update their own predictions. Admins can delete any prediction.
-    match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
-      allow read: if true; // Allow reading all predictions for a fixture
-      allow create, update: if isOwner(userId);
-      allow delete: if isOwner(userId) || isAdmin();
-    }
-    
-    // Anyone can read the leaderboard. Only admins can write to it (via a trusted process).
-    match /leaderboard/{userId} {
-        allow read: if true;
-        allow write: if isAdmin();
-    }
-
-    // --- Customization Data (Public Read, Admin Write) ---
     match /leagueCustomizations/{leagueId} {
       allow get, list: if true;
       allow write: if isAdmin();
@@ -71,11 +70,11 @@ service cloud.firestore {
       allow get, list: if true;
       allow write: if isAdmin();
     }
-    match /playerCustomizations/{playerId} {
+     match /playerCustomizations/{playerId} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
-    match /coachCustomizations/{coachId} {
+     match /coachCustomizations/{coachId} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
@@ -91,8 +90,6 @@ service cloud.firestore {
         allow get, list: if true;
         allow write: if isAdmin();
     }
-
-    // --- Iraqi League Specific Data (Public Read, Admin Write) ---
     match /iraqiLeagueTopScorers/{scorerId} {
         allow get, list: if true;
         allow write: if isAdmin();
@@ -102,6 +99,9 @@ service cloud.firestore {
         allow write: if isAdmin();
     }
 
-    // Default deny all other reads/writes
+    // Default Deny: Ensure any path not explicitly matched is locked down.
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
