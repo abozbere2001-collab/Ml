@@ -13,7 +13,7 @@ const pwaConfig = {
   sw: 'sw.js',
   buildExcludes: [/app-build-manifest\.json$/],
   manifest: {
-    id: "/",
+    id: basePath || "/",
     start_url: ".",
     display: "standalone",
     name: "نبض الملاعب",
