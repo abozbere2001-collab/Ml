@@ -23,24 +23,21 @@ const ONBOARDING_COMPLETE_KEY = 'goalstack_onboarding_complete_v1';
 
 export default function Home() {
     const { user, isUserLoading } = useAuth();
-    const [isOnboardingComplete, setIsOnboardingComplete] = React.useState(true);
+    const [isOnboardingComplete, setIsOnboardingComplete] = React.useState(true); // Default to true
 
     React.useEffect(() => {
-        if (typeof window !== 'undefined' && user) {
-            // Don't show onboarding for anonymous users, let them browse freely.
-            if(user.isAnonymous) {
-                setIsOnboardingComplete(true);
-                return;
-            }
+        // This effect now only runs on the client after hydration
+        if (user && !user.isAnonymous) {
             const onboardingStatus = localStorage.getItem(ONBOARDING_COMPLETE_KEY);
             setIsOnboardingComplete(onboardingStatus === 'true');
+        } else if (user && user.isAnonymous) {
+            // Guests are always considered "onboarded"
+            setIsOnboardingComplete(true);
         }
     }, [user]);
 
     const handleOnboardingComplete = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
-        }
+        localStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
         setIsOnboardingComplete(true);
     };
     

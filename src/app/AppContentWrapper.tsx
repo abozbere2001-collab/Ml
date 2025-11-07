@@ -46,8 +46,7 @@ import { IraqScreen } from './screens/IraqScreen';
 import { PredictionsScreen } from './screens/PredictionsScreen';
 import { doc, onSnapshot, getDocs, collection } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
-import { getLocalFavorites, setLocalFavorites, GUEST_MODE_KEY } from '@/lib/local-favorites';
-import { OnboardingHints } from '@/components/OnboardingHints';
+import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 
 const HINTS_DISMISSED_KEY = 'goalstack_hints_dismissed_v1';
 
@@ -101,9 +100,8 @@ export const ProfileButton = () => {
     };
     
     const navigateToLogin = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem(GUEST_MODE_KEY);
-            window.location.reload();
+        if ((window as any).appNavigate) {
+            (window as any).appNavigate('Welcome');
         }
     }
 
@@ -154,20 +152,6 @@ export function AppContentWrapper() {
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<Favorites>>({});
   const [customNames, setCustomNames] = useState<{ [key: string]: Map<number | string, string> } | null>(null);
-  const [showHints, setShowHints] = useState<boolean>(false);
-  
-  useEffect(() => {
-      // Defer reading from localStorage until the client has mounted
-      const hintsDismissed = localStorage.getItem(HINTS_DISMISSED_KEY) === 'true';
-      setShowHints(!hintsDismissed);
-  }, []);
-  
-  const handleHintsDismissed = () => {
-      if (typeof window !== 'undefined') {
-          localStorage.setItem(HINTS_DISMISSED_KEY, 'true');
-      }
-      setShowHints(false);
-  };
   
   const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
     activeTab: 'Matches',
@@ -373,11 +357,8 @@ export function AppContentWrapper() {
     isVisible: true,
   };
 
-
   return (
     <main className="h-screen w-screen bg-background flex flex-col">
-      {showHints && <OnboardingHints onDismiss={handleHintsDismissed} activeTab={navigationState.activeTab} />}
-      
       <div className="flex-1 flex flex-col overflow-hidden">
         {mainTabs.map(tabKey => {
             const stack = navigationState.stacks[tabKey];

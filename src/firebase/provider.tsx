@@ -41,12 +41,13 @@ export const FirebaseProvider: React.FC<{
       const userRef = doc(firestore, 'users', user.uid);
       await setDoc(userRef, { isProUser: isPro }, { merge: true });
       // Force a token refresh to get the latest custom claims if any
-      await user.getIdToken(true);
+      if (user) {
+        await user.getIdToken(true);
+      }
       // Re-set user to trigger re-renders
-      setUser({ ...user }); 
+      setUser({ ...user } as User); 
     }
   };
-
 
   const contextValue = useMemo((): FirebaseContextState => ({
     firebaseApp,

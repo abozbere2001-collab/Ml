@@ -11,6 +11,7 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  publicExcludes: ['!manifest.json'], // Ensure manifest.json is not excluded by PWA plugin
 });
 
 const nextConfig: NextConfig = {
