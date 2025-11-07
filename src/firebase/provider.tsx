@@ -3,9 +3,10 @@
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { Loader2 } from 'lucide-react';
 
 // 1. Basic context state for auth status
 export interface FirebaseContextState {
@@ -26,20 +27,17 @@ export const FirebaseProvider: React.FC<{
   auth: Auth;
 }> = ({ children, firebaseApp, firestore, auth }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(true); // Start as true
+  const [isUserLoading, setIsUserLoading] = useState(true);
 
-  // Listen for auth state changes. This is the core of the provider.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
-      setIsUserLoading(false); // Set loading to false once we have a definitive user state
+      setIsUserLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [auth]);
 
-  // Use useMemo to prevent unnecessary re-renders
   const contextValue = useMemo((): FirebaseContextState => ({
     firebaseApp,
     firestore,
@@ -47,6 +45,14 @@ export const FirebaseProvider: React.FC<{
     user,
     isUserLoading,
   }), [firebaseApp, firestore, auth, user, isUserLoading]);
+  
+  if (isUserLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -67,11 +73,10 @@ export const useFirebase = (): FirebaseContextState => {
 
 export const useAuth = () => {
   const context = useFirebase();
-  // The `setProUser` function is removed as it was part of the more complex logic.
-  // It should be implemented separately if needed.
   return {
     user: context.user,
     isUserLoading: context.isUserLoading,
+    setProUser: (isPro: boolean) => { /* Mock function, does nothing */ }
   };
 };
 

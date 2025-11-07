@@ -23,18 +23,15 @@ const ONBOARDING_COMPLETE_KEY = 'goalstack_onboarding_complete_v1';
 
 export default function Home() {
     const { user, isUserLoading } = useAuth();
-    const [isOnboardingComplete, setIsOnboardingComplete] = React.useState(true); // Default to true to avoid flashes
+    const [isOnboardingComplete, setIsOnboardingComplete] = React.useState(true);
     const [isClient, setIsClient] = React.useState(false);
 
-    // This effect runs once on the client to indicate it has mounted.
     React.useEffect(() => {
         setIsClient(true);
     }, []);
 
-    // This effect checks for onboarding status once the client has mounted and the user is known.
     React.useEffect(() => {
         if (!isClient || !user || user.isAnonymous) return;
-
         const onboardingStatus = localStorage.getItem(ONBOARDING_COMPLETE_KEY);
         setIsOnboardingComplete(onboardingStatus === 'true');
     }, [user, isClient]);
@@ -45,10 +42,8 @@ export default function Home() {
         }
         setIsOnboardingComplete(true);
     };
-    
-    // Render a loader until the client has mounted and auth state is known.
-    // This is the single source of truth for initial loading.
-    if (!isClient || isUserLoading) {
+
+    if (isUserLoading || !isClient) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-background">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -56,17 +51,14 @@ export default function Home() {
         );
     }
     
-    // If there's no user, show the welcome screen.
     if (!user) {
         return <WelcomeScreen />;
     }
 
-    // If the user is logged in but hasn't completed onboarding, show the selection screen.
     if (!isOnboardingComplete && !user.isAnonymous) {
         return <FavoriteSelectionScreen onOnboardingComplete={handleOnboardingComplete} />;
     }
 
-    // If the user is logged in and onboarded, show the main app.
     return (
         <AdProvider>
             <AppContentWrapper />
