@@ -26,15 +26,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const manifestPath = `${basePath}/manifest.json`;
-  const iconPath = `${basePath}/icon-192x192.png`;
 
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
         <head>
           <link rel="manifest" href={manifestPath} />
-          <link rel="apple-touch-icon" href={iconPath}></link>
+          <link rel="apple-touch-icon" href={`${basePath}/icons/icon-192x192.png`}></link>
           <meta name="theme-color" content="#000000" />
-          <meta name="background-color" content="#000000" />
         </head>
         <body className={`${cairo.variable} font-body antialiased`}>
             <ThemeProvider
