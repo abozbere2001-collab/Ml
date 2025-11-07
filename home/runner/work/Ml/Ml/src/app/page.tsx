@@ -35,7 +35,12 @@ export default function Home() {
     React.useEffect(() => {
         setIsClient(true);
         // Force hints to be dismissed for a better studio experience
-        setHintsDismissed(true); 
+        if (typeof window !== 'undefined' && window.frameElement) {
+             setHintsDismissed(true); 
+        } else {
+            const dismissed = localStorage.getItem(HINTS_DISMISSED_KEY);
+            setHintsDismissed(dismissed === 'true');
+        }
     }, []);
 
     React.useEffect(() => {
@@ -79,17 +84,13 @@ export default function Home() {
     return (
         <AdProvider>
             <AppContentWrapper />
-            {/* 
-              This component is disabled to prevent editor interference. 
-              Uncomment it for production if needed.
-            
-              !hintsDismissed && user && !user.isAnonymous && (
+             { !hintsDismissed && user && !user.isAnonymous && (
                 <OnboardingHints onDismiss={() => {
                     localStorage.setItem(HINTS_DISMISSED_KEY, 'true');
                     setHintsDismissed(true);
                 }} activeTab={activeTab}/>
               )
-            */}
+            }
         </AdProvider>
     );
 }
