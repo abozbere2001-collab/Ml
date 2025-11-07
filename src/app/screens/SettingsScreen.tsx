@@ -1,8 +1,7 @@
 
-
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, LogOut, User, Search, Trophy, Settings as SettingsIcon, FileText, FileBadge } from 'lucide-react';
@@ -62,7 +61,7 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavo
         canGoBack={canGoBack} 
         actions={
           <div className="flex items-center gap-1">
-              <SearchSheet navigate={navigate} favorites={favorites} customNames={{}} setFavorites={setFavorites}>
+              <SearchSheet navigate={navigate} favorites={favorites} customNames={{}} setFavorites={setFavorites} onCustomNameChange={useCallback(async () => {}, [])}>
                   <Button variant="ghost" size="icon">
                       <Search className="h-5 w-5" />
                   </Button>

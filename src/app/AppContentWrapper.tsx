@@ -152,7 +152,6 @@ export function AppContentWrapper() {
   const { user } = useAuth();
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<Favorites> | null>(null);
-  const [customNames, setCustomNames] = useState<any>(null);
   
   const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
     activeTab: 'Matches',
@@ -188,44 +187,8 @@ export function AppContentWrapper() {
     }
   }, [user, db, favorites]);
 
-  const fetchAllCustomNames = useCallback(async () => {
-    if (!db) {
-        setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map(), players: new Map(), coaches: new Map() });
-        return;
-    }
-    try {
-        const [leagues, teams, players, coaches, countries, continents] = await Promise.all([
-            getDocs(collection(db, "leagueCustomizations")),
-            getDocs(collection(db, "teamCustomizations")),
-            getDocs(collection(db, "playerCustomizations")),
-            getDocs(collection(db, "coachCustomizations")),
-            getDocs(collection(db, "countryCustomizations")),
-            getDocs(collection(db, "continentCustomizations")),
-        ]);
-
-        const newNames = {
-            leagues: new Map(leagues.docs.map(doc => [Number(doc.id), doc.data().customName])),
-            teams: new Map(teams.docs.map(doc => [Number(doc.id), doc.data().customName])),
-            players: new Map(players.docs.map(doc => [Number(doc.id), doc.data().customName])),
-            coaches: new Map(coaches.docs.map(doc => [Number(doc.id), doc.data().customName])),
-            countries: new Map(countries.docs.map(doc => [doc.id, doc.data().customName])),
-            continents: new Map(continents.docs.map(doc => [doc.id, doc.data().customName])),
-        };
-        setCustomNames(newNames);
-
-    } catch (error) {
-        const permissionError = new FirestorePermissionError({
-            path: 'customizations collections',
-            operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map(), players: new Map(), coaches: new Map() });
-    }
-  }, [db]);
-
+  
   useEffect(() => {
-    fetchAllCustomNames();
-    
     if (!db) {
       setFavorites(getLocalFavorites());
       return;
@@ -245,7 +208,7 @@ export function AppContentWrapper() {
     } else {
       setFavorites(getLocalFavorites());
     }
-  }, [user, db, fetchAllCustomNames]);
+  }, [user, db]);
 
 
   const goBack = useCallback(() => {
@@ -304,7 +267,7 @@ export function AppContentWrapper() {
     return <SplashScreenAd />;
   }
 
-  if (favorites === null || customNames === null) {
+  if (favorites === null) {
     return (
         <div className="h-screen w-screen flex items-center justify-center bg-background">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -319,8 +282,6 @@ export function AppContentWrapper() {
     goBack,
     favorites,
     setFavorites: handleSetFavorites,
-    customNames,
-    onCustomNameChange: fetchAllCustomNames,
   };
 
   return (

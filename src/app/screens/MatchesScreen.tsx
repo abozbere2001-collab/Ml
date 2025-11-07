@@ -271,40 +271,47 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
     
   const [pinnedPredictionMatches, setPinnedPredictionMatches] = useState(new Set<number>());
 
-    useEffect(() => {
-        if (!db) return;
-        const fetchNames = async () => {
-            const names: any = { leagues: new Map(), teams: new Map() };
-            try {
-                const [leaguesSnap, teamsSnap] = await Promise.all([
-                    getDocs(collection(db, 'leagueCustomizations')),
-                    getDocs(collection(db, 'teamCustomizations'))
-                ]);
-                leaguesSnap.forEach(doc => names.leagues.set(Number(doc.id), doc.data().customName));
-                teamsSnap.forEach(doc => names.teams.set(Number(doc.id), doc.data().customName));
-                setCustomNames(names);
-            } catch (e) {
-                console.error("Failed to fetch custom names, using empty maps.", e);
-                setCustomNames({ leagues: new Map(), teams: new Map() });
-            }
-        };
-        fetchNames();
-    }, [db]);
+  const fetchAllCustomNames = useCallback(async () => {
+    if (!db) {
+        setCustomNames({ leagues: new Map(), teams: new Map() });
+        return;
+    }
+    try {
+        const [leaguesSnap, teamsSnap] = await Promise.all([
+            getDocs(collection(db, 'leagueCustomizations')),
+            getDocs(collection(db, 'teamCustomizations'))
+        ]);
+        const names: any = { leagues: new Map(), teams: new Map() };
+        leaguesSnap.forEach(doc => names.leagues.set(Number(doc.id), doc.data().customName));
+        teamsSnap.forEach(doc => names.teams.set(Number(doc.id), doc.data().customName));
+        setCustomNames(names);
+    } catch (e: any) {
+        console.error("Failed to fetch custom names:", e);
+        const permissionError = new FirestorePermissionError({
+            path: 'customizations collections',
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setCustomNames({ leagues: new Map(), teams: new Map() });
+    }
+}, [db]);
+
+useEffect(() => {
+    fetchAllCustomNames();
+}, [fetchAllCustomNames]);
 
 
   useEffect(() => {
     if (!db || !isAdmin) return;
     const q = collection(db, "predictionFixtures");
-    // Only fetch if user is admin
-    if (isAdmin) {
-      getDocs(q).then(snapshot => {
+    
+    getDocs(q).then(snapshot => {
         const newPinnedSet = new Set<number>();
         snapshot.forEach(doc => newPinnedSet.add(Number(doc.id)));
         setPinnedPredictionMatches(newPinnedSet);
-      }).catch(error => {
-          console.error("Permission error listening to predictions as admin:", error);
-      });
-    }
+    }).catch(error => {
+        console.error("Permission error fetching predictions for admin:", error);
+    });
   }, [db, isAdmin]);
 
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
@@ -530,4 +537,3 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
     </div>
   );
 }
-

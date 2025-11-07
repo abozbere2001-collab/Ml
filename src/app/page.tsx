@@ -16,6 +16,7 @@ export type ScreenProps = {
   goBack: () => void;
   canGoBack: boolean;
   favorites?: any; // To accept props from wrapper
+  onCustomNameChange?: () => Promise<void>; // Added for screens that need to trigger a re-fetch
   customNames?: any; // To accept props from wrapper
 };
 

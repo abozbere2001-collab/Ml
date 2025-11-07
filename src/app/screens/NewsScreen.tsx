@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -91,7 +91,7 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
         canGoBack={canGoBack} 
         actions={
           <div className="flex items-center gap-1">
-              <SearchSheet navigate={navigate} favorites={favorites} customNames={{}} setFavorites={setFavorites}>
+              <SearchSheet navigate={navigate} favorites={favorites} customNames={{}} setFavorites={setFavorites} onCustomNameChange={useCallback(async () => {}, [])}>
                   <Button variant="ghost" size="icon">
                       <Search className="h-5 w-5" />
                   </Button>
