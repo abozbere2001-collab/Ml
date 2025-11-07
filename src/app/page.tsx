@@ -27,6 +27,11 @@ export default function Home() {
 
     React.useEffect(() => {
         if (typeof window !== 'undefined' && user) {
+            // Don't show onboarding for anonymous users, let them browse freely.
+            if(user.isAnonymous) {
+                setIsOnboardingComplete(true);
+                return;
+            }
             const onboardingStatus = localStorage.getItem(ONBOARDING_COMPLETE_KEY);
             setIsOnboardingComplete(onboardingStatus === 'true');
         }

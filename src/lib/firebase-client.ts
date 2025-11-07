@@ -12,8 +12,6 @@ import type { UserProfile, UserScore, Favorites } from './types';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { getLocalFavorites, clearLocalFavorites } from './local-favorites';
-import { getDatabase, ref, set } from 'firebase/database';
-
 
 export const handleNewUser = async (user: User, firestore: Firestore) => {
     const userRef = doc(firestore, 'users', user.uid);
