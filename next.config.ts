@@ -13,10 +13,15 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: isProd,
+  disable: process.env.NODE_ENV === "production",
 });
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // This is required to allow the Next.js dev server to be accessed from the cloud workstation preview.
+    // This is not required for production builds.
+    allowedDevOrigins: ["https://*.cloudworkstations.dev"],
+  },
   output: 'export',
   assetPrefix: assetPrefix,
   basePath: basePath,
