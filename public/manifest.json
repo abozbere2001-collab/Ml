@@ -2,11 +2,9 @@
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
   "description": "عالم كرة القدم بين يديك",
-  "dir": "rtl",
-  "lang": "ar",
-  "id": "/Ml/",
   "start_url": "/Ml/",
   "scope": "/Ml/",
+  "id": "/Ml/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
@@ -29,22 +27,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/Ml/screenshot1.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "شاشة المباريات"
-    },
-    {
-      "src": "/Ml/screenshot2.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "تفاصيل المباراة"
     }
   ]
 }
