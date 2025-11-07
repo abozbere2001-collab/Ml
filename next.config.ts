@@ -7,7 +7,6 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: !isProd,
-  base: basePath, // This tells PWA plugin about the base path.
   sw: `${basePath}/sw.js`, // This tells where to generate the service worker.
 });
 
