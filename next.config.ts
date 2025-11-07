@@ -4,12 +4,6 @@ import type {NextConfig} from 'next';
 const isProd = process.env.NODE_ENV === 'production';
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  disable: !isProd,
-  sw: `${basePath}/sw.js`, // This tells where to generate the service worker.
-});
-
 const nextConfig: NextConfig = {
   // This is required to allow the Next.js dev server to be accessed from the cloud workstation preview.
   // This is not required for production builds.
@@ -65,4 +59,4 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default withPWA(nextConfig);
+export default nextConfig;
