@@ -15,6 +15,29 @@ const withPWA = withPWAInit({
   scope: basePath,
   sw: 'sw.js',
   buildExcludes: [/app-build-manifest\.json$/],
+  manifest: {
+    id: "/",
+    start_url: ".",
+    display: "standalone",
+    icons: [
+      {
+        src: `${basePath}/icon-192x192.png`,
+        sizes: "192x192",
+        type: "image/png"
+      },
+      {
+        src: `${basePath}/icon-512x512.png`,
+        sizes: "512x512",
+        type: "image/png"
+      },
+      {
+        src: `${basePath}/icon-192x192.png`,
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any maskable"
+      }
+    ]
+  },
 });
 
 const nextConfig: NextConfig = {
