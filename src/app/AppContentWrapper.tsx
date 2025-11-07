@@ -172,36 +172,45 @@ export function AppContentWrapper() {
 
     const fetchAllCustomNames = useCallback(async () => {
         if (!db) {
-            setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map() });
+            setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map(), players: new Map(), coaches: new Map(), matches: new Map() });
             return;
         }
-        try {
-            const collections = ['leagueCustomizations', 'teamCustomizations', 'playerCustomizations', 'coachCustomizations', 'countryCustomizations', 'continentCustomizations', 'matchCustomizations'];
-            const promises = collections.map(c => getDocs(collection(db, c)));
-            const snapshots = await Promise.all(promises);
 
-            const newNames = {
-                leagues: new Map(snapshots[0].docs.map(doc => [Number(doc.id), doc.data().customName])),
-                teams: new Map(snapshots[1].docs.map(doc => [Number(doc.id), doc.data().customName])),
-                players: new Map(snapshots[2].docs.map(doc => [Number(doc.id), doc.data().customName])),
-                coaches: new Map(snapshots[3].docs.map(doc => [Number(doc.id), doc.data().customName])),
-                countries: new Map(snapshots[4].docs.map(doc => [doc.id, doc.data().customName])),
-                continents: new Map(snapshots[5].docs.map(doc => [doc.id, doc.data().customName])),
-                matches: new Map(snapshots[6].docs.map(doc => [doc.id, doc.data().customStatus])),
-            };
-            setCustomNames(newNames);
+        const collectionsToFetch = {
+            leagues: 'leagueCustomizations',
+            teams: 'teamCustomizations',
+            players: 'playerCustomizations',
+            coaches: 'coachCustomizations',
+            countries: 'countryCustomizations',
+            continents: 'continentCustomizations',
+            matches: 'matchCustomizations',
+        };
 
-        } catch (error: any) {
-            if (error.code === 'permission-denied') {
-                const permissionError = new FirestorePermissionError({
-                    path: 'customizations collections',
-                    operation: 'list',
-                });
-                errorEmitter.emit('permission-error', permissionError);
+        const newNames: any = {};
+        
+        for (const [key, collectionName] of Object.entries(collectionsToFetch)) {
+            try {
+                const snapshot = await getDocs(collection(db, collectionName));
+                const idKey = key === 'countries' || key === 'continents' ? 'string' : 'number';
+                
+                if (key === 'matches') {
+                    newNames[key] = new Map(snapshot.docs.map(doc => [doc.id, doc.data().customStatus]));
+                } else {
+                    newNames[key] = new Map(snapshot.docs.map(doc => [
+                        idKey === 'number' ? Number(doc.id) : doc.id,
+                        doc.data().customName
+                    ]));
+                }
+            } catch (error: any) {
+                // This error is expected for non-admins on certain collections. We can ignore it.
+                if (error.code !== 'permission-denied') {
+                    console.error(`Failed to fetch ${collectionName}:`, error);
+                }
+                newNames[key] = new Map(); // Initialize with an empty map on failure
             }
-            console.error("Failed to fetch custom names, using empty maps.", error);
-            setCustomNames({ leagues: new Map(), teams: new Map(), players: new Map(), coaches: new Map(), countries: new Map(), continents: new Map(), matches: new Map() });
         }
+        setCustomNames(newNames);
+
     }, [db]);
 
 

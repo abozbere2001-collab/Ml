@@ -1,67 +1,55 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------------------------------
     // Helper Functions
-    // ---------------------------------
     function isSignedIn() {
       return request.auth != null;
     }
-
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
+    }
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-    
-    // ---------------------------------
-    // User-Specific Data
-    // ---------------------------------
+    // User Data: Only accessible by the owner
     match /users/{userId} {
       allow read, write: if isOwner(userId);
     }
-
     match /users/{userId}/favorites/{docId} {
       allow read, write: if isOwner(userId);
     }
-    
-    // ---------------------------------
-    // Admin & Predictions
-    // ---------------------------------
+    match /users/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Admins: Only admins can manage other admins. Users can check their own status.
     match /admins/{adminId} {
-      allow get: if isSignedIn();
+      allow get: if isOwner(adminId);
       allow list, write: if isAdmin();
     }
     
+    // Predictions: Publicly readable, but only owners can predict, and only admins can manage fixtures.
     match /predictionFixtures/{fixtureId} {
-      allow get, list: if true; // Publicly readable
-      allow write: if isAdmin(); // Only admins can pin matches
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
-
     match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
-      allow read: if true; // All predictions for a fixture are public
-      allow create, update: if isOwner(userId); // Users can manage their own prediction
-      allow delete: if isOwner(userId) || isAdmin(); // User or admin can delete
+      allow get: if true;
+      allow write: if isOwner(userId);
     }
-    
     match /leaderboard/{userId} {
-        allow read: if true; // Leaderboard is public
-        allow write: if isAdmin(); // Leaderboard is updated by a trusted process (admin)
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
 
-    // ---------------------------------
     // Public Read / Admin Write Collections
-    // ---------------------------------
     match /news/{newsId} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
-    
     match /leagueCustomizations/{leagueId} {
       allow get, list: if true;
       allow write: if isAdmin();
@@ -70,33 +58,33 @@ service cloud.firestore {
       allow get, list: if true;
       allow write: if isAdmin();
     }
-     match /playerCustomizations/{playerId} {
+    match /playerCustomizations/{playerId} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
-     match /coachCustomizations/{coachId} {
+    match /coachCustomizations/{coachId} {
       allow get, list: if true;
       allow write: if isAdmin();
     }
     match /countryCustomizations/{countryId} {
-        allow get, list: if true;
-        allow write: if isAdmin();
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
-     match /continentCustomizations/{continentId} {
-        allow get, list: if true;
-        allow write: if isAdmin();
+    match /continentCustomizations/{continentId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
-     match /matchCustomizations/{matchId} {
-        allow get, list: if true;
-        allow write: if isAdmin();
+    match /matchCustomizations/{matchId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
     match /iraqiLeagueTopScorers/{scorerId} {
-        allow get, list: if true;
-        allow write: if isAdmin();
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
     match /pinnedIraqiMatches/{matchId} {
-        allow get, list: if true;
-        allow write: if isAdmin();
+      allow get, list: if true;
+      allow write: if isAdmin();
     }
   }
 }
