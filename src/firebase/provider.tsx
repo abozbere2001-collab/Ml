@@ -4,11 +4,9 @@
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore, doc, getDoc } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import type { UserProfile } from '@/lib/types';
-import { errorEmitter } from './error-emitter';
-import { FirestorePermissionError } from './errors';
+import { GUEST_MODE_KEY } from '@/lib/local-favorites';
 
 export interface FirebaseContextState {
   firebaseApp: FirebaseApp | null;
@@ -16,7 +14,6 @@ export interface FirebaseContextState {
   auth: Auth | null; 
   user: User | null;
   isUserLoading: boolean;
-  userError: Error | null;
 }
 
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
@@ -31,10 +28,28 @@ export const FirebaseProvider: React.FC<{
   const [isUserLoading, setIsUserLoading] = useState(true);
 
   useEffect(() => {
+    const isGuestMode = typeof window !== 'undefined' && localStorage.getItem(GUEST_MODE_KEY) === 'true';
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setIsUserLoading(false);
+      if (firebaseUser) {
+        // If a real user is signed in, set them and we're done.
+        setUser(firebaseUser);
+        setIsUserLoading(false);
+      } else if (isGuestMode) {
+        // If no user is signed in, but we are in guest mode, sign in anonymously.
+        signInAnonymously(auth).catch((error) => {
+          console.error("Anonymous sign-in failed:", error);
+          // If anon sign-in fails, stop loading and proceed without a user.
+          setIsUserLoading(false);
+        });
+        // The user will be set in the next onAuthStateChanged tick.
+      } else {
+        // No user and not in guest mode.
+        setUser(null);
+        setIsUserLoading(false);
+      }
     });
+
     return () => unsubscribe();
   }, [auth]);
 
@@ -44,7 +59,6 @@ export const FirebaseProvider: React.FC<{
     auth,
     user,
     isUserLoading,
-    userError: null,
   }), [firebaseApp, firestore, auth, user, isUserLoading]);
 
   return (
@@ -54,6 +68,7 @@ export const FirebaseProvider: React.FC<{
     </FirebaseContext.Provider>
   );
 };
+
 
 export const useFirebase = (): FirebaseContextState => {
   const context = useContext(FirebaseContext);
@@ -69,7 +84,6 @@ export const useAuth = () => {
     return {
         user: context.user,
         isUserLoading: context.isUserLoading,
-        userError: context.userError,
     };
 };
 
@@ -79,8 +93,7 @@ export const useAdmin = () => {
   const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
 
   useEffect(() => {
-    if (isUserLoading) return;
-    if (!user || !firestore) {
+    if (isUserLoading || !user || !firestore || user.isAnonymous) {
       setIsAdmin(false);
       setIsCheckingAdmin(false);
       return;
@@ -98,7 +111,17 @@ export const useAdmin = () => {
 
   }, [user, firestore, isUserLoading]);
   
-  return { isAdmin, isCheckingAdmin, db: firestore };
+  const makeAdmin = async () => {
+    if (!user || !firestore || isAdmin) return;
+    try {
+        await setDoc(doc(firestore, 'admins', user.uid), { isAdmin: true });
+        setIsAdmin(true);
+    } catch(e) {
+        console.error("Failed to become admin", e);
+    }
+  }
+
+  return { isAdmin, isCheckingAdmin, db: firestore, makeAdmin };
 };
 
 
@@ -117,11 +140,3 @@ export const useFirebaseApp = (): FirebaseApp | null => {
   }
   return context.firebaseApp;
 };
-
-export function useUser() {
-  const context = useContext(FirebaseContext);
-  if (context === undefined) {
-    throw new Error("useUser must be used within a FirebaseProvider.");
-  }
-  return context;
-}
