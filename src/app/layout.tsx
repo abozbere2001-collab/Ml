@@ -6,10 +6,12 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Cairo } from 'next/font/google';
 import { FirebaseClientProvider } from '@/firebase';
 
+const repoName = process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '';
+
 export const metadata: Metadata = {
   title: 'نبض الملاعب',
   description: 'عالم كرة القدم بين يديك',
-  manifest: '/MI/manifest.json',
+  manifest: repoName ? `/${repoName}/manifest.json` : '/manifest.json',
 };
 
 const cairo = Cairo({
@@ -23,11 +25,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const manifestPath = repoName ? `/${repoName}/manifest.json` : '/manifest.json';
+  const iconPath = repoName ? `/${repoName}/icon-192x192.png` : '/icon-192x192.png';
+
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
         <head>
-          <link rel="manifest" href="/MI/manifest.json" />
-          <link rel="apple-touch-icon" href="/MI/icon-192x192.png"></link>
+          <link rel="manifest" href={manifestPath} />
+          <link rel="apple-touch-icon" href={iconPath}></link>
           <meta name="theme-color" content="#000000" />
           <meta name="background-color" content="#000000" />
         </head>
