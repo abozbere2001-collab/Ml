@@ -56,3 +56,4 @@ export function ScreenHeader({ title, canGoBack, onBack, actions, secondaryActio
     </header>
   );
 }
+

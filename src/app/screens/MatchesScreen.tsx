@@ -245,9 +245,9 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
 }
 
 // Main Screen Component
-export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorites, setFavorites }: ScreenProps & { isVisible: boolean, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites>>> }) {
+export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorites, setFavorites }: ScreenProps & { isVisible: boolean, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>> }) {
   const { user } = useAuth();
-  const { db, isAdmin } = useAdmin();
+  const { db, isAdmin, isCheckingAdmin } = useAdmin();
   const { toast } = useToast();
   const [showOdds, setShowOdds] = useState(false);
   const [customNames, setCustomNames] = useState<any>(null);
@@ -263,13 +263,18 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         if (!db) return;
         const fetchNames = async () => {
             const names: any = { leagues: new Map(), teams: new Map() };
-            const [leaguesSnap, teamsSnap] = await Promise.all([
-                getDocs(collection(db, 'leagueCustomizations')),
-                getDocs(collection(db, 'teamCustomizations'))
-            ]);
-            leaguesSnap.forEach(doc => names.leagues.set(Number(doc.id), doc.data().customName));
-            teamsSnap.forEach(doc => names.teams.set(Number(doc.id), doc.data().customName));
-            setCustomNames(names);
+            try {
+                const [leaguesSnap, teamsSnap] = await Promise.all([
+                    getDocs(collection(db, 'leagueCustomizations')),
+                    getDocs(collection(db, 'teamCustomizations'))
+                ]);
+                leaguesSnap.forEach(doc => names.leagues.set(Number(doc.id), doc.data().customName));
+                teamsSnap.forEach(doc => names.teams.set(Number(doc.id), doc.data().customName));
+                setCustomNames(names);
+            } catch (e) {
+                console.error("Failed to fetch custom names, using empty maps.", e);
+                setCustomNames({ leagues: new Map(), teams: new Map() });
+            }
         };
         fetchNames();
     }, [db]);
@@ -277,18 +282,17 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
 
   useEffect(() => {
     if (!db || !isAdmin) return;
-    const fetchPinned = async () => {
-        const q = collection(db, "predictionFixtures");
-        try {
-            const snapshot = await getDocs(q);
-            const newPinnedSet = new Set<number>();
-            snapshot.forEach(doc => newPinnedSet.add(Number(doc.id)));
-            setPinnedPredictionMatches(newPinnedSet);
-        } catch (error) {
-            console.error("Permission error listening to predictions:", error);
-        }
-    };
-    fetchPinned();
+    const q = collection(db, "predictionFixtures");
+    getDocs(q).then(snapshot => {
+      const newPinnedSet = new Set<number>();
+      snapshot.forEach(doc => newPinnedSet.add(Number(doc.id)));
+      setPinnedPredictionMatches(newPinnedSet);
+    }).catch(error => {
+      // Don't emit permission error for regular users.
+      if (isAdmin) {
+          console.error("Permission error listening to predictions as admin:", error);
+      }
+    });
   }, [db, isAdmin]);
 
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
@@ -337,7 +341,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         setLoading(true);
 
         try {
-            const res = await fetch(`https://${API_FOOTBALL_HOST}/fixtures?date=${dateKey}`, { 
+            const res = await fetch(`https://v3.football.api-sports.io/fixtures?date=${dateKey}`, { 
                 signal: abortSignal,
                 headers: { 'x-rapidapi-key': API_KEY || '' },
              });
@@ -380,7 +384,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         if (liveFixtureIds.length === 0) return;
         
         try {
-            const res = await fetch(`https://${API_FOOTBALL_HOST}/fixtures?ids=${liveFixtureIds.join('-')}`, { 
+            const res = await fetch(`https://v3.football.api-sports.io/fixtures?ids=${liveFixtureIds.join('-')}`, { 
                 signal: abortSignal,
                 headers: { 'x-rapidapi-key': API_KEY || '' },
             });
@@ -472,7 +476,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
                   >
                     <span className="text-xs font-mono select-none">1x2</span>
                   </div>
-                  <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites}>
+                   <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites}>
                       <Button variant="ghost" size="icon" className="h-7 w-7">
                           <Search className="h-5 w-5" />
                       </Button>
@@ -506,3 +510,4 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
     </div>
   );
 }
+
