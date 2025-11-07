@@ -7,6 +7,8 @@ import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { Loader2 } from 'lucide-react';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 // 1. Basic context state for auth status
 export interface FirebaseContextState {
@@ -96,7 +98,10 @@ export const useAdmin = () => {
     const adminDocRef = doc(firestore, 'admins', user.uid);
     getDoc(adminDocRef).then(docSnap => {
       setIsAdmin(docSnap.exists());
-    }).catch(() => {
+    }).catch((error) => {
+      // Instead of just logging, we emit a detailed error
+      const permissionError = new FirestorePermissionError({ path: adminDocRef.path, operation: 'get' });
+      errorEmitter.emit('permission-error', permissionError);
       setIsAdmin(false);
     }).finally(() => {
       setIsCheckingAdmin(false);
@@ -105,10 +110,14 @@ export const useAdmin = () => {
   
   const makeAdmin = async () => {
     if (!user || !firestore || isAdmin) return;
+    const adminDocRef = doc(firestore, 'admins', user.uid);
+    const adminData = { isAdmin: true };
     try {
-        await setDoc(doc(firestore, 'admins', user.uid), { isAdmin: true });
+        await setDoc(adminDocRef, adminData);
         setIsAdmin(true);
     } catch(e) {
+        const permissionError = new FirestorePermissionError({ path: adminDocRef.path, operation: 'create', requestResourceData: adminData });
+        errorEmitter.emit('permission-error', permissionError);
         console.error("Failed to become admin", e);
     }
   }

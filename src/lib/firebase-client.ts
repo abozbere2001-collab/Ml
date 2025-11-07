@@ -25,7 +25,15 @@ export const handleNewUser = async (user: User, firestore: Firestore) => {
         // If user document already exists, just merge local favorites if any
         if (userDoc.exists()) {
             if (hasLocalFavorites) {
-                await setDoc(favoritesRef, localFavorites, { merge: true });
+                await setDoc(favoritesRef, localFavorites, { merge: true }).catch(error => {
+                    const permissionError = new FirestorePermissionError({
+                        path: favoritesRef.path,
+                        operation: 'write',
+                        requestResourceData: localFavorites,
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
+                    console.error("Failed to merge local favorites for existing user:", error);
+                });
                 clearLocalFavorites();
             }
             return; // Existing user flow ends here
@@ -91,7 +99,11 @@ export const updateUserDisplayName = async (user: User, newDisplayName: string, 
         throw new Error("Database service is not available.");
     }
 
-    await updateProfile(user, { displayName: newDisplayName });
+    try {
+      await updateProfile(user, { displayName: newDisplayName });
+    } catch(e) {
+      console.error("Firebase Auth updateProfile failed", e);
+    }
 
     const userRef = doc(db, 'users', user.uid);
     

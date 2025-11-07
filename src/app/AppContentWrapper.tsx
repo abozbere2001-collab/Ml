@@ -44,9 +44,10 @@ import { cn } from '@/lib/utils';
 import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
 import { IraqScreen } from './screens/IraqScreen';
 import { PredictionsScreen } from './screens/PredictionsScreen';
-import { doc, getDoc, setDoc, getDocs, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, getDocs, collection, onSnapshot } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
+import { errorEmitter, FirestorePermissionError } from '@/firebase';
 
 const screenConfig: Record<string, { component: React.ComponentType<any>;}> = {
   Matches: { component: MatchesScreen },
@@ -176,7 +177,14 @@ export function AppContentWrapper() {
         setLocalFavorites(newFavorites || {});
     } else if (db && newFavorites) {
         const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
-        setDoc(favDocRef, newFavorites, { merge: true }).catch(e => console.error("Favorites API call failed:", e));
+        setDoc(favDocRef, newFavorites, { merge: true }).catch(serverError => {
+            const permissionError = new FirestorePermissionError({
+                path: favDocRef.path,
+                operation: 'write',
+                requestResourceData: newFavorites,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
     }
   }, [user, db, favorites]);
 
@@ -206,7 +214,11 @@ export function AppContentWrapper() {
         setCustomNames(newNames);
 
     } catch (error) {
-        console.warn("Failed to fetch all custom names:", error);
+        const permissionError = new FirestorePermissionError({
+            path: 'customizations collections',
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
         setCustomNames({ leagues: new Map(), teams: new Map(), countries: new Map(), continents: new Map(), players: new Map(), coaches: new Map() });
     }
   }, [db]);
@@ -220,13 +232,16 @@ export function AppContentWrapper() {
     }
   
     if (user) {
-      const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
-      getDoc(favDocRef).then(docSnap => {
-        setFavorites(docSnap.exists() ? docSnap.data() as Favorites : {});
-      }).catch(e => {
-        console.error("Error fetching remote favorites:", e);
-        setFavorites({}); // Fallback to empty on error
-      });
+        const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
+        const unsubscribe = onSnapshot(favDocRef, (docSnap) => {
+            setFavorites(docSnap.exists() ? docSnap.data() as Favorites : {});
+        }, (error) => {
+            const permissionError = new FirestorePermissionError({ path: favDocRef.path, operation: 'get' });
+            errorEmitter.emit('permission-error', permissionError);
+            setFavorites({}); // Fallback to empty on error
+        });
+
+        return () => unsubscribe();
     } else {
       setFavorites(getLocalFavorites());
     }
