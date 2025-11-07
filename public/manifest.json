@@ -2,9 +2,8 @@
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
   "description": "عالم كرة القدم بين يديك",
-  "start_url": "/Ml/",
-  "scope": "/Ml/",
-  "id": "/Ml/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
@@ -23,7 +22,7 @@
       "purpose": "any"
     },
     {
-      "src": "/Ml/icon-maskable-512x512.png",
+      "src": "/Ml/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
