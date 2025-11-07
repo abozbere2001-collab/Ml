@@ -1,0 +1,83 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 130 30% 96%;
+    --foreground: 0 0% 10%;
+    --card: 0 70% 97%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 265 40% 15%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 260 50% 95%;
+    --secondary-foreground: 265 40% 25%;
+    --muted: 260 50% 95%;
+    --muted-foreground: 260 20% 45%;
+    --accent: 0 70% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 93%;
+    --input: 0 0% 93%;
+    --ring: 0 0% 9%;
+    --radius: 1.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 0%; /* Black */
+    --foreground: 220 15% 95%; /* Light gray */
+    --card: 240 2% 12%; /* #1c1c1e */
+    --card-foreground: 220 15% 95%;
+    --popover: 220 20% 8%;
+    --popover-foreground: 220 15% 95%;
+    --primary: 140 70% 50%; /* Lime Green */
+    --primary-foreground: 140 90% 10%;
+    --secondary: 240 2% 20%; /* Adjusted for new dark theme */
+    --secondary-foreground: 220 15% 95%;
+    --muted: 240 2% 15%; /* Adjusted for new dark theme */
+    --muted-foreground: 220 15% 60%;
+    --accent: 140 60% 45%; /* Slightly darker Lime Green */
+    --accent-foreground: 220 15% 95%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 2% 20%; /* Adjusted for new dark theme */
+    --input: 240 2% 18%; /* Adjusted for new dark theme */
+    --ring: 140 70% 50%;
+  }
+ 
+  .light {
+    --background: 210 40% 98%; /* Off-white with a hint of blue */
+    --foreground: 220 15% 20%; /* Dark blue-gray text */
+    --card: 0 0% 100%; /* Pure white */
+    --card-foreground: 220 15% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 20%;
+    --primary: 140 70% 50%; /* Lime Green */
+    --primary-foreground: 140 90% 10%;
+    --secondary: 210 30% 94%;
+    --secondary-foreground: 220 15% 20%;
+    --muted: 210 30% 94%;
+    --muted-foreground: 210 15% 45%;
+    --accent: 140 60% 45%; /* Slightly darker green for accents */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 140 65% 40%;
+    --radius: 1.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground/80;
+  }
+}
