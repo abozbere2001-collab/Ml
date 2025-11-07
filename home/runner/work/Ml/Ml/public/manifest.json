@@ -1,46 +1,56 @@
+
 {
+  "id": "/",
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
   "description": "عالم كرة القدم بين يديك",
   "start_url": ".",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#000000",
-  "theme_color": "#000000",
-  "id": "/Ml/",
-  "categories": ["sports", "social"],
+  "theme_color": "#149442",
+  "orientation": "portrait-primary",
+  "categories": [
+    "sports",
+    "social"
+  ],
   "icons": [
     {
       "src": "/Ml/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/Ml/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/Ml/icon-192x192.png",
+      "src": "/Ml/icon-maskable-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
+    },
+    {
+      "src": "/Ml/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "https://www.pwabuilder.com/assets/screenshots/screen1.png",
-      "sizes": "1280x720",
+      "src": "/Ml/screenshots/screenshot1.png",
+      "sizes": "1080x1920",
       "type": "image/png",
-      "platform": "wide",
-      "label": "Matches Screen"
+      "form_factor": "narrow"
     },
     {
-      "src": "https://www.pwabuilder.com/assets/screenshots/screen2.png",
-      "sizes": "720x1280",
+      "src": "/Ml/screenshots/screenshot2.png",
+      "sizes": "1080x1920",
       "type": "image/png",
-      "platform": "narrow",
-      "label": "Competitions Screen"
+      "form_factor": "narrow"
     }
   ]
 }
