@@ -1,7 +1,7 @@
 
 import type {NextConfig} from 'next';
 import withPWAInit from 'next-pwa';
-import pwaConfig from './pwa.config.js';
+import pwaConfig from './pwa.config.js'; // Use the separate config file
 
 const isProd = process.env.NODE_ENV === 'production';
 const assetPrefix = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
