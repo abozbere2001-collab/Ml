@@ -4,7 +4,7 @@ import type {NextConfig} from 'next';
 const isProd = process.env.NODE_ENV === 'production';
 
 // Automatically determine the repository name from GitHub Actions environment variables
-const repo = process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '';
+const repo = isProd && process.env.GITHUB_REPOSITORY ? process.env.GITHUB_REPOSITORY.split('/')[1] : '';
 
 const assetPrefix = isProd && repo ? `/${repo}/` : '';
 const basePath = isProd && repo ? `/${repo}` : '';
@@ -12,6 +12,8 @@ const basePath = isProd && repo ? `/${repo}` : '';
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
+  base: basePath, // Explicitly set the base for PWA assets
+  publicExcludes: ['!noprecache/**/*', '!robots.txt'], // Ensure all public assets are available
 });
 
 const nextConfig: NextConfig = {
