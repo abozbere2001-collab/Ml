@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -44,7 +45,7 @@ import { cn } from '@/lib/utils';
 import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
 import { IraqScreen } from './screens/IraqScreen';
 import { PredictionsScreen } from './screens/PredictionsScreen';
-import { doc, getDoc, setDoc, getDocs, collection, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, getDocs, collection, onSnapshot, writeBatch } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 import { errorEmitter, FirestorePermissionError } from '@/firebase';
@@ -151,7 +152,7 @@ export const ProfileButton = () => {
 export function AppContentWrapper() {
   const { user } = useAuth();
   const { db } = useFirestore();
-  const [favorites, setFavorites] = useState<Partial<Favorites> | null>(null);
+  const [favorites, setFavorites] = useState<Partial<import('@/lib/types').Favorites> | null>(null);
   const [customNames, setCustomNames] = useState<any>(null);
 
   
@@ -187,8 +188,7 @@ export function AppContentWrapper() {
         };
 
         const newNames: any = {};
-        
-        for (const [key, collectionName] of Object.entries(collectionsToFetch)) {
+        const promises = Object.entries(collectionsToFetch).map(async ([key, collectionName]) => {
             try {
                 const snapshot = await getDocs(collection(db, collectionName));
                 const idKey = key === 'countries' || key === 'continents' ? 'string' : 'number';
@@ -202,13 +202,14 @@ export function AppContentWrapper() {
                     ]));
                 }
             } catch (error: any) {
-                // This error is expected for non-admins on certain collections. We can ignore it.
-                if (error.code !== 'permission-denied') {
+                 if (error.code !== 'permission-denied') {
                     console.warn(`Could not fetch ${collectionName}:`, error.message);
                 }
-                newNames[key] = new Map(); // Initialize with an empty map on failure
+                newNames[key] = new Map();
             }
-        }
+        });
+
+        await Promise.all(promises);
         setCustomNames(newNames);
 
     }, [db]);
@@ -218,7 +219,7 @@ export function AppContentWrapper() {
     const newFavorites = typeof updater === 'function' ? updater(favorites) : updater;
     setFavorites(newFavorites);
 
-    if (!user || !db) {
+    if (!user) {
         setLocalFavorites(newFavorites || {});
     } else if (db && newFavorites) {
         const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
@@ -237,6 +238,19 @@ export function AppContentWrapper() {
   useEffect(() => {
     fetchAllCustomNames();
   }, [fetchAllCustomNames]);
+
+  const handleLocalFavoritesChange = useCallback(() => {
+      if (!user) {
+          setFavorites(getLocalFavorites());
+      }
+  }, [user]);
+
+  useEffect(() => {
+    window.addEventListener('localFavoritesChanged', handleLocalFavoritesChange);
+    return () => {
+        window.removeEventListener('localFavoritesChanged', handleLocalFavoritesChange);
+    }
+  }, [handleLocalFavoritesChange]);
 
 
   useEffect(() => {
@@ -285,26 +299,18 @@ export function AppContentWrapper() {
       const newKey = `${screen}-${keyCounter.current++}`;
       
       setNavigationState(prevState => {
+          const newState = { ...prevState };
           if (mainTabs.includes(screen)) {
-              return {
-                  ...prevState,
-                  activeTab: screen,
-                  stacks: {
-                      ...prevState.stacks,
-                      [screen]: [{ key: `${screen}-0`, screen: screen, props }]
-                  }
-              };
+              newState.activeTab = screen;
+              newState.stacks[screen] = [{ key: `${screen}-0`, screen: screen, props }];
+          } else {
+              const newItem = { key: newKey, screen, props };
+              const currentStack = newState.stacks[newState.activeTab] || [];
+              newState.stacks[newState.activeTab] = [...currentStack, newItem];
           }
           
-          const newItem = { key: newKey, screen, props };
-          const currentStack = prevState.stacks[prevState.activeTab] || [];
-          return {
-              ...prevState,
-              stacks: {
-                  ...prevState.stacks,
-                  [prevState.activeTab]: [...currentStack, newItem]
-              }
-          };
+          window.dispatchEvent(new CustomEvent('navigationChange', { detail: { activeTab: newState.activeTab } }));
+          return newState;
       });
   }, []);
   
