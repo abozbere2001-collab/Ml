@@ -1,48 +1,50 @@
 
 {
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/Ml/",
+  "start_url": "/Ml/",
   "id": "/Ml/",
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
   "description": "عالم كرة القدم بين يديك",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
   "orientation": "portrait-primary",
-  "categories": [
-    "sports",
-    "social"
-  ],
+  "categories": ["sports", "social"],
   "icons": [
     {
       "src": "/Ml/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/Ml/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/Ml/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
+    },
+    {
+      "src": "/Ml/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "screenshots": [
     {
-      "src": "/Ml/images/screenshots/screenshot1.png",
-      "sizes": "1080x1920",
+      "src": "https://picsum.photos/seed/1/540/720",
+      "sizes": "540x720",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Matches Screen"
     },
     {
-      "src": "/Ml/images/screenshots/screenshot2.png",
-      "sizes": "1080x1920",
+      "src": "https://picsum.photos/seed/2/720/540",
+      "sizes": "720x540",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "wide",
+      "label": "Competition Details"
     }
   ]
 }
