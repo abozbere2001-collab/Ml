@@ -9,10 +9,9 @@ const pwaConfig = {
   skipWaiting: true,
   disable: !isProd,
   publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
-  // The scope is now set from the manifest.json
+  scope: basePath || '/',
   sw: 'sw.js',
   buildExcludes: [/app-build-manifest\.json$/],
-  // Manifest object is removed from here. The source of truth is now public/manifest.json
 };
 
 export default pwaConfig;
