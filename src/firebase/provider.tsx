@@ -7,17 +7,18 @@ import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
+// 1. Basic context state for auth status
 export interface FirebaseContextState {
   firebaseApp: FirebaseApp | null;
   firestore: Firestore | null;
   auth: Auth | null;
   user: User | null;
   isUserLoading: boolean;
-  setProUser: (isPro: boolean) => Promise<void>;
 }
 
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
+// 2. The main provider component
 export const FirebaseProvider: React.FC<{
   children: ReactNode;
   firebaseApp: FirebaseApp;
@@ -25,37 +26,26 @@ export const FirebaseProvider: React.FC<{
   auth: Auth;
 }> = ({ children, firebaseApp, firestore, auth }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(true);
+  const [isUserLoading, setIsUserLoading] = useState(true); // Start as true
 
+  // Listen for auth state changes. This is the core of the provider.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
-      setIsUserLoading(false);
+      setIsUserLoading(false); // Set loading to false once we have a definitive user state
     });
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [auth]);
 
-  const setProUser = async (isPro: boolean) => {
-    if (user && firestore) {
-      const userRef = doc(firestore, 'users', user.uid);
-      await setDoc(userRef, { isProUser: isPro }, { merge: true });
-      // Force a token refresh to get the latest custom claims if any
-      if (user) {
-        await user.getIdToken(true);
-      }
-      // Re-set user to trigger re-renders
-      setUser({ ...user } as User); 
-    }
-  };
-
+  // Use useMemo to prevent unnecessary re-renders
   const contextValue = useMemo((): FirebaseContextState => ({
     firebaseApp,
     firestore,
     auth,
     user,
     isUserLoading,
-    setProUser,
   }), [firebaseApp, firestore, auth, user, isUserLoading]);
 
   return (
@@ -66,7 +56,7 @@ export const FirebaseProvider: React.FC<{
   );
 };
 
-
+// 3. Simplified Hooks
 export const useFirebase = (): FirebaseContextState => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
@@ -76,13 +66,13 @@ export const useFirebase = (): FirebaseContextState => {
 };
 
 export const useAuth = () => {
-    const context = useContext(FirebaseContext);
-    if (context === undefined) throw new Error('useAuth must be used within a FirebaseProvider.');
-    return {
-        user: context.user,
-        isUserLoading: context.isUserLoading,
-        setProUser: context.setProUser,
-    };
+  const context = useFirebase();
+  // The `setProUser` function is removed as it was part of the more complex logic.
+  // It should be implemented separately if needed.
+  return {
+    user: context.user,
+    isUserLoading: context.isUserLoading,
+  };
 };
 
 export const useAdmin = () => {
@@ -106,7 +96,6 @@ export const useAdmin = () => {
     }).finally(() => {
       setIsCheckingAdmin(false);
     });
-
   }, [user, firestore, isUserLoading]);
   
   const makeAdmin = async () => {
@@ -122,19 +111,12 @@ export const useAdmin = () => {
   return { isAdmin, isCheckingAdmin, db: firestore, makeAdmin };
 };
 
-
 export const useFirestore = (): { db: Firestore | null } => {
-  const context = useContext(FirebaseContext);
-  if (context === undefined) {
-    throw new Error('useFirestore must be used within a FirebaseProvider.');
-  }
+  const context = useFirebase();
   return { db: context.firestore };
 };
 
 export const useFirebaseApp = (): FirebaseApp | null => {
-  const context = useContext(FirebaseContext);
-  if (context === undefined) {
-    throw new Error("useFirebaseApp must be used within a FirebaseProvider");
-  }
+  const context = useFirebase();
   return context.firebaseApp;
 };
