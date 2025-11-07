@@ -1,6 +1,6 @@
 
 import type {Metadata} from 'next';
-import './globals.css';
+import '@/app/globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from '@/components/theme-provider';
 import { Cairo } from 'next/font/google';

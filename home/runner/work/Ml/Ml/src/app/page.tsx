@@ -34,8 +34,8 @@ export default function Home() {
 
     React.useEffect(() => {
         setIsClient(true);
-        const savedHintsDismissed = localStorage.getItem(HINTS_DISMISSED_KEY) === 'true';
-        setHintsDismissed(true); // Force hints to be dismissed for better studio experience
+        // Force hints to be dismissed for a better studio experience
+        setHintsDismissed(true); 
     }, []);
 
     React.useEffect(() => {
@@ -50,11 +50,6 @@ export default function Home() {
         }
         setIsOnboardingComplete(true);
     };
-
-    const handleHintsDismissed = () => {
-        localStorage.setItem(HINTS_DISMISSED_KEY, 'true');
-        setHintsDismissed(true);
-    }
     
     // This effect is to listen to navigation changes from the AppContentWrapper
     React.useEffect(() => {
@@ -84,9 +79,17 @@ export default function Home() {
     return (
         <AdProvider>
             <AppContentWrapper />
-            {/*!hintsDismissed && user && !user.isAnonymous && (
-                <OnboardingHints onDismiss={handleHintsDismissed} activeTab={activeTab}/>
-            )*/}
+            {/* 
+              This component is disabled to prevent editor interference. 
+              Uncomment it for production if needed.
+            
+              !hintsDismissed && user && !user.isAnonymous && (
+                <OnboardingHints onDismiss={() => {
+                    localStorage.setItem(HINTS_DISMISSED_KEY, 'true');
+                    setHintsDismissed(true);
+                }} activeTab={activeTab}/>
+              )
+            */}
         </AdProvider>
     );
 }
