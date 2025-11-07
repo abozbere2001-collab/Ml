@@ -12,6 +12,8 @@ const basePath = isProd && repo ? `/${repo}` : '';
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
+  register: true,
+  scope: basePath,
   publicExcludes: ['!noprecache/**/*', '!robots.txt'], // Ensure all public assets are available
 });
 
