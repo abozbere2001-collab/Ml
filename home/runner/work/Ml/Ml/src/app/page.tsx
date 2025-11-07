@@ -3,12 +3,12 @@
 "use client";
 
 import React from 'react';
-import { AppContentWrapper } from './AppContentWrapper';
+import { AppContentWrapper } from '@/app/AppContentWrapper';
 import { AdProvider } from '@/components/AdProvider';
-import { WelcomeScreen } from './screens/WelcomeScreen';
+import { WelcomeScreen } from '@/app/screens/WelcomeScreen';
 import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import { FavoriteSelectionScreen } from './screens/FavoriteSelectionScreen';
+import { FavoriteSelectionScreen } from '@/app/screens/FavoriteSelectionScreen';
 import { OnboardingHints } from '@/components/OnboardingHints';
 
 export type ScreenKey = 'Welcome' | 'SignUp' | 'Matches' | 'Competitions' | 'AllCompetitions' | 'News' | 'Settings' | 'CompetitionDetails' | 'TeamDetails' | 'PlayerDetails' | 'AdminFavoriteTeamDetails' | 'Profile' | 'SeasonPredictions' | 'SeasonTeamSelection' | 'SeasonPlayerSelection' | 'AddEditNews' | 'ManageTopScorers' | 'MatchDetails' | 'NotificationSettings' | 'GeneralSettings' | 'ManagePinnedMatch' | 'PrivacyPolicy' | 'TermsOfService' | 'FavoriteSelection' | 'GoPro' | 'MyCountry' | 'Predictions';

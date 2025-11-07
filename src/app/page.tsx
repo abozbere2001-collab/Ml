@@ -3,12 +3,12 @@
 "use client";
 
 import React from 'react';
-import { AppContentWrapper } from './AppContentWrapper';
+import { AppContentWrapper } from '@/app/AppContentWrapper';
 import { AdProvider } from '@/components/AdProvider';
-import { WelcomeScreen } from './screens/WelcomeScreen';
+import { WelcomeScreen } from '@/app/screens/WelcomeScreen';
 import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import { FavoriteSelectionScreen } from './screens/FavoriteSelectionScreen';
+import { FavoriteSelectionScreen } from '@/app/screens/FavoriteSelectionScreen';
 import { OnboardingHints } from '@/components/OnboardingHints';
 
 export type ScreenKey = 'Welcome' | 'SignUp' | 'Matches' | 'Competitions' | 'AllCompetitions' | 'News' | 'Settings' | 'CompetitionDetails' | 'TeamDetails' | 'PlayerDetails' | 'AdminFavoriteTeamDetails' | 'Profile' | 'SeasonPredictions' | 'SeasonTeamSelection' | 'SeasonPlayerSelection' | 'AddEditNews' | 'ManageTopScorers' | 'MatchDetails' | 'NotificationSettings' | 'GeneralSettings' | 'ManagePinnedMatch' | 'PrivacyPolicy' | 'TermsOfService' | 'FavoriteSelection' | 'GoPro' | 'MyCountry' | 'Predictions';
@@ -36,7 +36,7 @@ export default function Home() {
     React.useEffect(() => {
         setIsClient(true);
         const savedHintsDismissed = localStorage.getItem(HINTS_DISMISSED_KEY) === 'true';
-        setHintsDismissed(savedHintsDismissed);
+        setHintsDismissed(true); // Force hints to be dismissed for better studio experience
     }, []);
 
     React.useEffect(() => {
@@ -85,10 +85,9 @@ export default function Home() {
     return (
         <AdProvider>
             <AppContentWrapper />
-            {!hintsDismissed && user && !user.isAnonymous && (
+            {/*!hintsDismissed && user && !user.isAnonymous && (
                 <OnboardingHints onDismiss={handleHintsDismissed} activeTab={activeTab}/>
-            )}
+            )*/}
         </AdProvider>
     );
 }
-
