@@ -44,7 +44,7 @@ import { cn } from '@/lib/utils';
 import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
 import { IraqScreen } from './screens/IraqScreen';
 import { PredictionsScreen } from './screens/PredictionsScreen';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
 
@@ -171,7 +171,7 @@ export function AppContentWrapper() {
     setFavorites(currentFavorites => {
         const newFavorites = typeof updater === 'function' ? updater(currentFavorites) : updater;
 
-        if (!user || user.isAnonymous) {
+        if (!user || !db) {
             setLocalFavorites(newFavorites || {});
         } else if (db && newFavorites) {
             const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
@@ -189,29 +189,52 @@ export function AppContentWrapper() {
 
 
   useEffect(() => {
-    const fetchRemoteFavorites = async () => {
-        if (user && db && !user.isAnonymous) {
-            const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
-            try {
-                const docSnap = await getDoc(favDocRef);
-                if (docSnap.exists()) {
-                    setFavorites(docSnap.data() as Favorites);
-                } else {
-                    setFavorites({});
-                }
-            } catch (error) {
-                console.error("Error fetching remote favorites:", error);
-                setFavorites({}); // Set empty on error
-            }
-        }
-    };
-    
-    if (user && !user.isAnonymous) {
-      fetchRemoteFavorites();
-    } else {
+    if (!db) {
+      // Handle case where firestore is not available
       setFavorites(getLocalFavorites());
-      // No need for a listener for local storage, we update state directly.
+      return;
     }
+  
+    let unsubscribe: (() => void) | undefined;
+  
+    if (user) {
+      // Logged-in user: listen to Firestore
+      const favDocRef = doc(db, 'users', user.uid, 'favorites', 'data');
+      unsubscribe = onSnapshot(
+        favDocRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            setFavorites(docSnap.data() as Favorites);
+          } else {
+            // Document doesn't exist, maybe it's a new user.
+            // We can set an empty object.
+            setFavorites({});
+          }
+        },
+        (error) => {
+          console.error("Error listening to remote favorites:", error);
+          setFavorites({}); // Fallback to empty on error
+        }
+      );
+    } else {
+      // Guest user: use local storage and listen for changes
+      const handleStorageChange = () => {
+        setFavorites(getLocalFavorites());
+      };
+      
+      setFavorites(getLocalFavorites()); // Initial load
+      window.addEventListener('localFavoritesChanged', handleStorageChange);
+      
+      unsubscribe = () => {
+        window.removeEventListener('localFavoritesChanged', handleStorageChange);
+      };
+    }
+  
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [user, db]);
 
 

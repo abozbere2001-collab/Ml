@@ -26,15 +26,18 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
-    match /users/{userId}/favorites/data {
-        allow read, write: if isOwner(userId);
+    match /users/{userId}/favorites/{docId} {
+      allow read, write: if isOwner(userId);
     }
     
     // ---------------------------------
     // Admin & Predictions
     // ---------------------------------
     match /admins/{adminId} {
-      allow get: if isOwner(adminId); // Allow user to check their own admin status
+      // Let any signed in user check if a UID is an admin
+      // This is safe as it only reveals a boolean status.
+      // Write access is restricted to admins only.
+      allow get: if isSignedIn();
       allow list, write: if isAdmin();
     }
     
@@ -97,11 +100,6 @@ service cloud.firestore {
     match /pinnedIraqiMatches/{matchId} {
         allow get, list: if true;
         allow write: if isAdmin();
-    }
-
-    // Default Deny: Ensure any path not explicitly matched is locked down.
-    match /{document=**} {
-      allow read, write: if false;
     }
   }
 }
