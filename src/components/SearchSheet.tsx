@@ -60,7 +60,7 @@ interface LeagueResult {
     country: { name: string; };
 }
 
-type Item = TeamResult['team'] | LeagueResult['league'];
+type SearchItemOriginal = TeamResult['team'] | LeagueResult['league'];
 type ItemType = 'teams' | 'leagues';
 type RenameType = 'league' | 'team' | 'player' | 'continent' | 'country' | 'coach' | 'status' | 'crown';
 
@@ -70,7 +70,7 @@ interface SearchableItem {
     name: string; // The translated name
     originalName: string;
     logo: string;
-    originalItem: Item;
+    originalItem: SearchItemOriginal;
 }
 
 const normalizeArabic = (text: string) => {
@@ -85,7 +85,7 @@ const normalizeArabic = (text: string) => {
 };
 
 
-const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: Item, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: Item, itemType: ItemType) => void, onCrownToggle: (item: Item) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
+const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, itemType: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
   return (
     <div className="flex items-center gap-2 p-1.5 border-b last:border-b-0 hover:bg-accent/50 rounded-md">
        <div className="flex-1 flex items-center gap-2 cursor-pointer" onClick={onResultClick}>
@@ -115,7 +115,7 @@ const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onC
 }
 
 
-export function SearchSheet({ children, navigate, initialItemType, favorites, customNames: initialCustomNames, setFavorites, onCustomNameChange }: { children: React.ReactNode, navigate: ScreenProps['navigate'], initialItemType?: ItemType, favorites: Partial<Favorites> | null, customNames: any, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>, onCustomNameChange?: () => void }) {
+export function SearchSheet({ children, navigate, initialItemType, favorites, customNames: initialCustomNames, setFavorites, onCustomNameChange }: { children: React.ReactNode, navigate: ScreenProps['navigate'], initialItemType?: ItemType, favorites: Partial<Favorites> | null, customNames: any, setFavorites?: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>, onCustomNameChange?: () => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
@@ -314,7 +314,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }
   }, [debouncedSearchTerm, handleSearch, isOpen]);
 
-    const handleFavorite = useCallback((item: Item, itemType: ItemType) => {
+    const handleFavorite = useCallback((item: SearchItemOriginal, itemType: ItemType) => {
         const itemId = item.id;
     
         if (!user) { // Guest mode logic
@@ -355,7 +355,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }, [user, setFavorites, toast]);
 
 
-  const handleOpenCrownDialog = (team: Item) => {
+  const handleOpenCrownDialog = (team: SearchItemOriginal) => {
     if (!user) {
         toast({ title: 'مستخدم زائر', description: 'يرجى تسجيل الدخول لاستخدام هذه الميزة.' });
         return;
@@ -380,7 +380,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     handleOpenChange(false);
   }
 
-  const handleOpenRename = (type: RenameType, id: number, originalItem: Item) => {
+  const handleOpenRename = (type: RenameType, id: number, originalItem: SearchItemOriginal) => {
     const currentName = getDisplayName(type as 'team' | 'league', id, originalItem.name);
     setRenameItem({ id, name: currentName, type, originalData: originalItem, purpose: 'rename', originalName: originalItem.name });
   };
@@ -436,7 +436,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             name: getDisplayName(type.slice(0, -1) as 'team' | 'league', item.id, item.name),
             originalName: item.name,
             logo: item.logo,
-            originalItem: item as Item,
+            originalItem: item as SearchItemOriginal,
         };
     }).filter(Boolean) as SearchableItem[];
 

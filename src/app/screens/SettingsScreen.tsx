@@ -130,3 +130,5 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavo
     </div>
   );
 }
+
+    
