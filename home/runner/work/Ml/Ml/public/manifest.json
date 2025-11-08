@@ -1,32 +1,32 @@
-
 {
-    "id": "/Ml/",
-    "name": "نبض الملاعب",
-    "short_name": "نبض الملاعب",
-    "description": "عالم كرة القدم بين يديك. تابع المباريات والأخبار والنتائج أولاً بأول.",
-    "icons": [
-        {
-            "src": "/Ml/icon-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "/Ml/icon-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        },
-        {
-            "src": "/Ml/icon-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
-        }
-    ],
-    "theme_color": "#000000",
-    "background_color": "#000000",
-    "start_url": "/Ml/",
-    "display": "standalone",
-    "orientation": "portrait",
-    "scope": "/Ml/",
-    "prefer_related_applications": false
+  "name": "نبض الملاعب",
+  "short_name": "نبض الملاعب",
+  "description": "عالم كرة القدم بين يديك",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "display": "standalone",
+  "scope": "/Ml/",
+  "start_url": "/Ml/",
+  "id": "/Ml/",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }
