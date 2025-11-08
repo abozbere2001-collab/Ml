@@ -4,9 +4,11 @@
   "display": "standalone",
   "scope": "/Ml/",
   "start_url": "/Ml/",
+  "id": "/Ml/",
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
   "description": "عالم كرة القدم بين يديك",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/Ml/icon-192x192.png",
@@ -29,7 +31,6 @@
       "type": "image/png"
     }
   ],
-  "id": "/Ml/",
   "display_override": [
     "window-controls-overlay",
     "tabbed",
