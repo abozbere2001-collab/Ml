@@ -4,27 +4,27 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { BottomNav } from '@/components/BottomNav';
-import { MatchesScreen } from './screens/MatchesScreen';
-import { CompetitionsScreen } from './screens/CompetitionsScreen';
-import { AllCompetitionsScreen } from './screens/AllCompetitionsScreen';
-import { NewsScreen } from './screens/NewsScreen';
-import { SettingsScreen } from './screens/SettingsScreen';
-import { CompetitionDetailScreen } from './screens/CompetitionDetailScreen';
-import { TeamDetailScreen } from './screens/TeamDetailScreen';
-import { PlayerDetailScreen } from './screens/PlayerDetailScreen';
-import { AdminFavoriteTeamScreen } from './screens/AdminFavoriteTeamScreen';
-import { ProfileScreen } from './screens/ProfileScreen';
-import { SeasonPredictionsScreen } from './screens/SeasonPredictionsScreen';
-import { SeasonTeamSelectionScreen } from './screens/SeasonTeamSelectionScreen';
-import { SeasonPlayerSelectionScreen } from './screens/SeasonPlayerSelectionScreen';
-import { AddEditNewsScreen } from './screens/AddEditNewsScreen';
-import { ManagePinnedMatchScreen } from './screens/ManagePinnedMatchScreen';
-import MatchDetailScreen from './screens/MatchDetailScreen';
-import { NotificationSettingsScreen } from './screens/NotificationSettingsScreen';
-import { GeneralSettingsScreen } from './screens/GeneralSettingsScreen';
-import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
-import TermsOfServiceScreen from './screens/TermsOfServiceScreen';
-import { GoProScreen } from './screens/GoProScreen';
+import { MatchesScreen } from '@/app/screens/MatchesScreen';
+import { CompetitionsScreen } from '@/app/screens/CompetitionsScreen';
+import { AllCompetitionsScreen } from '@/app/screens/AllCompetitionsScreen';
+import { NewsScreen } from '@/app/screens/NewsScreen';
+import { SettingsScreen } from '@/app/screens/SettingsScreen';
+import { CompetitionDetailScreen } from '@/app/screens/CompetitionDetailScreen';
+import { TeamDetailScreen } from '@/app/screens/TeamDetailScreen';
+import { PlayerDetailScreen } from '@/app/screens/PlayerDetailScreen';
+import { AdminFavoriteTeamScreen } from '@/app/screens/AdminFavoriteTeamScreen';
+import { ProfileScreen } from '@/app/screens/ProfileScreen';
+import { SeasonPredictionsScreen } from '@/app/screens/SeasonPredictionsScreen';
+import { SeasonTeamSelectionScreen } from '@/app/screens/SeasonTeamSelectionScreen';
+import { SeasonPlayerSelectionScreen } from '@/app/screens/SeasonPlayerSelectionScreen';
+import { AddEditNewsScreen } from '@/app/screens/AddEditNewsScreen';
+import { ManagePinnedMatchScreen } from '@/app/screens/ManagePinnedMatchScreen';
+import MatchDetailScreen from '@/app/screens/MatchDetailScreen';
+import { NotificationSettingsScreen } from '@/app/screens/NotificationSettingsScreen';
+import { GeneralSettingsScreen } from '@/app/screens/GeneralSettingsScreen';
+import PrivacyPolicyScreen from '@/app/screens/PrivacyPolicyScreen';
+import TermsOfServiceScreen from '@/app/screens/TermsOfServiceScreen';
+import { GoProScreen } from '@/app/screens/GoProScreen';
 import type { ScreenKey } from './page';
 
 import { useAd, SplashScreenAd } from '@/components/AdProvider';
@@ -42,9 +42,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User as UserIcon, Loader2 } from 'lucide-react';
 import { signOut } from '@/lib/firebase-client';
 import { cn } from '@/lib/utils';
-import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
-import { IraqScreen } from './screens/IraqScreen';
-import { PredictionsScreen } from './screens/PredictionsScreen';
+import { ManageTopScorersScreen } from '@/app/screens/ManageTopScorersScreen';
+import { IraqScreen } from '@/app/screens/IraqScreen';
+import { PredictionsScreen } from '@/app/screens/PredictionsScreen';
 import { doc, getDoc, setDoc, getDocs, collection, onSnapshot, writeBatch } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
@@ -374,3 +374,7 @@ export function AppContentWrapper() {
     </main>
   );
 }
+
+    
+
+    
