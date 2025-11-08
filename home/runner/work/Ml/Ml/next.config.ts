@@ -12,8 +12,8 @@ const withPWA = withPWAInit({
   skipWaiting: true,
   disable: !isProd,
   publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
-  scope: basePath,
-  sw: `${basePath}/sw.js`,
+  scope: '/Ml/',
+  sw: '/Ml/sw.js',
   buildExcludes: [/app-build-manifest\.json$/],
 });
 
