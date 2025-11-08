@@ -6,12 +6,10 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Cairo } from 'next/font/google';
 import { FirebaseClientProvider } from '@/firebase';
 
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-
 export const metadata: Metadata = {
   title: 'نبض الملاعب',
   description: 'عالم كرة القدم بين يديك',
-  manifest: `${basePath}/manifest.json`,
+  manifest: `/Ml/manifest.json`,
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -41,8 +39,8 @@ export default function RootLayout({
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
           <meta name="theme-color" content="#000000" />
-          <link rel="manifest" href={`${basePath}/manifest.json`} />
-          <link rel="apple-touch-icon" href={`${basePath}/icon-192x192.png`} />
+          <link rel="manifest" href="/Ml/manifest.json" />
+          <link rel="apple-touch-icon" href="/Ml/icon-192x192.png" />
         </head>
         <body className={`${cairo.variable} font-body antialiased`}>
             <ThemeProvider
