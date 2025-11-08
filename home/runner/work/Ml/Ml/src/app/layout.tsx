@@ -11,12 +11,12 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 export const metadata: Metadata = {
   title: 'نبض الملاعب',
   description: 'عالم كرة القدم بين يديك',
+  manifest: `${basePath}/manifest.json`,
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'نبض الملاعب',
   },
-  manifest: `${basePath}/manifest.json`,
 };
 
 const cairo = Cairo({
