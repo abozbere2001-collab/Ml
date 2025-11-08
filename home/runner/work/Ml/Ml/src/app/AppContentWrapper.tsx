@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -42,7 +41,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User as UserIcon, Loader2 } from 'lucide-react';
 import { signOut } from '@/lib/firebase-client';
 import { cn } from '@/lib/utils';
-import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
+import { ManageTopScorersScreen } from '@/app/screens/ManageTopScorersScreen';
 import { IraqScreen } from '@/app/screens/IraqScreen';
 import { PredictionsScreen } from '@/app/screens/PredictionsScreen';
 import { doc, getDoc, setDoc, getDocs, collection, onSnapshot, writeBatch } from 'firebase/firestore';
@@ -374,3 +373,5 @@ export function AppContentWrapper() {
     </main>
   );
 }
+
+    
