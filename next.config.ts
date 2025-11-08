@@ -11,8 +11,6 @@ const withPWA = withPWAInit({
   register: true,
   skipWaiting: true,
   disable: !isProd,
-  scope: '/Ml/',
-  sw: '/Ml/sw.js',
   buildExcludes: [/app-build-manifest\.json$/, /manifest\.json$/],
 });
 
