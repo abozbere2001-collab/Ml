@@ -1,0 +1,293 @@
+
+
+"use client";
+
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import type { ScreenProps } from '@/app/page';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ProfileButton } from '../AppContentWrapper';
+import { Button } from '@/components/ui/button';
+import { Crown, Search, X, Loader2, Trophy, BarChart, Users as UsersIcon, RefreshCw, CalendarDays, ThumbsUp } from 'lucide-react';
+import { SearchSheet } from '@/app/screens/SearchSheet';
+import { useAdmin, useAuth, useFirestore } from '@/firebase';
+import type { CrownedTeam, Favorites, Fixture, Standing, TopScorer, Prediction, Team, Player, UserScore, PredictionMatch, UserProfile } from '@/lib/types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { collection, onSnapshot, doc, updateDoc, deleteField, setDoc, query, where, getDocs, writeBatch, getDoc, orderBy, limit } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { useToast } from '@/hooks/use-toast';
+import { FixtureItem } from '@/components/FixtureItem';
+import { isMatchLive } from '@/lib/matchStatus';
+import { CURRENT_SEASON } from '@/lib/constants';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format, addDays, subDays, isToday, isYesterday, isTomorrow } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import PredictionCard from '@/components/PredictionCard';
+import { FootballIcon } from '@/components/icons/FootballIcon';
+import { cn } from '@/lib/utils';
+import {Skeleton} from "@/components/ui/skeleton";
+import { setLocalFavorites } from '@/lib/local-favorites';
+import { hardcodedTranslations } from '@/lib/hardcoded-translations';
+
+
+const CrownedTeamScroller = ({
+  crownedTeams,
+  onSelectTeam,
+  onRemove,
+  selectedTeamId,
+  navigate,
+}: {
+  crownedTeams: CrownedTeam[];
+  onSelectTeam: (teamId: number) => void;
+  onRemove: (teamId: number) => void;
+  selectedTeamId: number | null;
+  navigate: ScreenProps['navigate'];
+}) => {
+  if (crownedTeams.length === 0) {
+    return (
+      <div class="text-center text-muted-foreground py-4 px-4">
+        <p class="mb-4">
+          قم بتتويج فريقك المفضل بالضغط على أيقونة التاج 👑 في صفحة تفاصيل الفريق لتبقى على اطلاع دائم بآخر أخباره ومبارياته هنا.
+        </p>
+        <Button onClick={() => navigate('AllCompetitions')}>استكشف</Button>
+      </div>
+    );
+  }
+
+  return (
+    <ScrollArea className="w-full whitespace-nowrap">
+      <div class="flex w-max space-x-4 px-4 flex-row-reverse">
+        {crownedTeams.map(team => (
+          <div
+            key={team.teamId}
+            className="relative flex flex-col items-center gap-1 w-20 text-center cursor-pointer group"
+            onClick={() => onSelectTeam(team.teamId)}
+          >
+            <Avatar className={`h-12 w-12 border-2 ${selectedTeamId === team.teamId ? 'border-primary' : 'border-yellow-400'}`}>
+              <AvatarImage src={team.logo} />
+              <AvatarFallback>{team.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <span class="text-[11px] font-medium truncate w-full">{team.name}</span>
+            <p class="text-[10px] text-muted-foreground truncate w-full">{team.note}</p>
+            <button 
+              onClick={(e) => { e.stopPropagation(); onRemove(team.teamId); }}
+              className="absolute top-0 left-0 h-5 w-5 bg-background/80 rounded-full flex items-center justify-center border border-destructive"
+            >
+              <X class="h-3 w-3 text-destructive"/>
+            </button>
+          </div>
+        ))}
+      </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
+  );
+};
+
+const TeamFixturesDisplay = ({ teamId, navigate }: { teamId: number; navigate: ScreenProps['navigate'] }) => {
+    const [allFixtures, setAllFixtures] = useState<Fixture[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
+    const listRef = useRef<HTMLDivElement>(null);
+    const firstUpcomingMatchIndex = useRef<number>(-1);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchFixtures = async () => {
+            if (!teamId) {
+                setLoading(false);
+                return;
+            };
+            setLoading(true);
+            try {
+                const url = `https://v3.football.api-sports.io/fixtures?team=${teamId}&season=${CURRENT_SEASON}`;
+                const res = await fetch(url, { headers: { 'x-rapidapi-key': process.env.NEXT_PUBLIC_API_FOOTBALL_KEY || '' } });
+                if (!isMounted) return;
+                if (!res.ok) throw new Error(`API fetch failed with status: ${res.status}`);
+                
+                const data = await res.json();
+                const fixtures: Fixture[] = data.response || [];
+                fixtures.sort((a, b) => a.fixture.timestamp - b.fixture.timestamp);
+                
+                const now = new Date();
+                const upcomingIndex = fixtures.findIndex(f => {
+                    const fixtureDate = new Date(f.fixture.timestamp * 1000);
+                    return isMatchLive(f.fixture.status) || fixtureDate >= now;
+                });
+
+                if(isMounted) {
+                    setAllFixtures(fixtures);
+                    firstUpcomingMatchIndex.current = upcomingIndex > -1 ? upcomingIndex : (fixtures.length > 0 ? fixtures.length - 1 : -1);
+                }
+
+            } catch (error) {
+                console.error("Error fetching fixtures:", error);
+                if(isMounted) {
+                    toast({
+                        variant: "destructive",
+                        title: "خطأ في الشبكة",
+                        description: "فشل في جلب المباريات. يرجى التحقق من اتصالك بالإنترنت.",
+                    });
+                }
+            } finally {
+                if(isMounted) setLoading(false);
+            }
+        };
+        fetchFixtures();
+
+        return () => { isMounted = false; }
+    }, [teamId, toast]);
+
+    useEffect(() => {
+        if (!loading && firstUpcomingMatchIndex.current > -1 && listRef.current) {
+            setTimeout(() => {
+                const itemElement = listRef.current?.children[firstUpcomingMatchIndex.current] as HTMLDivElement;
+                if (itemElement) {
+                    listRef.current?.scrollTo({
+                        top: itemElement.offsetTop - 10,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 200);
+        }
+    }, [loading, allFixtures]);
+
+    if (loading) {
+      return (
+        <div class="flex items-center justify-center h-64">
+          <Loader2 class="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    if (allFixtures.length === 0) {
+      return (
+        <Card className="mt-4">
+            <CardContent className="p-6">
+                <p class="text-center text-muted-foreground">لا توجد مباريات متاحة لهذا الفريق.</p>
+            </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+        <div ref={listRef} className="h-full overflow-y-auto space-y-2">
+            {allFixtures.map((fixture, index) => (
+                <div key={fixture.fixture.id}>
+                    <FixtureItem fixture={fixture} navigate={navigate} />
+                </div>
+            ))}
+        </div>
+    );
+};
+
+export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps) {
+  const { user } = useAuth();
+  const { db } = useFirestore();
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  
+  const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
+    if (!customNames) return defaultName;
+    const key = `${type}s` as 'teams' | 'leagues';
+    const firestoreMap = customNames[key];
+    const customName = firestoreMap?.get(id);
+    if (customName) return customName;
+
+    const hardcodedMap = hardcodedTranslations[key];
+    const hardcodedName = hardcodedMap[id as any];
+    if (hardcodedName) return hardcodedName;
+
+    return defaultName;
+  }, [customNames]);
+  
+  const crownedTeams = useMemo(() => {
+    if (!favorites?.crownedTeams) return [];
+    return Object.values(favorites.crownedTeams).map(team => ({
+        ...team,
+        name: getDisplayName('team', team.teamId, team.name)
+    }));
+  }, [favorites?.crownedTeams, getDisplayName]);
+  
+  useEffect(() => {
+    if(crownedTeams.length > 0 && !selectedTeamId) {
+      setSelectedTeamId(crownedTeams[0].teamId);
+    }
+    if (crownedTeams.length === 0) {
+      setSelectedTeamId(null);
+    }
+  }, [crownedTeams, selectedTeamId]);
+
+
+ const handleRemoveCrowned = useCallback((teamIdToRemove: number) => {
+    if (!setFavorites) return;
+    const newFavorites = JSON.parse(JSON.stringify(favorites || {}));
+    if (newFavorites.crownedTeams?.[teamIdToRemove]) {
+        delete newFavorites.crownedTeams[teamIdToRemove];
+    }
+    setFavorites(newFavorites);
+}, [favorites, setFavorites]);
+  
+  const handleSelectTeam = (teamId: number) => {
+    setSelectedTeamId(teamId);
+  }
+  
+  if (!user) {
+    return (
+       <div class="flex h-full flex-col bg-background">
+          <ScreenHeader title="ملعبي" onBack={goBack} canGoBack={canGoBack} />
+           <div class="flex-1 flex flex-col items-center justify-center text-center p-8">
+              <Crown class="h-16 w-16 text-muted-foreground mb-4"/>
+              <h2 class="text-xl font-bold">ميزة حصرية للمستخدمين المسجلين</h2>
+              <p class="text-muted-foreground mb-6">
+                قم بتسجيل الدخول لتتويج فرقك وبطولاتك المفضلة.
+              </p>
+              <Button onClick={() => navigate('Welcome')}>تسجيل الدخول</Button>
+           </div>
+       </div>
+    )
+  }
+
+  return (
+    <div class="flex h-full flex-col bg-background">
+      <ScreenHeader
+        title="ملعبي"
+        onBack={goBack}
+        canGoBack={canGoBack}
+        actions={
+          <div class="flex items-center gap-1">
+              <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
+                  <Button variant="ghost" size="icon">
+                      <Search class="h-5 w-5" />
+                  </Button>
+              </SearchSheet>
+              <ProfileButton />
+          </div>
+        }
+      />
+      <div class="flex-1 flex flex-col min-h-0">
+          <div class="py-4 border-b">
+            <CrownedTeamScroller 
+              crownedTeams={crownedTeams} 
+              onSelectTeam={handleSelectTeam}
+              onRemove={handleRemoveCrowned} 
+              selectedTeamId={selectedTeamId}
+              navigate={navigate}
+            />
+          </div>
+          <div class="flex-1 overflow-y-auto p-4">
+            {selectedTeamId ? (
+              <TeamFixturesDisplay teamId={selectedTeamId} navigate={navigate} />
+            ) : (
+              crownedTeams.length > 0 && (
+                 <div class="flex items-center justify-center h-full text-muted-foreground text-center p-4">
+                  <p>اختر فريقًا من الأعلى لعرض مبارياته.</p>
+                </div>
+              )
+            )}
+          </div>
+      </div>
+    </div>
+  );
+}
