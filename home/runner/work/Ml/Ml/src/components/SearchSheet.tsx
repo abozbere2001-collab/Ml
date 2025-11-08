@@ -59,7 +59,7 @@ interface LeagueResult {
     country: { name: string; };
 }
 
-type Item = TeamResult['team'] | LeagueResult['league'];
+type SearchItem = TeamResult['team'] | LeagueResult['league'];
 type ItemType = 'teams' | 'leagues';
 type RenameType = 'league' | 'team' | 'player' | 'continent' | 'country' | 'coach' | 'status' | 'crown';
 
@@ -69,7 +69,7 @@ interface SearchableItem {
     name: string; // The translated name
     originalName: string;
     logo: string;
-    originalItem: Item;
+    originalItem: SearchItem;
 }
 
 const normalizeArabic = (text: string) => {
@@ -84,7 +84,7 @@ const normalizeArabic = (text: string) => {
 };
 
 
-const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: Item, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: Item, itemType: ItemType) => void, onCrownToggle: (item: Item) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
+const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItem, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItem, itemType: ItemType) => void, onCrownToggle: (item: SearchItem) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
   return (
     <div className="flex items-center gap-2 p-1.5 border-b last:border-b-0 hover:bg-accent/50 rounded-md">
        <div className="flex-1 flex items-center gap-2 cursor-pointer" onClick={onResultClick}>
@@ -313,7 +313,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }
   }, [debouncedSearchTerm, handleSearch, isOpen]);
 
-    const handleFavorite = useCallback((item: Item, itemType: ItemType) => {
+    const handleFavorite = useCallback((item: SearchItem, itemType: ItemType) => {
         const itemId = item.id;
     
         if (!user) { // Guest mode logic
@@ -354,7 +354,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }, [user, setFavorites, toast]);
 
 
-  const handleOpenCrownDialog = (team: Item) => {
+  const handleOpenCrownDialog = (team: SearchItem) => {
     if (!user) {
         toast({ title: 'مستخدم زائر', description: 'يرجى تسجيل الدخول لاستخدام هذه الميزة.' });
         return;
@@ -379,7 +379,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     handleOpenChange(false);
   }
 
-  const handleOpenRename = (type: RenameType, id: number, originalItem: Item) => {
+  const handleOpenRename = (type: RenameType, id: number, originalItem: SearchItem) => {
     const currentName = getDisplayName(type as 'team' | 'league', id, originalItem.name);
     setRenameItem({ id, name: currentName, type, originalData: originalItem, purpose: 'rename', originalName: originalItem.name });
   };
@@ -435,14 +435,14 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             name: getDisplayName(type.slice(0, -1) as 'team' | 'league', item.id, item.name),
             originalName: item.name,
             logo: item.logo,
-            originalItem: item as Item,
+            originalItem: item as SearchItem,
         };
     }).filter(Boolean) as SearchableItem[];
 
   }, [getDisplayName, initialCustomNames]);
 
   const renderContent = () => {
-    if (!initialCustomNames) {
+    if (!initialCustomNames || !favorites) {
       return <div className="flex justify-center items-center h-full"><Loader2 className="h-6 w-6 animate-spin" /></div>;
     }
 
