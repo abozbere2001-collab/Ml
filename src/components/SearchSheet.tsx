@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
@@ -332,25 +331,27 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             }
         }
     
-        setFavorites(prev => {
-            if (!prev) return null;
-            const newFavorites = JSON.parse(JSON.stringify(prev));
-            if (!newFavorites[itemType]) {
-                newFavorites[itemType] = {};
-            }
-    
-            const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
-    
-            if (isCurrentlyFavorited) {
-                delete newFavorites[itemType]![itemId];
-            } else {
-                const favData = itemType === 'leagues'
-                    ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
-                    : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
-                newFavorites[itemType]![itemId] = favData as any;
-            }
-            return newFavorites;
-        });
+        if (setFavorites) {
+            setFavorites(prev => {
+                if (!prev) return null;
+                const newFavorites = JSON.parse(JSON.stringify(prev));
+                if (!newFavorites[itemType]) {
+                    newFavorites[itemType] = {};
+                }
+        
+                const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
+        
+                if (isCurrentlyFavorited) {
+                    delete newFavorites[itemType]![itemId];
+                } else {
+                    const favData = itemType === 'leagues'
+                        ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
+                        : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
+                    newFavorites[itemType]![itemId] = favData as any;
+                }
+                return newFavorites;
+            });
+        }
     }, [user, setFavorites, toast]);
 
 
@@ -400,19 +401,21 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     } else if (purpose === 'crown' && user) {
         const teamId = Number(id);
         
-        setFavorites(prev => {
-            if (!prev) return null;
-            const newFavorites = JSON.parse(JSON.stringify(prev));
-            if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
-            const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
+        if (setFavorites) {
+            setFavorites(prev => {
+                if (!prev) return null;
+                const newFavorites = JSON.parse(JSON.stringify(prev));
+                if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
+                const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
 
-            if (isCurrentlyCrowned) {
-                delete newFavorites.crownedTeams[teamId];
-            } else {
-                newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
-            }
-            return newFavorites;
-        });
+                if (isCurrentlyCrowned) {
+                    delete newFavorites.crownedTeams[teamId];
+                } else {
+                    newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
+                }
+                return newFavorites;
+            });
+        }
     }
     setRenameItem(null);
   };
@@ -463,8 +466,8 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         <div className="space-y-2">
             {!debouncedSearchTerm && <h3 className="font-bold text-md text-center text-muted-foreground">{itemType === 'teams' ? 'الفرق الأكثر شعبية' : 'البطولات الأكثر شعبية'}</h3>}
              {itemsToDisplay.map(result => {
-                    const isFavorited = !!favorites[result.type]?.[result.id];
-                    const isCrowned = result.type === 'teams' && !!favorites.crownedTeams?.[result.id];
+                    const isFavorited = !!favorites?.[result.type]?.[result.id];
+                    const isCrowned = result.type === 'teams' && !!favorites?.crownedTeams?.[result.id];
                     return <ItemRow 
                                 key={`${result.type}-${result.id}`} 
                                 item={{...result.originalItem, name: result.name}}
@@ -521,3 +524,5 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     </Sheet>
   );
 }
+
+    
