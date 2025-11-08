@@ -14,6 +14,7 @@ const withPWA = withPWAInit({
   publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
   scope: basePath,
   sw: `${basePath}/sw.js`,
+  buildExcludes: [/app-build-manifest\.json$/],
 });
 
 const nextConfig: NextConfig = {

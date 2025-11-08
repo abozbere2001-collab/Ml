@@ -3,6 +3,7 @@ import type {NextConfig} from 'next';
 import withPWAInit from 'next-pwa';
 
 const isProd = process.env.NODE_ENV === 'production';
+const assetPrefix = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
 const basePath = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
 
 const withPWA = withPWAInit({
@@ -13,6 +14,7 @@ const withPWA = withPWAInit({
   publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
   scope: basePath,
   sw: `${basePath}/sw.js`,
+  buildExcludes: [/app-build-manifest\.json$/],
 });
 
 const nextConfig: NextConfig = {
@@ -20,7 +22,7 @@ const nextConfig: NextConfig = {
   // This is not required for production builds.
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
   output: 'export',
-  assetPrefix: basePath,
+  assetPrefix: assetPrefix,
   basePath: basePath,
   typescript: {
     ignoreBuildErrors: true,
