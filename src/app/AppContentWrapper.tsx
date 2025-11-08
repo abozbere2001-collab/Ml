@@ -22,7 +22,7 @@ import { ManagePinnedMatchScreen } from './screens/ManagePinnedMatchScreen';
 import MatchDetailScreen from './screens/MatchDetailScreen';
 import { NotificationSettingsScreen } from './screens/NotificationSettingsScreen';
 import { GeneralSettingsScreen } from './screens/GeneralSettingsScreen';
-import PrivacyPolicyScreen from './privacy-policy/page';
+import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
 import TermsOfServiceScreen from './terms-of-service/page';
 import { GoProScreen } from './screens/GoProScreen';
 import type { ScreenKey } from './page';
