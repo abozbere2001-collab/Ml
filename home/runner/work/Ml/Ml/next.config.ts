@@ -1,13 +1,20 @@
 
 import type {NextConfig} from 'next';
 import withPWAInit from 'next-pwa';
-import pwaConfig from './pwa.config.js'; // Use the separate config file
 
 const isProd = process.env.NODE_ENV === 'production';
 const assetPrefix = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
 const basePath = isProd ? process.env.NEXT_PUBLIC_BASE_PATH || '' : '';
 
-const withPWA = withPWAInit(pwaConfig);
+const withPWA = withPWAInit({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: !isProd,
+  publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
+  scope: basePath,
+  sw: `${basePath}/sw.js`,
+});
 
 const nextConfig: NextConfig = {
   // This is required to allow the Next.js dev server to be accessed from the cloud workstation preview.
