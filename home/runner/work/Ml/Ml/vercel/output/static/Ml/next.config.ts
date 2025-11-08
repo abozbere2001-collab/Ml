@@ -13,6 +13,7 @@ const withPWA = withPWAInit({
   disable: !isProd,
   scope: '/Ml/', // Hardcoded for GitHub Pages
   sw: '/Ml/sw.js',   // Hardcoded for GitHub Pages
+  buildExcludes: [/app-build-manifest\.json$/, /manifest\.json$/], // Prevent next-pwa from processing our manifest
 });
 
 const nextConfig: NextConfig = {
