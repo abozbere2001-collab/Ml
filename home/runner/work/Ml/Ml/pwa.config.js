@@ -10,10 +10,9 @@ const pwaConfig = {
   disable: !isProd,
   scope: basePath || '/',
   sw: 'sw.js',
-  // Ensure that workbox files are not excluded
-  publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
   // This is important to prevent next-pwa from overwriting our custom manifest
   buildExcludes: [/app-build-manifest\.json$/],
+  publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
 };
 
 export default pwaConfig;
