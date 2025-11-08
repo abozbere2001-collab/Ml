@@ -85,12 +85,12 @@ const normalizeArabic = (text: string) => {
 };
 
 
-const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, itemType: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
+const ItemRow = ({ item, type, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, type: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, type: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
   return (
     <div className="flex items-center gap-2 p-1.5 border-b last:border-b-0 hover:bg-accent/50 rounded-md">
        <div className="flex-1 flex items-center gap-2 cursor-pointer" onClick={onResultClick}>
-            <Avatar className={cn('h-7 w-7', itemType === 'leagues' && 'p-0.5')}>
-                <AvatarImage src={item.logo} alt={item.name} className={itemType === 'leagues' ? 'object-contain' : 'object-cover'} />
+            <Avatar className={cn('h-7 w-7', type === 'leagues' && 'p-0.5')}>
+                <AvatarImage src={item.logo} alt={item.name} className={type === 'leagues' ? 'object-contain' : 'object-cover'} />
                 <AvatarFallback>{item.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 font-semibold truncate text-sm">{item.name}</div>
@@ -101,12 +101,12 @@ const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onC
                     <Pencil className="h-4 w-4 text-muted-foreground" />
                 </Button>
             )}
-            {itemType === 'teams' && (
+            {type === 'teams' && (
                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onCrownToggle(item); }}>
                     <Crown className={cn("h-5 w-5 text-muted-foreground/60", isCrowned && "fill-current text-yellow-400")} />
                 </Button>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onFavoriteToggle(item, itemType); }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onFavoriteToggle(item, type); }}>
                 <Star className={cn("h-5 w-5 text-muted-foreground/60", isFavorited && "fill-current text-yellow-400")} />
             </Button>
         </div>
@@ -314,11 +314,11 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }
   }, [debouncedSearchTerm, handleSearch, isOpen]);
 
-    const handleFavorite = useCallback((item: SearchItemOriginal, itemType: ItemType) => {
+    const handleFavorite = useCallback((item: SearchItemOriginal, type: ItemType) => {
         const itemId = item.id;
     
         if (!user) { // Guest mode logic
-            const isPopular = itemType === 'teams'
+            const isPopular = type === 'teams'
                 ? POPULAR_TEAMS.some(t => t.id === itemId)
                 : POPULAR_LEAGUES.some(l => l.id === itemId);
     
@@ -335,19 +335,19 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             setFavorites(prev => {
                 if (!prev) return null;
                 const newFavorites = JSON.parse(JSON.stringify(prev));
-                if (!newFavorites[itemType]) {
-                    newFavorites[itemType] = {};
+                if (!newFavorites[type]) {
+                    newFavorites[type] = {};
                 }
         
-                const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
+                const isCurrentlyFavorited = !!newFavorites[type]?.[itemId];
         
                 if (isCurrentlyFavorited) {
-                    delete newFavorites[itemType]![itemId];
+                    delete newFavorites[type]![itemId];
                 } else {
-                    const favData = itemType === 'leagues'
+                    const favData = type === 'leagues'
                         ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
                         : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
-                    newFavorites[itemType]![itemId] = favData as any;
+                    newFavorites[type]![itemId] = favData as any;
                 }
                 return newFavorites;
             });
@@ -471,7 +471,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
                     return <ItemRow 
                                 key={`${result.type}-${result.id}`} 
                                 item={{...result.originalItem, name: result.name}}
-                                itemType={result.type} 
+                                type={result.type} 
                                 isFavorited={isFavorited} 
                                 isCrowned={isCrowned}
                                 onFavoriteToggle={handleFavorite} 
