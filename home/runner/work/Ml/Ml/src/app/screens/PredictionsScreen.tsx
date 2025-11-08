@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -9,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileButton } from '../AppContentWrapper';
 import { Button } from '@/components/ui/button';
 import { Crown, Search, X, Loader2, Trophy, BarChart, Users as UsersIcon, RefreshCw, CalendarDays, ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { SearchSheet } from '@/app/screens/SearchSheet';
+import { SearchSheet } from '@/components/SearchSheet';
 import { useAuth, useFirestore, useAdmin } from '@/firebase';
 import type { CrownedTeam, Favorites, Fixture, Standing, TopScorer, Prediction, Team, Player, UserScore, PredictionMatch, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -67,12 +65,12 @@ const calculatePoints = (prediction: Prediction, fixture: Fixture): number => {
 const LeaderboardDisplay = React.memo(({ leaderboard, loadingLeaderboard, userScore, userId }: { leaderboard: UserScore[], loadingLeaderboard: boolean, userScore: UserScore | null, userId: string | undefined }) => {
     if (loadingLeaderboard) {
         return (
-            <div class="space-y-2 p-4">
+            <div className="space-y-2 p-4">
                 {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="flex items-center gap-4 p-2">
                         <Skeleton className="h-4 w-4" />
                         <Skeleton className="h-8 w-8 rounded-full" />
-                        <div class="flex-1"><Skeleton className="h-4 w-3/4" /></div>
+                        <div className="flex-1"><Skeleton className="h-4 w-3/4" /></div>
                         <Skeleton className="h-4 w-8" />
                     </div>
                 ))}
@@ -81,13 +79,13 @@ const LeaderboardDisplay = React.memo(({ leaderboard, loadingLeaderboard, userSc
     }
 
     if (leaderboard.length === 0) {
-        return <p class="text-center text-muted-foreground p-8">لا يوجد مشاركون في لوحة الصدارة بعد.</p>;
+        return <p className="text-center text-muted-foreground p-8">لا يوجد مشاركون في لوحة الصدارة بعد.</p>;
     }
     
     const isUserInTop100 = leaderboard.some(s => s.userId === userId);
 
     return (
-        <div class="space-y-2">
+        <div className="space-y-2">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -101,7 +99,7 @@ const LeaderboardDisplay = React.memo(({ leaderboard, loadingLeaderboard, userSc
                         <TableRow key={score.userId} className={cn(score.userId === userId && "bg-primary/10")}>
                             <TableCell>{score.rank}</TableCell>
                             <TableCell className="text-right">
-                                <div class="flex items-center gap-2 justify-end">
+                                <div className="flex items-center gap-2 justify-end">
                                     {score.userName}
                                     <Avatar className="h-6 w-6"><AvatarImage src={score.userPhoto}/></Avatar>
                                 </div>
@@ -119,7 +117,7 @@ const LeaderboardDisplay = React.memo(({ leaderboard, loadingLeaderboard, userSc
                                 <TableRow className="border-t-2 border-primary/50">
                                     <TableCell>{userScore.rank || '-'}</TableCell>
                                     <TableCell className="text-right">
-                                        <div class="flex items-center gap-2 justify-end">
+                                        <div className="flex items-center gap-2 justify-end">
                                             {userScore.userName}
                                             <Avatar className="h-6 w-6"><AvatarImage src={userScore.userPhoto}/></Avatar>
                                         </div>
@@ -161,14 +159,14 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
     }, [selectedDateKey]);
 
     return (
-        <div class="relative bg-card py-2 border-x border-b rounded-b-lg shadow-md -mt-1 flex items-center justify-center">
+        <div className="relative bg-card py-2 border-x border-b rounded-b-lg shadow-md -mt-1 flex items-center justify-center">
              <Button 
                 variant="ghost" 
                 size="icon"
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={() => onDateSelect(formatDateKey(addDays(new Date(selectedDateKey), 1)))}
              >
-                <ChevronRight class="h-5 w-5" />
+                <ChevronRight className="h-5 w-5" />
              </Button>
             <div ref={scrollerRef} className="flex flex-row-reverse overflow-x-auto pb-1 px-10" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {dates.map(date => {
@@ -185,9 +183,9 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
                             )}
                             onClick={() => onDateSelect(dateKey)}
                         >
-                            <span class="text-[10px] font-normal">{format(date, "EEE", { locale: ar })}</span>
-                            <span class="font-semibold text-sm">{format(date, 'd')}</span>
-                            {isSelected && <span class="absolute bottom-0 h-0.5 w-3 rounded-full bg-primary" />}
+                            <span className="text-[10px] font-normal">{format(date, "EEE", { locale: ar })}</span>
+                            <span className="font-semibold text-sm">{format(date, 'd')}</span>
+                            {isSelected && <span className="absolute bottom-0 h-0.5 w-3 rounded-full bg-primary" />}
                         </button>
                     )
                 })}
@@ -198,7 +196,7 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
                 className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={() => onDateSelect(formatDateKey(subDays(new Date(selectedDateKey), 1)))}
              >
-                <ChevronLeft class="h-5 w-5" />
+                <ChevronLeft className="h-5 w-5" />
              </Button>
         </div>
     );
@@ -468,16 +466,16 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
     }, [pinnedMatches, selectedDateKey]);
 
     return (
-        <div class="flex h-full flex-col bg-background">
+        <div className="flex h-full flex-col bg-background">
             <ScreenHeader
                 title="التوقعات"
                 onBack={goBack}
                 canGoBack={canGoBack}
                 actions={
-                  <div class="flex items-center gap-1">
+                  <div className="flex items-center gap-1">
                       <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                           <Button variant="ghost" size="icon">
-                              <Search class="h-5 w-5" />
+                              <Search className="h-5 w-5" />
                           </Button>
                       </SearchSheet>
                       <ProfileButton />
@@ -486,17 +484,17 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
               />
              <Tabs value={mainTab} onValueChange={setMainTab} className="w-full flex-1 flex flex-col min-h-0">
                <TabsList className="grid w-full grid-cols-2">
-                   <TabsTrigger value="leaderboard"><BarChart class="ml-2 h-4 w-4" />الترتيب</TabsTrigger>
-                   <TabsTrigger value="voting"><ThumbsUp class="ml-2 h-4 w-4" />تصويت</TabsTrigger>
+                   <TabsTrigger value="leaderboard"><BarChart className="ml-2 h-4 w-4" />الترتيب</TabsTrigger>
+                   <TabsTrigger value="voting"><ThumbsUp className="ml-2 h-4 w-4" />تصويت</TabsTrigger>
                </TabsList>
                
                <TabsContent value="voting" className="flex-1 flex flex-col mt-0 data-[state=inactive]:hidden min-h-0">
                     <DateScroller selectedDateKey={selectedDateKey} onDateSelect={setSelectedDateKey} />
-                    <div class="flex-1 overflow-y-auto p-1 space-y-4 pt-4">
+                    <div className="flex-1 overflow-y-auto p-1 space-y-4 pt-4">
                         {loadingMatches || isCheckingAdmin || loadingUserPredictions ? (
-                            <div class="flex justify-center p-8"><Loader2 class="h-6 w-6 animate-spin" /></div>
+                            <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
                         ) : !user ? (
-                            <div class="text-center text-muted-foreground pt-10">
+                            <div className="text-center text-muted-foreground pt-10">
                                 <p>ميزة التوقعات متاحة للمستخدمين المسجلين.</p>
                                 <Button onClick={() => navigate('Welcome')} className="mt-4">تسجيل الدخول</Button>
                              </div>
@@ -510,9 +508,9 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
                                 />
                             ))
                         ) : (
-                            <div class="text-center text-muted-foreground pt-10">
+                            <div className="text-center text-muted-foreground pt-10">
                                 <p>لا توجد مباريات للتوقع في هذا اليوم.</p>
-                                {isAdmin && <p class="text-xs">يمكنك تثبيت مباريات من شاشة المباريات.</p>}
+                                {isAdmin && <p className="text-xs">يمكنك تثبيت مباريات من شاشة المباريات.</p>}
                             </div>
                         )}
                     </div>
@@ -524,8 +522,8 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
                            <CardTitle>لوحة الصدارة</CardTitle>
                            {isAdmin && (
                                <Button onClick={handleCalculateAllPoints} disabled={isUpdatingPoints} size="sm">
-                                   {isUpdatingPoints ? <Loader2 class="h-4 w-4 animate-spin"/> : <RefreshCw class="h-4 w-4"/>}
-                                   <span class="mr-2">تحديث النتائج</span>
+                                   {isUpdatingPoints ? <Loader2 className="h-4 w-4 animate-spin"/> : <RefreshCw className="h-4 w-4"/>}
+                                   <span className="mr-2">تحديث النتائج</span>
                                </Button>
                            )}
                       </CardHeader>

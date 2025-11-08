@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
@@ -9,7 +7,7 @@ import type { ScreenProps } from '@/app/page';
 import { Button } from '@/components/ui/button';
 import { useAuth, useFirestore } from '@/firebase/provider';
 import type { Favorites } from '@/lib/types';
-import { SearchSheet } from '@/app/screens/SearchSheet';
+import { SearchSheet } from '@/components/SearchSheet';
 import { ProfileButton } from '../AppContentWrapper';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -66,34 +64,34 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
     }
 
     return (
-        <div class="flex h-full flex-col bg-background">
+        <div className="flex h-full flex-col bg-background">
              <ScreenHeader 
                 title={"اختياراتي"} 
                 onBack={goBack} 
                 canGoBack={canGoBack} 
                 actions={
-                  <div class="flex items-center gap-1">
+                  <div className="flex items-center gap-1">
                       <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                           <Button variant="ghost" size="icon" className="h-7 w-7">
-                              <Search class="h-5 w-5" />
+                              <Search className="h-5 w-5" />
                           </Button>
                       </SearchSheet>
                       <ProfileButton />
                   </div>
                 }
             />
-            <div class="flex-1 flex flex-col min-h-0">
-                <div class="flex-1 overflow-y-auto">
-                     <div class="space-y-6 py-4">
+            <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 overflow-y-auto">
+                     <div className="space-y-6 py-4">
                         <ScrollArea className="w-full whitespace-nowrap">
-                            <div class="flex w-max space-x-4 px-4 flex-row-reverse">
-                                 <div class="flex flex-col items-center gap-2 w-20 h-[84px] text-center">
+                            <div className="flex w-max space-x-4 px-4 flex-row-reverse">
+                                 <div className="flex flex-col items-center gap-2 w-20 h-[84px] text-center">
                                       <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
-                                        <div class="flex flex-col items-center justify-center h-14 w-14 bg-card rounded-full cursor-pointer hover:bg-accent/50 transition-colors">
-                                            <Plus class="h-6 w-6 text-primary" />
+                                        <div className="flex flex-col items-center justify-center h-14 w-14 bg-card rounded-full cursor-pointer hover:bg-accent/50 transition-colors">
+                                            <Plus className="h-6 w-6 text-primary" />
                                         </div>
                                       </SearchSheet>
-                                      <span class="text-xs font-medium truncate w-full text-primary">أضف</span>
+                                      <span className="text-xs font-medium truncate w-full text-primary">أضف</span>
                                 </div>
                                 {favoriteTeams.map((team, index) => (
                                     <div key={`${team.teamId}-${index}`} className="relative flex flex-col items-center gap-2 w-20 text-center cursor-pointer" onClick={() => navigate('TeamDetails', { teamId: team.teamId })}>
@@ -101,8 +99,8 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                                             <AvatarImage src={team.logo} />
                                             <AvatarFallback>{team.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
-                                        <span class="text-xs font-medium truncate w-full">{team.name}</span>
-                                        <Star class="absolute top-0 right-0 h-4 w-4 text-yellow-400 fill-current" />
+                                        <span className="text-xs font-medium truncate w-full">{team.name}</span>
+                                        <Star className="absolute top-0 right-0 h-4 w-4 text-yellow-400 fill-current" />
                                     </div>
                                 ))}
                             </div>
@@ -110,21 +108,21 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                         </ScrollArea>
 
                         <Tabs defaultValue="teams" className="w-full px-1">
-                             <div class="bg-card text-card-foreground rounded-b-lg border-x border-b shadow-md">
+                             <div className="bg-card text-card-foreground rounded-b-lg border-x border-b shadow-md">
                                 <TabsList className="grid w-full grid-cols-3 bg-transparent h-11 p-0">
-                                    <TabsTrigger value="players" className="data-[state=active]:shadow-none"><PlayerIcon class="ml-1 h-4 w-4"/>اللاعبين</TabsTrigger>
-                                    <TabsTrigger value="competitions" className="data-[state=active]:shadow-none"><Trophy class="ml-1 h-4 w-4"/>البطولات</TabsTrigger>
-                                    <TabsTrigger value="teams" className="data-[state=active]:shadow-none"><Users class="ml-1 h-4 w-4"/>الفرق</TabsTrigger>
+                                    <TabsTrigger value="players" className="data-[state=active]:shadow-none"><PlayerIcon className="ml-1 h-4 w-4"/>اللاعبين</TabsTrigger>
+                                    <TabsTrigger value="competitions" className="data-[state=active]:shadow-none"><Trophy className="ml-1 h-4 w-4"/>البطولات</TabsTrigger>
+                                    <TabsTrigger value="teams" className="data-[state=active]:shadow-none"><Users className="ml-1 h-4 w-4"/>الفرق</TabsTrigger>
                                 </TabsList>
                             </div>
                             
                             <TabsContent value="teams" className="mt-4 px-3">
-                                <div class="grid grid-cols-4 gap-4">
-                                     <div class="h-[76px] w-full">
+                                <div className="grid grid-cols-4 gap-4">
+                                     <div className="h-[76px] w-full">
                                          <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
-                                            <div class="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
-                                                <div class="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
-                                                    <Plus class="h-6 w-6 text-primary" />
+                                            <div className="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
+                                                <div className="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
+                                                    <Plus className="h-6 w-6 text-primary" />
                                                 </div>
                                             </div>
                                          </SearchSheet>
@@ -135,20 +133,20 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                                                 <AvatarImage src={team.logo} />
                                                 <AvatarFallback>{team.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
-                                            <span class="text-[11px] font-medium truncate w-full">{team.name}</span>
-                                            <Star class="absolute top-1 right-1 h-3 w-3 text-yellow-400 fill-current" />
+                                            <span className="text-[11px] font-medium truncate w-full">{team.name}</span>
+                                            <Star className="absolute top-1 right-1 h-3 w-3 text-yellow-400 fill-current" />
                                         </div>
                                     )}
                                 </div>
                             </TabsContent>
                             
                             <TabsContent value="competitions" className="mt-4 px-3">
-                                <div class="grid grid-cols-4 gap-4">
-                                    <div class="h-[76px] w-full">
+                                <div className="grid grid-cols-4 gap-4">
+                                    <div className="h-[76px] w-full">
                                         <SearchSheet navigate={navigate} initialItemType="leagues" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
-                                            <div class="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
-                                                <div class="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
-                                                    <Plus class="h-6 w-6 text-primary" />
+                                            <div className="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
+                                                <div className="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
+                                                    <Plus className="h-6 w-6 text-primary" />
                                                 </div>
                                             </div>
                                         </SearchSheet>
@@ -159,33 +157,33 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                                                 <AvatarImage src={comp.logo} className="object-contain" />
                                                 <AvatarFallback>{comp.name.charAt(0)}</AvatarFallback>
                                             </Avatar>
-                                             <span class="text-[11px] font-medium truncate w-full">{comp.name}</span>
-                                            <Star class="absolute top-1 right-1 h-3 w-3 text-yellow-400 fill-current" />
+                                             <span className="text-[11px] font-medium truncate w-full">{comp.name}</span>
+                                            <Star className="absolute top-1 right-1 h-3 w-3 text-yellow-400 fill-current" />
                                         </div>
                                     )}
                                 </div>
                             </TabsContent>
 
                             <TabsContent value="players" className="mt-4 px-3">
-                                <div class="grid grid-cols-4 gap-4">
-                                     <div class="h-[76px] w-full">
+                                <div className="grid grid-cols-4 gap-4">
+                                     <div className="h-[76px] w-full">
                                         <SearchSheet navigate={navigate} initialItemType="teams" favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
-                                            <div class="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
-                                                <div class="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
-                                                    <Plus class="h-6 w-6 text-primary" />
+                                            <div className="flex flex-col items-center justify-center gap-2 text-center p-2 rounded-2xl border-2 border-dashed border-muted-foreground/50 h-full w-full cursor-pointer hover:bg-accent/50 transition-colors">
+                                                <div className="flex items-center justify-center h-10 w-10 bg-primary/10 rounded-full">
+                                                    <Plus className="h-6 w-6 text-primary" />
                                                 </div>
                                             </div>
                                         </SearchSheet>
                                      </div>
-                                     <div class="h-[76px] w-full col-span-3 flex items-center justify-center">
-                                        <p class="text-muted-foreground text-center text-sm">قائمة اللاعبين المفضلين قيد التطوير.</p>
+                                     <div className="h-[76px] w-full col-span-3 flex items-center justify-center">
+                                        <p className="text-muted-foreground text-center text-sm">قائمة اللاعبين المفضلين قيد التطوير.</p>
                                      </div>
                                 </div>
                             </TabsContent>
                         </Tabs>
                          {user && user.isAnonymous && (
-                            <div class="px-4 pt-4 text-center">
-                                 <p class="text-sm text-muted-foreground mb-4">للحفاظ على مفضلاتك ومزامنتها عبر الأجهزة، قم بإنشاء حساب دائم.</p>
+                            <div className="px-4 pt-4 text-center">
+                                 <p className="text-sm text-muted-foreground mb-4">للحفاظ على مفضلاتك ومزامنتها عبر الأجهزة، قم بإنشاء حساب دائم.</p>
                                 <Button onClick={handleLoginClick} className="w-full max-w-sm mx-auto">تسجيل الدخول أو إنشاء حساب</Button>
                             </div>
                         )}

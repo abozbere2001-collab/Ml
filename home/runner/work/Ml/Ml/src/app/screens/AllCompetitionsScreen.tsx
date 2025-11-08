@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -14,7 +12,7 @@ import { AddCompetitionDialog } from '@/components/AddCompetitionDialog';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 import type { Favorites, ManagedCompetition as ManagedCompetitionType, Team, FavoriteTeam, CrownedLeague, CrownedTeam } from '@/lib/types';
-import { SearchSheet } from '@/app/screens/SearchSheet';
+import { SearchSheet } from '@/components/SearchSheet';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from '@/hooks/use-toast';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
@@ -393,8 +391,8 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     };
 
     const renderNationalTeams = () => {
-        if (loadingNationalTeams) return <div class="flex justify-center p-4"><Loader2 class="h-6 w-6 animate-spin"/></div>;
-        if (!groupedNationalTeams) return <p class="p-4 text-center text-muted-foreground">اضغط على زر الفتح لعرض المنتخبات.</p>;
+        if (loadingNationalTeams) return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>;
+        if (!groupedNationalTeams) return <p className="p-4 text-center text-muted-foreground">اضغط على زر الفتح لعرض المنتخبات.</p>;
 
 
         return continentOrder.filter(c => groupedNationalTeams[c]).map(continent => (
@@ -445,8 +443,8 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
 
 
     const renderClubCompetitions = () => {
-        if (loadingClubData) return <div class="flex justify-center p-4"><Loader2 class="h-6 w-6 animate-spin"/></div>;
-        if (!allLeagues) return <p class="p-4 text-center text-muted-foreground">اضغط على زر الفتح لعرض البطولات.</p>;
+        if (loadingClubData) return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>;
+        if (!allLeagues) return <p className="p-4 text-center text-muted-foreground">اضغط على زر الفتح لعرض البطولات.</p>;
         
         return continentOrder.filter(c => sortedGroupedCompetitions[c]).map(continent => (
              <AccordionItem value={`club-${continent}`} key={`club-${continent}`} className="rounded-lg border bg-card/50">
@@ -503,39 +501,39 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
 
     if (!favorites || !customNames) {
          return (
-            <div class="flex h-full flex-col bg-background">
+            <div className="flex h-full flex-col bg-background">
                 <ScreenHeader 
                     title={"البطولات"} 
                     onBack={goBack} 
                     canGoBack={canGoBack} 
                 />
-                <div class="flex-1 flex items-center justify-center">
-                    <Loader2 class="h-8 w-8 animate-spin" />
+                <div className="flex-1 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             </div>
         );
     }
 
     return (
-        <div class="flex h-full flex-col bg-background">
+        <div className="flex h-full flex-col bg-background">
             <ScreenHeader 
                 title={"البطولات"} 
                 onBack={goBack} 
                 canGoBack={canGoBack} 
                 actions={
-                  <div class="flex items-center gap-1">
+                  <div className="flex items-center gap-1">
                       <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                           <Button variant="ghost" size="icon">
-                              <Search class="h-5 w-5" />
+                              <Search className="h-5 w-5" />
                           </Button>
                       </SearchSheet>
                       {isAdmin && (
                         <>
                             <Button size="icon" variant="ghost" onClick={handleAdminRefresh}>
-                                <RefreshCw class="h-5 w-5" />
+                                <RefreshCw className="h-5 w-5" />
                             </Button>
                             <Button size="icon" variant="ghost" onClick={() => setAddOpen(true)}>
-                                <Plus class="h-5 w-5" />
+                                <Plus className="h-5 w-5" />
                             </Button>
                         </>
                       )}
@@ -543,13 +541,13 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                   </div>
                 }
             />
-            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
                  <Accordion type="multiple" className="w-full space-y-2">
                     <AccordionItem value="national-teams-section" className="rounded-lg border bg-card/50">
                         <AccordionTrigger className="px-4 py-3 hover:no-underline" onClick={() => !nationalTeams && fetchNationalTeams()}>
-                            <div class="flex items-center gap-3">
-                                <Users class="h-6 w-6 text-primary"/>
-                                <h3 class="text-lg font-bold">المنتخبات</h3>
+                            <div className="flex items-center gap-3">
+                                <Users className="h-6 w-6 text-primary"/>
+                                <h3 className="text-lg font-bold">المنتخبات</h3>
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="p-2">
@@ -563,9 +561,9 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                  <Accordion type="multiple" className="w-full space-y-2">
                     <AccordionItem value="club-competitions-section" className="rounded-lg border bg-card/50">
                         <AccordionTrigger className="px-4 py-3 hover:no-underline" onClick={() => !allLeagues && fetchAllCompetitions()}>
-                            <div class="flex items-center gap-3">
-                                <Trophy class="h-6 w-6 text-primary"/>
-                                <h3 class="text-lg font-bold">البطولات</h3>
+                            <div className="flex items-center gap-3">
+                                <Trophy className="h-6 w-6 text-primary"/>
+                                <h3 className="text-lg font-bold">البطولات</h3>
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="p-2">

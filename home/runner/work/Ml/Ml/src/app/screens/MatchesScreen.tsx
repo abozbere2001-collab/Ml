@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -15,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { Button } from '@/components/ui/button';
-import { SearchSheet } from '@/app/screens/SearchSheet';
+import { SearchSheet } from '@/components/SearchSheet';
 import { ProfileButton } from '../AppContentWrapper';
 import type { Fixture as FixtureType, Favorites, PredictionMatch } from '@/lib/types';
 import { FixtureItem } from '@/components/FixtureItem';
@@ -87,17 +85,17 @@ const FixturesList = React.memo((props: {
 
     if (props.loading) {
         return (
-            <div class="flex items-center justify-center h-64">
-                <Loader2 class="h-8 w-8 animate-spin text-primary" />
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
     
     if (props.error) {
         return (
-            <div class="flex flex-col items-center justify-center text-center text-destructive h-64 p-4">
+            <div className="flex flex-col items-center justify-center text-center text-destructive h-64 p-4">
                 <p>خطأ في تحميل المباريات.</p>
-                <p class="text-xs">{props.error}</p>
+                <p className="text-xs">{props.error}</p>
             </div>
         )
     }
@@ -107,7 +105,7 @@ const FixturesList = React.memo((props: {
     if (totalFixturesToShow === 0) {
         const message = props.hasAnyFavorites ? "لا توجد مباريات لمفضلاتك في هذا اليوم." : "لا توجد مباريات لهذا اليوم.";
         return (
-            <div class="flex flex-col items-center justify-center text-center text-muted-foreground h-64 p-4">
+            <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64 p-4">
                 <p>{message}</p>
                 <Button className="mt-4" onClick={() => props.navigate('AllCompetitions')}>استكشف البطولات</Button>
             </div>
@@ -117,14 +115,14 @@ const FixturesList = React.memo((props: {
     const sortedLeagues = Object.keys(groupedOtherFixtures).sort((a,b) => a.localeCompare(b));
 
     return (
-        <div class="space-y-4">
+        <div className="space-y-4">
             {favoriteTeamMatches.length > 0 && (
                  <div>
-                    <div class="font-semibold text-foreground py-1 px-3 rounded-md bg-card border flex items-center gap-2 text-xs h-6">
-                        <Star class="h-4 w-4 text-yellow-400" />
-                        <span class="truncate">مباريات فرقك المفضلة</span>
+                    <div className="font-semibold text-foreground py-1 px-3 rounded-md bg-card border flex items-center gap-2 text-xs h-6">
+                        <Star className="h-4 w-4 text-yellow-400" />
+                        <span className="truncate">مباريات فرقك المفضلة</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1">
                         {favoriteTeamMatches.map(f => (
                             <FixtureItem 
                                 key={f.fixture.id} 
@@ -144,11 +142,11 @@ const FixturesList = React.memo((props: {
                 const { league, fixtures: leagueFixtures } = groupedOtherFixtures[leagueName];
                 return (
                     <div key={`${league.id}-${league.name}`}>
-                       <div class="font-semibold text-foreground py-1 px-3 rounded-md bg-card border flex items-center gap-2 text-xs h-6 cursor-pointer" onClick={() => props.navigate('CompetitionDetails', { leagueId: league.id, title: league.name, logo: league.logo })}>
+                       <div className="font-semibold text-foreground py-1 px-3 rounded-md bg-card border flex items-center gap-2 text-xs h-6 cursor-pointer" onClick={() => props.navigate('CompetitionDetails', { leagueId: league.id, title: league.name, logo: league.logo })}>
                            <Avatar className="h-4 w-4"><AvatarImage src={league.logo} alt={league.name} /></Avatar>
-                           <span class="truncate">{league.name}</span>
+                           <span className="truncate">{league.name}</span>
                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1">
                             {leagueFixtures.map(f => (
                                 <FixtureItem 
                                     key={f.fixture.id} 
@@ -208,19 +206,19 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
     const selectedDayName = getDayLabel(new Date(selectedDateKey));
 
     return (
-        <div class="relative bg-card py-2 border-x border-b rounded-b-lg shadow-md flex flex-col items-center">
-            <h3 class="text-sm font-semibold mb-2 text-center text-primary">{selectedDayName}</h3>
-            <div class="flex items-center w-full px-1">
+        <div className="relative bg-card py-2 border-x border-b rounded-b-lg shadow-md flex flex-col items-center">
+            <h3 className="text-sm font-semibold mb-2 text-center text-primary">{selectedDayName}</h3>
+            <div className="flex items-center w-full px-1">
                 <Button 
                     variant="ghost" 
                     size="icon"
                     className="h-9 w-9 z-10 flex-shrink-0"
                     onClick={() => onDateSelect(formatDateKey(subDays(new Date(selectedDateKey), 1)))}
                 >
-                    <ChevronRight class="h-5 w-5" />
+                    <ChevronRight className="h-5 w-5" />
                 </Button>
                 <ScrollArea ref={scrollerRef} className="w-full whitespace-nowrap mx-1">
-                    <div class="flex flex-row-reverse justify-start items-center h-9">
+                    <div className="flex flex-row-reverse justify-start items-center h-9">
                         {dates.map(date => {
                             const dateKey = formatDateKey(date);
                             const isSelected = dateKey === selectedDateKey;
@@ -236,7 +234,7 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
                                     )}
                                     onClick={() => onDateSelect(dateKey)}
                                 >
-                                    <span class="font-semibold text-sm">{format(date, 'd')}</span>
+                                    <span className="font-semibold text-sm">{format(date, 'd')}</span>
                                 </button>
                             )
                         })}
@@ -249,7 +247,7 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
                     className="h-9 w-9 z-10 flex-shrink-0"
                     onClick={() => onDateSelect(formatDateKey(addDays(new Date(selectedDateKey), 1)))}
                 >
-                    <ChevronLeft class="h-5 w-5" />
+                    <ChevronLeft className="h-5 w-5" />
                 </Button>
             </div>
         </div>
@@ -450,32 +448,32 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
 
   if (customNames === null) {
       return (
-        <div class="flex h-full flex-col bg-background">
+        <div className="flex h-full flex-col bg-background">
             <ScreenHeader title="" canGoBack={false} onBack={() => {}} />
-            <div class="flex-1 flex items-center justify-center">
-                <Loader2 class="h-8 w-8 animate-spin" />
+            <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         </div>
       );
   }
     
   return (
-    <div class="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-background">
         <ScreenHeader 
             title="نبض الملاعب" 
             canGoBack={false}
             onBack={() => {}} 
             actions={
-               <div class="flex items-center gap-0.5">
+               <div className="flex items-center gap-0.5">
                   <div
                     onClick={() => setShowOdds(prev => !prev)}
                     className={cn("flex items-center justify-center h-7 w-7 rounded-md cursor-pointer", showOdds ? 'bg-accent' : 'hover:bg-accent/50')}
                   >
-                    <span class="text-xs font-mono select-none">1x2</span>
+                    <span className="text-xs font-mono select-none">1x2</span>
                   </div>
                    <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                       <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <Search class="h-5 w-5" />
+                          <Search className="h-5 w-5" />
                       </Button>
                   </SearchSheet>
                   <ProfileButton />
@@ -483,12 +481,12 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
             }
         />
         
-        <div class="flex flex-1 flex-col min-h-0">
-             <div class="sticky top-0 z-10 px-1 pt-1 bg-background">
+        <div className="flex flex-1 flex-col min-h-0">
+             <div className="sticky top-0 z-10 px-1 pt-1 bg-background">
                  <DateScroller selectedDateKey={selectedDateKey} onDateSelect={handleDateChange} />
             </div>
             
-            <div class="flex-1 overflow-y-auto p-1 space-y-4 mt-2">
+            <div className="flex-1 overflow-y-auto p-1 space-y-4 mt-2">
                 <FixturesList 
                     fixtures={allFixturesForDay}
                     loading={loading}

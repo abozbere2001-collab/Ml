@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -9,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileButton } from '../AppContentWrapper';
 import { Button } from '@/components/ui/button';
 import { Crown, Search, X, Loader2, Trophy, BarChart, Users as UsersIcon, RefreshCw, CalendarDays, ThumbsUp } from 'lucide-react';
-import { SearchSheet } from '@/app/screens/SearchSheet';
+import { SearchSheet } from '@/components/SearchSheet';
 import { useAdmin, useAuth, useFirestore } from '@/firebase';
 import type { CrownedTeam, Favorites, Fixture, Standing, TopScorer, Prediction, Team, Player, UserScore, PredictionMatch, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,8 +46,8 @@ const CrownedTeamScroller = ({
 }) => {
   if (crownedTeams.length === 0) {
     return (
-      <div class="text-center text-muted-foreground py-4 px-4">
-        <p class="mb-4">
+      <div className="text-center text-muted-foreground py-4 px-4">
+        <p className="mb-4">
           قم بتتويج فريقك المفضل بالضغط على أيقونة التاج 👑 في صفحة تفاصيل الفريق لتبقى على اطلاع دائم بآخر أخباره ومبارياته هنا.
         </p>
         <Button onClick={() => navigate('AllCompetitions')}>استكشف</Button>
@@ -59,7 +57,7 @@ const CrownedTeamScroller = ({
 
   return (
     <ScrollArea className="w-full whitespace-nowrap">
-      <div class="flex w-max space-x-4 px-4 flex-row-reverse">
+      <div className="flex w-max space-x-4 px-4 flex-row-reverse">
         {crownedTeams.map(team => (
           <div
             key={team.teamId}
@@ -70,13 +68,13 @@ const CrownedTeamScroller = ({
               <AvatarImage src={team.logo} />
               <AvatarFallback>{team.name.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span class="text-[11px] font-medium truncate w-full">{team.name}</span>
-            <p class="text-[10px] text-muted-foreground truncate w-full">{team.note}</p>
+            <span className="text-[11px] font-medium truncate w-full">{team.name}</span>
+            <p className="text-[10px] text-muted-foreground truncate w-full">{team.note}</p>
             <button 
               onClick={(e) => { e.stopPropagation(); onRemove(team.teamId); }}
               className="absolute top-0 left-0 h-5 w-5 bg-background/80 rounded-full flex items-center justify-center border border-destructive"
             >
-              <X class="h-3 w-3 text-destructive"/>
+              <X className="h-3 w-3 text-destructive"/>
             </button>
           </div>
         ))}
@@ -156,8 +154,8 @@ const TeamFixturesDisplay = ({ teamId, navigate }: { teamId: number; navigate: S
 
     if (loading) {
       return (
-        <div class="flex items-center justify-center h-64">
-          <Loader2 class="h-8 w-8 animate-spin text-primary" />
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       );
     }
@@ -166,7 +164,7 @@ const TeamFixturesDisplay = ({ teamId, navigate }: { teamId: number; navigate: S
       return (
         <Card className="mt-4">
             <CardContent className="p-6">
-                <p class="text-center text-muted-foreground">لا توجد مباريات متاحة لهذا الفريق.</p>
+                <p className="text-center text-muted-foreground">لا توجد مباريات متاحة لهذا الفريق.</p>
             </CardContent>
         </Card>
       );
@@ -235,12 +233,12 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
   
   if (!user) {
     return (
-       <div class="flex h-full flex-col bg-background">
+       <div className="flex h-full flex-col bg-background">
           <ScreenHeader title="ملعبي" onBack={goBack} canGoBack={canGoBack} />
-           <div class="flex-1 flex flex-col items-center justify-center text-center p-8">
-              <Crown class="h-16 w-16 text-muted-foreground mb-4"/>
-              <h2 class="text-xl font-bold">ميزة حصرية للمستخدمين المسجلين</h2>
-              <p class="text-muted-foreground mb-6">
+           <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+              <Crown className="h-16 w-16 text-muted-foreground mb-4"/>
+              <h2 className="text-xl font-bold">ميزة حصرية للمستخدمين المسجلين</h2>
+              <p className="text-muted-foreground mb-6">
                 قم بتسجيل الدخول لتتويج فرقك وبطولاتك المفضلة.
               </p>
               <Button onClick={() => navigate('Welcome')}>تسجيل الدخول</Button>
@@ -250,24 +248,24 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
   }
 
   return (
-    <div class="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-background">
       <ScreenHeader
         title="ملعبي"
         onBack={goBack}
         canGoBack={canGoBack}
         actions={
-          <div class="flex items-center gap-1">
+          <div className="flex items-center gap-1">
               <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                   <Button variant="ghost" size="icon">
-                      <Search class="h-5 w-5" />
+                      <Search className="h-5 w-5" />
                   </Button>
               </SearchSheet>
               <ProfileButton />
           </div>
         }
       />
-      <div class="flex-1 flex flex-col min-h-0">
-          <div class="py-4 border-b">
+      <div className="flex-1 flex flex-col min-h-0">
+          <div className="py-4 border-b">
             <CrownedTeamScroller 
               crownedTeams={crownedTeams} 
               onSelectTeam={handleSelectTeam}
@@ -276,12 +274,12 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
               navigate={navigate}
             />
           </div>
-          <div class="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4">
             {selectedTeamId ? (
               <TeamFixturesDisplay teamId={selectedTeamId} navigate={navigate} />
             ) : (
               crownedTeams.length > 0 && (
-                 <div class="flex items-center justify-center h-full text-muted-foreground text-center p-4">
+                 <div className="flex items-center justify-center h-full text-muted-foreground text-center p-4">
                   <p>اختر فريقًا من الأعلى لعرض مبارياته.</p>
                 </div>
               )

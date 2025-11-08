@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
@@ -20,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { SearchSheet } from '@/app/screens/SearchSheet';
+import { SearchSheet } from '@/components/SearchSheet';
 import { ProfileButton } from '../AppContentWrapper';
 
 export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & {setFavorites: (favorites: any) => void, customNames: any, onCustomNameChange: () => void}) {
@@ -55,49 +53,49 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavo
   };
 
   return (
-    <div class="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-background">
       <ScreenHeader 
         title={"المزيد"} 
         onBack={goBack} 
         canGoBack={canGoBack} 
         actions={
-          <div class="flex items-center gap-1">
+          <div className="flex items-center gap-1">
               <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                   <Button variant="ghost" size="icon">
-                      <Search class="h-5 w-5" />
+                      <Search className="h-5 w-5" />
                   </Button>
               </SearchSheet>
               <ProfileButton/>
           </div>
         }
       />
-      <div class="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2">
         
-        <div class="space-y-2">
+        <div className="space-y-2">
             {mainSettingsItems.map(item => (
                 <button key={item.label} onClick={() => item.action(navigate)} className="flex w-full items-center justify-between rounded-lg bg-card p-4 text-right transition-colors hover:bg-accent/50">
-                    <div class="flex items-center gap-4">
-                        <item.icon class="h-6 w-6 text-primary"/>
-                        <span class="font-medium">{item.label}</span>
+                    <div className="flex items-center gap-4">
+                        <item.icon className="h-6 w-6 text-primary"/>
+                        <span className="font-medium">{item.label}</span>
                     </div>
-                    <div class="flex items-center gap-2 text-muted-foreground">
-                        <ChevronLeft class="h-5 w-5"/>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <ChevronLeft className="h-5 w-5"/>
                     </div>
                 </button>
             ))}
         </div>
 
-        <div class="pt-4">
-            <p class="px-4 pb-2 text-sm font-semibold text-muted-foreground">قانوني</p>
-            <div class="space-y-2">
+        <div className="pt-4">
+            <p className="px-4 pb-2 text-sm font-semibold text-muted-foreground">قانوني</p>
+            <div className="space-y-2">
                 {legalSettingsItems.map(item => (
                     <button key={item.label} onClick={() => item.action(navigate)} className="flex w-full items-center justify-between rounded-lg bg-card p-4 text-right transition-colors hover:bg-accent/50">
-                        <div class="flex items-center gap-4">
-                            <item.icon class="h-6 w-6 text-muted-foreground"/>
-                            <span class="font-medium">{item.label}</span>
+                        <div className="flex items-center gap-4">
+                            <item.icon className="h-6 w-6 text-muted-foreground"/>
+                            <span className="font-medium">{item.label}</span>
                         </div>
-                        <div class="flex items-center gap-2 text-muted-foreground">
-                            <ChevronLeft class="h-5 w-5"/>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <ChevronLeft className="h-5 w-5"/>
                         </div>
                     </button>
                 ))}
@@ -105,11 +103,11 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavo
         </div>
 
 
-        <div class="pt-8">
+        <div className="pt-8">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" className="w-full gap-2">
-                  <LogOut class="h-5 w-5" />
+                  <LogOut className="h-5 w-5" />
                   تسجيل الخروج
                 </Button>
               </AlertDialogTrigger>

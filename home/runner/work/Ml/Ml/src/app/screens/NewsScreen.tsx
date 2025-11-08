@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -29,7 +27,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { SearchSheet } from '@/app/screens/SearchSheet';
+import { SearchSheet } from '@/components/SearchSheet';
 import { ProfileButton } from '../AppContentWrapper';
 
 export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & {setFavorites: (favorites: any) => void, customNames: any, onCustomNameChange: () => void}) {
@@ -85,23 +83,23 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
 
 
   return (
-    <div class="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-background">
       <ScreenHeader 
         title={"أخبار"} 
         onBack={goBack} 
         canGoBack={canGoBack} 
         actions={
-          <div class="flex items-center gap-1">
+          <div className="flex items-center gap-1">
               <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                   <Button variant="ghost" size="icon">
-                      <Search class="h-5 w-5" />
+                      <Search className="h-5 w-5" />
                   </Button>
               </SearchSheet>
               <ProfileButton />
           </div>
         }
       />
-      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Card key={i}>
@@ -118,7 +116,7 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
               <Card key={article.id}>
                 {article.imageUrl && (
                     <CardHeader>
-                        <div class="relative aspect-video w-full mb-4">
+                        <div className="relative aspect-video w-full mb-4">
                         <Image 
                             src={article.imageUrl}
                             alt={article.title}
@@ -133,18 +131,18 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
                   <CardTitle>{article.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                   <p class="text-muted-foreground whitespace-pre-line">{article.content}</p>
+                   <p className="text-muted-foreground whitespace-pre-line">{article.content}</p>
                 </CardContent>
                 <CardFooter className="flex justify-between items-center">
-                   <p class="text-xs text-muted-foreground">
+                   <p className="text-xs text-muted-foreground">
                     {article.timestamp ? formatDistanceToNow(article.timestamp.toDate(), { addSuffix: true, locale: ar }) : ''}
                   </p>
                   {isAdmin && (
-                    <div class="flex gap-2">
+                    <div className="flex gap-2">
                        <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="icon" disabled={deletingId === article.id}>
-                                {deletingId === article.id ? <Loader2 class="h-4 w-4 animate-spin"/> : <Trash2 class="h-4 w-4" />}
+                                {deletingId === article.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4" />}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
@@ -161,7 +159,7 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
                           </AlertDialogContent>
                        </AlertDialog>
                        <Button variant="outline" size="icon" onClick={() => navigate('AddEditNews', { article, isEditing: true })}>
-                        <Edit class="h-4 w-4" />
+                        <Edit className="h-4 w-4" />
                       </Button>
                     </div>
                   )}
@@ -169,15 +167,15 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
               </Card>
             ))
         ) : (
-             <div class="text-center text-muted-foreground pt-10">
-                <p class="text-lg font-semibold">لا توجد أخبار حاليًا.</p>
+             <div className="text-center text-muted-foreground pt-10">
+                <p className="text-lg font-semibold">لا توجد أخبار حاليًا.</p>
                 {isAdmin && <p>انقر على زر الإضافة لبدء نشر الأخبار.</p>}
             </div>
         )}
       </div>
       {isAdmin && (
           <Button className="absolute bottom-24 right-4 h-14 w-14 rounded-full shadow-lg" size="icon" onClick={() => navigate('AddEditNews', { isEditing: false })}>
-              <Plus class="h-6 w-6" />
+              <Plus className="h-6 w-6" />
           </Button>
       )}
     </div>
