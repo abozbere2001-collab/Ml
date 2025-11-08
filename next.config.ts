@@ -13,12 +13,10 @@ const withPWA = withPWAInit({
   disable: !isProd,
   scope: '/Ml/',
   sw: '/Ml/sw.js',
-  buildExcludes: [/app-build-manifest\.json$/, /manifest\.json$/], // <--- Prevent next-pwa from processing our manifest
+  buildExcludes: [/app-build-manifest\.json$/, /manifest\.json$/],
 });
 
 const nextConfig: NextConfig = {
-  // This is required to allow the Next.js dev server to be accessed from the cloud workstation preview.
-  // This is not required for production builds.
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
   output: 'export',
   assetPrefix: assetPrefix,
