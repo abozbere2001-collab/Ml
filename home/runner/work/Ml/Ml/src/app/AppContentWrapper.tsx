@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -148,7 +149,7 @@ export const ProfileButton = () => {
     );
 };
 
-export function AppContentWrapper() {
+export function AppContentWrapper({ activeTab, setActiveTab }: { activeTab: ScreenKey; setActiveTab: (tab: ScreenKey) => void; }) {
   const { user } = useAuth();
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<import('@/lib/types').Favorites> | null>(null);
@@ -288,11 +289,12 @@ export function AppContentWrapper() {
             };
         }
         if (!mainTabs.includes(prevState.activeTab)) {
+            setActiveTab('Matches');
             return { ...prevState, activeTab: 'Matches' };
         }
         return prevState;
     });
-  }, []);
+  }, [setActiveTab]);
 
   const navigate = useCallback((screen: ScreenKey, props?: Record<string, any>) => {
       const newKey = `${screen}-${keyCounter.current++}`;
@@ -300,6 +302,7 @@ export function AppContentWrapper() {
       setNavigationState(prevState => {
           const newState = { ...prevState };
           if (mainTabs.includes(screen)) {
+              setActiveTab(screen);
               newState.activeTab = screen;
               newState.stacks[screen] = [{ key: `${screen}-0`, screen: screen, props }];
           } else {
@@ -307,11 +310,9 @@ export function AppContentWrapper() {
               const currentStack = newState.stacks[newState.activeTab] || [];
               newState.stacks[newState.activeTab] = [...currentStack, newItem];
           }
-          
-          window.dispatchEvent(new CustomEvent('navigationChange', { detail: { activeTab: newState.activeTab } }));
           return newState;
       });
-  }, []);
+  }, [setActiveTab]);
   
   useEffect(() => {
       if (typeof window !== 'undefined') {
@@ -373,7 +374,3 @@ export function AppContentWrapper() {
     </main>
   );
 }
-
-    
-
-    
