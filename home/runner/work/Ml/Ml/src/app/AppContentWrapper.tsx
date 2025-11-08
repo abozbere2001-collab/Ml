@@ -4,27 +4,27 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { BottomNav } from '@/components/BottomNav';
-import { MatchesScreen } from '@/app/screens/MatchesScreen';
-import { CompetitionsScreen } from '@/app/screens/CompetitionsScreen';
-import { AllCompetitionsScreen } from '@/app/screens/AllCompetitionsScreen';
-import { NewsScreen } from '@/app/screens/NewsScreen';
-import { SettingsScreen } from '@/app/screens/SettingsScreen';
-import { CompetitionDetailScreen } from '@/app/screens/CompetitionDetailScreen';
-import { TeamDetailScreen } from '@/app/screens/TeamDetailScreen';
-import { PlayerDetailScreen } from '@/app/screens/PlayerDetailScreen';
-import { AdminFavoriteTeamScreen } from '@/app/screens/AdminFavoriteTeamScreen';
-import { ProfileScreen } from '@/app/screens/ProfileScreen';
-import { SeasonPredictionsScreen } from '@/app/screens/SeasonPredictionsScreen';
-import { SeasonTeamSelectionScreen } from '@/app/screens/SeasonTeamSelectionScreen';
-import { SeasonPlayerSelectionScreen } from '@/app/screens/SeasonPlayerSelectionScreen';
-import { AddEditNewsScreen } from '@/app/screens/AddEditNewsScreen';
-import { ManagePinnedMatchScreen } from '@/app/screens/ManagePinnedMatchScreen';
-import MatchDetailScreen from '@/app/screens/MatchDetailScreen';
-import { NotificationSettingsScreen } from '@/app/screens/NotificationSettingsScreen';
-import { GeneralSettingsScreen } from '@/app/screens/GeneralSettingsScreen';
-import PrivacyPolicyScreen from '@/app/screens/PrivacyPolicyScreen';
-import TermsOfServiceScreen from '@/app/screens/TermsOfServiceScreen';
-import { GoProScreen } from '@/app/screens/GoProScreen';
+import { MatchesScreen } from './screens/MatchesScreen';
+import { CompetitionsScreen } from './screens/CompetitionsScreen';
+import { AllCompetitionsScreen } from './screens/AllCompetitionsScreen';
+import { NewsScreen } from './screens/NewsScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
+import { CompetitionDetailScreen } from './screens/CompetitionDetailScreen';
+import { TeamDetailScreen } from './screens/TeamDetailScreen';
+import { PlayerDetailScreen } from './screens/PlayerDetailScreen';
+import { AdminFavoriteTeamScreen } from './screens/AdminFavoriteTeamScreen';
+import { ProfileScreen } from './screens/ProfileScreen';
+import { SeasonPredictionsScreen } from './screens/SeasonPredictionsScreen';
+import { SeasonTeamSelectionScreen } from './screens/SeasonTeamSelectionScreen';
+import { SeasonPlayerSelectionScreen } from './screens/SeasonPlayerSelectionScreen';
+import { AddEditNewsScreen } from './screens/AddEditNewsScreen';
+import { ManagePinnedMatchScreen } from './screens/ManagePinnedMatchScreen';
+import MatchDetailScreen from './screens/MatchDetailScreen';
+import { NotificationSettingsScreen } from './screens/NotificationSettingsScreen';
+import { GeneralSettingsScreen } from './screens/GeneralSettingsScreen';
+import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
+import TermsOfServiceScreen from './screens/TermsOfServiceScreen';
+import { GoProScreen } from './screens/GoProScreen';
 import type { ScreenKey } from './page';
 
 import { useAd, SplashScreenAd } from '@/components/AdProvider';
@@ -42,9 +42,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User as UserIcon, Loader2 } from 'lucide-react';
 import { signOut } from '@/lib/firebase-client';
 import { cn } from '@/lib/utils';
-import { ManageTopScorersScreen } from '@/app/screens/ManageTopScorersScreen';
-import { IraqScreen } from '@/app/screens/IraqScreen';
-import { PredictionsScreen } from '@/app/screens/PredictionsScreen';
+import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
+import { IraqScreen } from './screens/IraqScreen';
+import { PredictionsScreen } from './screens/PredictionsScreen';
 import { doc, getDoc, setDoc, getDocs, collection, onSnapshot, writeBatch } from 'firebase/firestore';
 import type { Favorites } from '@/lib/types';
 import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
@@ -156,8 +156,7 @@ export function AppContentWrapper({ activeTab, setActiveTab }: { activeTab: Scre
   const [customNames, setCustomNames] = useState<any>(null);
 
   
-  const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
-    activeTab: 'Matches',
+  const [navigationState, setNavigationState] = useState<{ stacks: Record<string, StackItem[]> }>({
     stacks: {
         'Matches': [{ key: 'Matches-0', screen: 'Matches' }],
         'Competitions': [{ key: 'Competitions-0', screen: 'Competitions' }],
@@ -277,42 +276,45 @@ export function AppContentWrapper({ activeTab, setActiveTab }: { activeTab: Scre
 
 
   const goBack = useCallback(() => {
-    setNavigationState(prevState => {
-        const currentStack = prevState.stacks[prevState.activeTab];
-        if (currentStack.length > 1) {
-            return {
-                ...prevState,
-                stacks: {
-                    ...prevState.stacks,
-                    [prevState.activeTab]: currentStack.slice(0, -1),
-                }
-            };
-        }
-        if (!mainTabs.includes(prevState.activeTab)) {
-            setActiveTab('Matches');
-            return { ...prevState, activeTab: 'Matches' };
-        }
-        return prevState;
-    });
-  }, [setActiveTab]);
+    const currentStack = navigationState.stacks[activeTab];
+    if (currentStack.length > 1) {
+        setNavigationState(prevState => ({
+            ...prevState,
+            stacks: {
+                ...prevState.stacks,
+                [activeTab]: currentStack.slice(0, -1),
+            }
+        }));
+    } else if (!mainTabs.includes(activeTab)) {
+        setActiveTab('Matches');
+    }
+  }, [activeTab, navigationState.stacks, setActiveTab]);
 
   const navigate = useCallback((screen: ScreenKey, props?: Record<string, any>) => {
       const newKey = `${screen}-${keyCounter.current++}`;
       
-      setNavigationState(prevState => {
-          const newState = { ...prevState };
-          if (mainTabs.includes(screen)) {
-              setActiveTab(screen);
-              newState.activeTab = screen;
-              newState.stacks[screen] = [{ key: `${screen}-0`, screen: screen, props }];
-          } else {
-              const newItem = { key: newKey, screen, props };
-              const currentStack = newState.stacks[newState.activeTab] || [];
-              newState.stacks[newState.activeTab] = [...currentStack, newItem];
-          }
-          return newState;
-      });
-  }, [setActiveTab]);
+      if (mainTabs.includes(screen)) {
+          setActiveTab(screen);
+          setNavigationState(prevState => ({
+              ...prevState,
+              stacks: {
+                  ...prevState.stacks,
+                  [screen]: [{ key: `${screen}-0`, screen: screen, props }]
+              }
+          }));
+      } else {
+          setNavigationState(prevState => {
+              const currentStack = prevState.stacks[activeTab] || [];
+              return {
+                  ...prevState,
+                  stacks: {
+                      ...prevState.stacks,
+                      [activeTab]: [...currentStack, { key: newKey, screen, props }]
+                  }
+              };
+          });
+      }
+  }, [setActiveTab, activeTab]);
   
   useEffect(() => {
       if (typeof window !== 'undefined') {
@@ -332,7 +334,7 @@ export function AppContentWrapper({ activeTab, setActiveTab }: { activeTab: Scre
     );
   }
   
-  const activeStack = navigationState.stacks[navigationState.activeTab] || [];
+  const activeStack = navigationState.stacks[activeTab] || [];
 
   const baseScreenProps = {
     navigate,
@@ -348,7 +350,7 @@ export function AppContentWrapper({ activeTab, setActiveTab }: { activeTab: Scre
       <div className="flex-1 flex flex-col overflow-hidden">
         {mainTabs.map(tabKey => {
             const stack = navigationState.stacks[tabKey];
-            const isTabActive = navigationState.activeTab === tabKey;
+            const isTabActive = activeTab === tabKey;
             
             return (
                 <div key={tabKey} className={cn("h-full w-full", isTabActive ? "flex flex-col" : "hidden")}>
@@ -368,8 +370,8 @@ export function AppContentWrapper({ activeTab, setActiveTab }: { activeTab: Scre
         })}
       </div>
       
-      {mainTabs.includes(navigationState.stacks[navigationState.activeTab]?.slice(-1)[0]?.screen) && 
-        <BottomNav activeScreen={navigationState.activeTab} onNavigate={(screen) => navigate(screen)} />
+      {mainTabs.includes(navigationState.stacks[activeTab]?.slice(-1)[0]?.screen) && 
+        <BottomNav activeScreen={activeTab} onNavigate={(screen) => navigate(screen)} />
       }
     </main>
   );
