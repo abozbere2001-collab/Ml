@@ -8,7 +8,6 @@ const pwaConfig = {
   register: true,
   skipWaiting: true,
   disable: !isProd,
-  buildExcludes: [/app-build-manifest\.json$/, /manifest\.json$/], // Keep manifest untouched
   scope: basePath || '/',
   sw: 'sw.js',
 };
