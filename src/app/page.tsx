@@ -51,15 +51,6 @@ export default function Home() {
         setIsOnboardingComplete(true);
     };
     
-    // This effect is to listen to navigation changes from the AppContentWrapper
-    React.useEffect(() => {
-        const handleNavChange = (event: CustomEvent) => {
-            setActiveTab(event.detail.activeTab);
-        };
-        window.addEventListener('navigationChange', handleNavChange as EventListener);
-        return () => window.removeEventListener('navigationChange', handleNavChange as EventListener);
-    }, []);
-
     if (isUserLoading || !isClient) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-background">
@@ -78,7 +69,7 @@ export default function Home() {
 
     return (
         <AdProvider>
-            <AppContentWrapper />
+            <AppContentWrapper activeTab={activeTab} setActiveTab={setActiveTab} />
             {/* 
               This component is disabled to prevent editor interference. 
               Uncomment it for production if needed.
@@ -93,3 +84,5 @@ export default function Home() {
         </AdProvider>
     );
 }
+
+    

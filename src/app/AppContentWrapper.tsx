@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -23,7 +22,7 @@ import MatchDetailScreen from './screens/MatchDetailScreen';
 import { NotificationSettingsScreen } from './screens/NotificationSettingsScreen';
 import { GeneralSettingsScreen } from './screens/GeneralSettingsScreen';
 import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
-import TermsOfServiceScreen from './terms-of-service/page';
+import TermsOfServiceScreen from './screens/TermsOfServiceScreen';
 import { GoProScreen } from './screens/GoProScreen';
 import type { ScreenKey } from './page';
 
@@ -149,23 +148,20 @@ export const ProfileButton = () => {
     );
 };
 
-export function AppContentWrapper() {
+export function AppContentWrapper({ activeTab, setActiveTab }: { activeTab: ScreenKey; setActiveTab: (tab: ScreenKey) => void; }) {
   const { user } = useAuth();
   const { db } = useFirestore();
   const [favorites, setFavorites] = useState<Partial<import('@/lib/types').Favorites> | null>(null);
   const [customNames, setCustomNames] = useState<any>(null);
 
   
-  const [navigationState, setNavigationState] = useState<{ activeTab: ScreenKey, stacks: Record<string, StackItem[]> }>({
-    activeTab: 'Matches',
-    stacks: {
-        'Matches': [{ key: 'Matches-0', screen: 'Matches' }],
-        'Competitions': [{ key: 'Competitions-0', screen: 'Competitions' }],
-        'News': [{ key: 'News-0', screen: 'News' }],
-        'MyCountry': [{ key: 'MyCountry-0', screen: 'MyCountry' }],
-        'Predictions': [{ key: 'Predictions-0', screen: 'Predictions' }],
-        'Settings': [{ key: 'Settings-0', screen: 'Settings' }],
-    },
+  const [stacks, setStacks] = useState<Record<string, StackItem[]>>({
+    'Matches': [{ key: 'Matches-0', screen: 'Matches' }],
+    'Competitions': [{ key: 'Competitions-0', screen: 'Competitions' }],
+    'News': [{ key: 'News-0', screen: 'News' }],
+    'MyCountry': [{ key: 'MyCountry-0', screen: 'MyCountry' }],
+    'Predictions': [{ key: 'Predictions-0', screen: 'Predictions' }],
+    'Settings': [{ key: 'Settings-0', screen: 'Settings' }],
   });
 
   const { showSplashAd } = useAd();
@@ -277,42 +273,36 @@ export function AppContentWrapper() {
 
 
   const goBack = useCallback(() => {
-    setNavigationState(prevState => {
-        const currentStack = prevState.stacks[prevState.activeTab];
-        if (currentStack.length > 1) {
-            return {
-                ...prevState,
-                stacks: {
-                    ...prevState.stacks,
-                    [prevState.activeTab]: currentStack.slice(0, -1),
-                }
-            };
-        }
-        if (!mainTabs.includes(prevState.activeTab)) {
-            return { ...prevState, activeTab: 'Matches' };
-        }
-        return prevState;
-    });
-  }, []);
+    const currentStack = stacks[activeTab];
+    if (currentStack.length > 1) {
+        setStacks(prevStacks => ({
+            ...prevStacks,
+            [activeTab]: currentStack.slice(0, -1),
+        }));
+    } else if (!mainTabs.includes(activeTab)) {
+        setActiveTab('Matches');
+    }
+  }, [activeTab, stacks, setActiveTab]);
 
   const navigate = useCallback((screen: ScreenKey, props?: Record<string, any>) => {
       const newKey = `${screen}-${keyCounter.current++}`;
       
-      setNavigationState(prevState => {
-          const newState = { ...prevState };
-          if (mainTabs.includes(screen)) {
-              newState.activeTab = screen;
-              newState.stacks[screen] = [{ key: `${screen}-0`, screen: screen, props }];
-          } else {
-              const newItem = { key: newKey, screen, props };
-              const currentStack = newState.stacks[newState.activeTab] || [];
-              newState.stacks[newState.activeTab] = [...currentStack, newItem];
-          }
-          
-          window.dispatchEvent(new CustomEvent('navigationChange', { detail: { activeTab: newState.activeTab } }));
-          return newState;
-      });
-  }, []);
+      if (mainTabs.includes(screen)) {
+          setActiveTab(screen);
+          setStacks(prevStacks => ({
+              ...prevStacks,
+              [screen]: [{ key: `${screen}-0`, screen: screen, props }]
+          }));
+      } else {
+          setStacks(prevStacks => {
+              const currentStack = prevStacks[activeTab] || [];
+              return {
+                  ...prevStacks,
+                  [activeTab]: [...currentStack, { key: newKey, screen, props }]
+              };
+          });
+      }
+  }, [setActiveTab, activeTab]);
   
   useEffect(() => {
       if (typeof window !== 'undefined') {
@@ -332,7 +322,7 @@ export function AppContentWrapper() {
     );
   }
   
-  const activeStack = navigationState.stacks[navigationState.activeTab] || [];
+  const activeStack = stacks[activeTab] || [];
 
   const baseScreenProps = {
     navigate,
@@ -347,8 +337,8 @@ export function AppContentWrapper() {
     <main className="h-screen w-screen bg-background flex flex-col">
       <div className="flex-1 flex flex-col overflow-hidden">
         {mainTabs.map(tabKey => {
-            const stack = navigationState.stacks[tabKey];
-            const isTabActive = navigationState.activeTab === tabKey;
+            const stack = stacks[tabKey];
+            const isTabActive = activeTab === tabKey;
             
             return (
                 <div key={tabKey} className={cn("h-full w-full", isTabActive ? "flex flex-col" : "hidden")}>
@@ -368,8 +358,8 @@ export function AppContentWrapper() {
         })}
       </div>
       
-      {mainTabs.includes(navigationState.stacks[navigationState.activeTab]?.slice(-1)[0]?.screen) && 
-        <BottomNav activeScreen={navigationState.activeTab} onNavigate={(screen) => navigate(screen)} />
+      {mainTabs.includes(stacks[activeTab]?.slice(-1)[0]?.screen) && 
+        <BottomNav activeScreen={activeTab} onNavigate={(screen) => navigate(screen)} />
       }
     </main>
   );
