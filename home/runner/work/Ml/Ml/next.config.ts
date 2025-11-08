@@ -13,7 +13,7 @@ const withPWA = withPWAInit({
   disable: !isProd,
   scope: '/Ml/',
   sw: '/Ml/sw.js',
-  buildExcludes: [/app-build-manifest\.json$/, /manifest.json$/], // <-- Prevent next-pwa from processing our manifest
+  buildExcludes: [/app-build-manifest\.json$/, /manifest\.json$/], // <-- Prevent next-pwa from processing our manifest
 });
 
 const nextConfig: NextConfig = {

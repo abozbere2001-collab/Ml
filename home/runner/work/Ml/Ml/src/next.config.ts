@@ -11,7 +11,6 @@ const withPWA = withPWAInit({
   register: true,
   skipWaiting: true,
   disable: !isProd,
-  publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
   scope: '/Ml/',
   sw: '/Ml/sw.js',
   buildExcludes: [/app-build-manifest\.json$/, /manifest.json$/], // <--- Prevent next-pwa from processing our manifest

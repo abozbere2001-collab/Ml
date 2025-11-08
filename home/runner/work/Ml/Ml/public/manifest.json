@@ -1,13 +1,13 @@
 {
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
-  "description": "عالم كرة القدم بين يديك. تابع آخر الأخبار والنتائج والبطولات.",
+  "description": "عالم كرة القدم بين يديك. تابع المباريات، الأخبار، والبطولات.",
   "start_url": "/Ml/",
   "scope": "/Ml/",
   "id": "/Ml/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#E5F5F9",
+  "theme_color": "#29ABE2",
   "orientation": "portrait",
   "icons": [
     {
