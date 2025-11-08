@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React from 'react';
@@ -52,6 +51,7 @@ export default function Home() {
         setIsOnboardingComplete(true);
     };
     
+
     if (isUserLoading || !isClient) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-background">
