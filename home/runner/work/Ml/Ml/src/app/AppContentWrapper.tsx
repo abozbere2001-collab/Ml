@@ -23,7 +23,7 @@ import MatchDetailScreen from '@/app/screens/MatchDetailScreen';
 import { NotificationSettingsScreen } from '@/app/screens/NotificationSettingsScreen';
 import { GeneralSettingsScreen } from '@/app/screens/GeneralSettingsScreen';
 import PrivacyPolicyScreen from '@/app/screens/PrivacyPolicyScreen';
-import TermsOfServiceScreen from '@/app/screens/TermsOfServiceScreen';
+import TermsOfServiceScreen from '@/app/terms-of-service/page';
 import { GoProScreen } from '@/app/screens/GoProScreen';
 import type { ScreenKey } from './page';
 
@@ -42,7 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User as UserIcon, Loader2 } from 'lucide-react';
 import { signOut } from '@/lib/firebase-client';
 import { cn } from '@/lib/utils';
-import { ManageTopScorersScreen } from '@/app/screens/ManageTopScorersScreen';
+import { ManageTopScorersScreen } from './screens/ManageTopScorersScreen';
 import { IraqScreen } from '@/app/screens/IraqScreen';
 import { PredictionsScreen } from '@/app/screens/PredictionsScreen';
 import { doc, getDoc, setDoc, getDocs, collection, onSnapshot, writeBatch } from 'firebase/firestore';
@@ -374,7 +374,3 @@ export function AppContentWrapper() {
     </main>
   );
 }
-
-    
-
-    
