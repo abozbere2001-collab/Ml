@@ -11,10 +11,7 @@ const withPWA = withPWAInit({
   register: true,
   skipWaiting: true,
   disable: !isProd,
-  scope: basePath || '/',
-  sw: 'sw.js',
-  publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
-  buildExcludes: [/app-build-manifest\.json$/],
+  // No need to specify scope or sw, next-pwa handles it based on basePath
 });
 
 const nextConfig: NextConfig = {
