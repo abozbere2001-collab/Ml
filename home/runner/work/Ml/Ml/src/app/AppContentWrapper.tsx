@@ -23,7 +23,7 @@ import MatchDetailScreen from '@/app/screens/MatchDetailScreen';
 import { NotificationSettingsScreen } from '@/app/screens/NotificationSettingsScreen';
 import { GeneralSettingsScreen } from '@/app/screens/GeneralSettingsScreen';
 import PrivacyPolicyScreen from '@/app/screens/PrivacyPolicyScreen';
-import TermsOfServiceScreen from '@/app/terms-of-service/page';
+import TermsOfServiceScreen from '@/app/screens/TermsOfServiceScreen';
 import { GoProScreen } from '@/app/screens/GoProScreen';
 import type { ScreenKey } from './page';
 
