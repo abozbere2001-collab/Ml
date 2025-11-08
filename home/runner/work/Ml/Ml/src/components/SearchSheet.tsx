@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
@@ -59,7 +60,7 @@ interface LeagueResult {
     country: { name: string; };
 }
 
-type SearchItem = TeamResult['team'] | LeagueResult['league'];
+type SearchItemOriginal = TeamResult['team'] | LeagueResult['league'];
 type ItemType = 'teams' | 'leagues';
 type RenameType = 'league' | 'team' | 'player' | 'continent' | 'country' | 'coach' | 'status' | 'crown';
 
@@ -69,7 +70,7 @@ interface SearchableItem {
     name: string; // The translated name
     originalName: string;
     logo: string;
-    originalItem: SearchItem;
+    originalItem: SearchItemOriginal;
 }
 
 const normalizeArabic = (text: string) => {
@@ -84,7 +85,7 @@ const normalizeArabic = (text: string) => {
 };
 
 
-const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItem, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItem, itemType: ItemType) => void, onCrownToggle: (item: SearchItem) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
+const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, itemType: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
   return (
     <div className="flex items-center gap-2 p-1.5 border-b last:border-b-0 hover:bg-accent/50 rounded-md">
        <div className="flex-1 flex items-center gap-2 cursor-pointer" onClick={onResultClick}>
@@ -313,11 +314,11 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }
   }, [debouncedSearchTerm, handleSearch, isOpen]);
 
-    const handleFavorite = useCallback((item: SearchItem, itemType: ItemType) => {
+    const handleFavorite = useCallback((item: SearchItemOriginal, type: ItemType) => {
         const itemId = item.id;
     
         if (!user) { // Guest mode logic
-            const isPopular = itemType === 'teams'
+            const isPopular = type === 'teams'
                 ? POPULAR_TEAMS.some(t => t.id === itemId)
                 : POPULAR_LEAGUES.some(l => l.id === itemId);
     
@@ -334,19 +335,19 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             setFavorites(prev => {
                 if (!prev) return null;
                 const newFavorites = JSON.parse(JSON.stringify(prev));
-                if (!newFavorites[itemType]) {
-                    newFavorites[itemType] = {};
+                if (!newFavorites[type]) {
+                    newFavorites[type] = {};
                 }
         
-                const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
+                const isCurrentlyFavorited = !!newFavorites[type]?.[itemId];
         
                 if (isCurrentlyFavorited) {
-                    delete newFavorites[itemType]![itemId];
+                    delete newFavorites[type]![itemId];
                 } else {
-                    const favData = itemType === 'leagues'
+                    const favData = type === 'leagues'
                         ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
                         : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
-                    newFavorites[itemType]![itemId] = favData as any;
+                    newFavorites[type]![itemId] = favData as any;
                 }
                 return newFavorites;
             });
@@ -354,7 +355,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }, [user, setFavorites, toast]);
 
 
-  const handleOpenCrownDialog = (team: SearchItem) => {
+  const handleOpenCrownDialog = (team: SearchItemOriginal) => {
     if (!user) {
         toast({ title: 'مستخدم زائر', description: 'يرجى تسجيل الدخول لاستخدام هذه الميزة.' });
         return;
@@ -379,7 +380,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     handleOpenChange(false);
   }
 
-  const handleOpenRename = (type: RenameType, id: number, originalItem: SearchItem) => {
+  const handleOpenRename = (type: RenameType, id: number, originalItem: SearchItemOriginal) => {
     const currentName = getDisplayName(type as 'team' | 'league', id, originalItem.name);
     setRenameItem({ id, name: currentName, type, originalData: originalItem, purpose: 'rename', originalName: originalItem.name });
   };
@@ -435,7 +436,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             name: getDisplayName(type.slice(0, -1) as 'team' | 'league', item.id, item.name),
             originalName: item.name,
             logo: item.logo,
-            originalItem: item as SearchItem,
+            originalItem: item as SearchItemOriginal,
         };
     }).filter(Boolean) as SearchableItem[];
 
