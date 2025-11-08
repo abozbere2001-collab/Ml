@@ -1,13 +1,15 @@
+
 {
+  "theme_color": "#148342",
+  "background_color": "#000000",
+  "display": "standalone",
+  "scope": "/Ml/",
+  "start_url": "/Ml/",
+  "id": "/Ml/",
   "name": "نبض الملاعب",
   "short_name": "نبض الملاعب",
-  "description": "عالم كرة القدم بين يديك",
-  "start_url": "/Ml/",
-  "scope": "/Ml/",
-  "id": "/Ml/",
-  "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "description": "تطبيقك الأول لمتابعة عالم كرة القدم، من أخبار ونتائج مباشرة وإحصائيات.",
+  "categories": ["sports", "football"],
   "icons": [
     {
       "src": "icon-192x192.png",
@@ -19,6 +21,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "categories": ["sports"]
+  ]
 }
