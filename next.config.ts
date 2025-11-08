@@ -11,10 +11,8 @@ const withPWA = withPWAInit({
   register: true,
   skipWaiting: true,
   disable: !isProd,
-  publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
-  scope: '/Ml/',
-  sw: '/Ml/sw.js',
-  buildExcludes: [/app-build-manifest\.json$/],
+  scope: '/Ml/', // Hardcoded for GitHub Pages
+  sw: '/Ml/sw.js',   // Hardcoded for GitHub Pages
 });
 
 const nextConfig: NextConfig = {
