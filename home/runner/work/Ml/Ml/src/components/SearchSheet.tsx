@@ -438,7 +438,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             logo: item.logo,
             originalItem: item as SearchItemOriginal,
         };
-    }).filter((item): item is SearchableItem => item !== null);
+    }).filter(Boolean) as SearchableItem[];
 
   }, [getDisplayName, initialCustomNames]);
 
@@ -524,3 +524,5 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     </Sheet>
   );
 }
+
+    
