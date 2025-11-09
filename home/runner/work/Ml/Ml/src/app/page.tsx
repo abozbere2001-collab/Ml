@@ -20,6 +20,8 @@ export type ScreenProps = {
   onCustomNameChange?: () => Promise<void>; // Added for screens that need to trigger a re-fetch
   customNames?: any; // To accept props from wrapper
   setFavorites?: React.Dispatch<React.SetStateAction<Partial<import('@/lib/types').Favorites> | null>>;
+  isVisible?: boolean;
+  headerActions?: React.ReactNode;
 };
 
 const ONBOARDING_COMPLETE_KEY = 'goalstack_onboarding_complete_v1';

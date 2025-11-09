@@ -121,7 +121,7 @@ const getLeagueImportance = (leagueName: string): number => {
 
 
 // --- MAIN SCREEN COMPONENT ---
-export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & {setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>, customNames: any, onCustomNameChange: () => Promise<void>}) {
+export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps) {
     const { isAdmin } = useAdmin();
     const { user, db } = useAuth();
     const { toast } = useToast();
@@ -341,7 +341,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     
             const op = (newName && newName.trim() && newName !== originalName) ? setDoc(docRef, data) : deleteDoc(docRef);
     
-            op.then(() => onCustomNameChange())
+            op.then(() => onCustomNameChange && onCustomNameChange())
             .catch(serverError => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'write', requestResourceData: data }));
             });
@@ -586,7 +586,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
             />}
             <AddCompetitionDialog isOpen={isAddOpen} onOpenChange={(isOpen) => {
                 setAddOpen(isOpen);
-                if(!isOpen) {
+                if(!isOpen && onCustomNameChange) {
                     onCustomNameChange();
                 }
             }} />

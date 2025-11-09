@@ -221,12 +221,15 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
 
  const handleRemoveCrowned = useCallback((teamIdToRemove: number) => {
     if (!setFavorites) return;
-    const newFavorites = JSON.parse(JSON.stringify(favorites || {}));
-    if (newFavorites.crownedTeams?.[teamIdToRemove]) {
-        delete newFavorites.crownedTeams[teamIdToRemove];
-    }
-    setFavorites(newFavorites);
-}, [favorites, setFavorites]);
+    setFavorites(prev => {
+        if (!prev) return null;
+        const newFavorites = JSON.parse(JSON.stringify(prev));
+        if (newFavorites.crownedTeams?.[teamIdToRemove]) {
+            delete newFavorites.crownedTeams[teamIdToRemove];
+        }
+        return newFavorites;
+    });
+}, [setFavorites]);
   
   const handleSelectTeam = (teamId: number) => {
     setSelectedTeamId(teamId);
