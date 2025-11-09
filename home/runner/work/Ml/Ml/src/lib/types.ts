@@ -151,7 +151,6 @@ export interface TeamStatistics {
   };
 }
 
-
 // --- Firebase Firestore Types ---
 
 export interface FavoriteLeague {

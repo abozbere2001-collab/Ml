@@ -306,7 +306,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 if (itemType === 'leagues') {
                     newFavorites.leagues![itemId] = { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true };
                 } else {
-                    newFavorites.teams![itemId] = { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
+                    newFavorites.teams![itemId] = { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club', notificationsEnabled: true };
                 }
             }
             return newFavorites;
@@ -584,12 +584,12 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 item={renameItem}
                 onSave={(type, id, name, note) => handleSaveRenameOrNote(type, id, name, note || '')}
             />}
-            <AddCompetitionDialog isOpen={isAddOpen} onOpenChange={(isOpen) => {
+            {onCustomNameChange && <AddCompetitionDialog isOpen={isAddOpen} onOpenChange={(isOpen) => {
                 setAddOpen(isOpen);
-                if(!isOpen && onCustomNameChange) {
+                if(!isOpen) {
                     onCustomNameChange();
                 }
-            }} />
+            }} />}
         </div>
     );
 }
