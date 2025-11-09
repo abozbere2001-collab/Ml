@@ -38,7 +38,7 @@ interface Cache<T> {
     data: T;
     lastFetched: number;
 }
-const getCachedData = <T>(key: string): T | null => {
+const getCachedData = <T,>(key: string): T | null => {
     if (typeof window === 'undefined') return null;
     try {
         const cachedData = localStorage.getItem(key);
