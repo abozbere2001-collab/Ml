@@ -85,12 +85,12 @@ const normalizeArabic = (text: string) => {
 };
 
 
-const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, itemType: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
+const ItemRow = ({ item, type, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, type: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, type: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
   return (
     <div className="flex items-center gap-2 p-1.5 border-b last:border-b-0 hover:bg-accent/50 rounded-md">
        <div className="flex-1 flex items-center gap-2 cursor-pointer" onClick={onResultClick}>
-            <Avatar className={cn('h-7 w-7', itemType === 'leagues' && 'p-0.5')}>
-                <AvatarImage src={item.logo} alt={item.name} className={itemType === 'leagues' ? 'object-contain' : 'object-cover'} />
+            <Avatar className={cn('h-7 w-7', type === 'leagues' && 'p-0.5')}>
+                <AvatarImage src={item.logo} alt={item.name} className={type === 'leagues' ? 'object-contain' : 'object-cover'} />
                 <AvatarFallback>{item.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 font-semibold truncate text-sm">{item.name}</div>
@@ -101,12 +101,12 @@ const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onC
                     <Pencil className="h-4 w-4 text-muted-foreground" />
                 </Button>
             )}
-            {itemType === 'teams' && (
+            {type === 'teams' && (
                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onCrownToggle(item); }}>
                     <Crown className={cn("h-5 w-5 text-muted-foreground/60", isCrowned && "fill-current text-yellow-400")} />
                 </Button>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onFavoriteToggle(item, itemType); }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onFavoriteToggle(item, type); }}>
                 <Star className={cn("h-5 w-5 text-muted-foreground/60", isFavorited && "fill-current text-yellow-400")} />
             </Button>
         </div>
@@ -471,7 +471,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
                     return <ItemRow 
                                 key={`${result.type}-${result.id}`} 
                                 item={{...result.originalItem, name: result.name}}
-                                itemType={result.type} 
+                                type={result.type} 
                                 isFavorited={isFavorited} 
                                 isCrowned={isCrowned}
                                 onFavoriteToggle={handleFavorite} 
@@ -525,3 +525,4 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   );
 }
 
+    
