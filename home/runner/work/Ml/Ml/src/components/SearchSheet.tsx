@@ -19,7 +19,7 @@ import { useAdmin, useAuth, useFirestore } from '@/firebase';
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, writeBatch, deleteField, onSnapshot, updateDoc } from 'firebase/firestore';
 import { RenameDialog } from '@/components/RenameDialog';
 import { cn } from '@/lib/utils';
-import type { Favorites, AdminFavorite, ManagedCompetition, Team, CrownedTeam } from '@/lib/types';
+import type { Favorites, AdminFavorite, ManagedCompetition, Team, CrownedTeam, FavoriteLeague, FavoriteTeam } from '@/lib/types';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { useToast } from '@/hooks/use-toast';
@@ -344,10 +344,15 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
                 if (isCurrentlyFavorited) {
                     delete newFavorites[type]![itemId];
                 } else {
-                    const favData = type === 'leagues'
-                        ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
-                        : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
-                    newFavorites[type]![itemId] = favData as any;
+                    if (type === 'leagues') {
+                        const leagueItem = item as LeagueResult['league'];
+                        const favData: FavoriteLeague = { name: leagueItem.name, leagueId: itemId, logo: leagueItem.logo, notificationsEnabled: true };
+                        newFavorites.leagues![itemId] = favData;
+                    } else {
+                        const teamItem = item as TeamResult['team'];
+                        const favData: FavoriteTeam = { name: teamItem.name, teamId: itemId, logo: teamItem.logo, type: teamItem.national ? 'National' : 'Club' };
+                        newFavorites.teams![itemId] = favData;
+                    }
                 }
                 return newFavorites;
             });
@@ -438,7 +443,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             logo: item.logo,
             originalItem: item as SearchItemOriginal,
         };
-    }).filter(Boolean) as SearchableItem[];
+    }).filter((item): item is SearchableItem => item !== null);
 
   }, [getDisplayName, initialCustomNames]);
 
@@ -524,3 +529,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     </Sheet>
   );
 }
+
+
+    
