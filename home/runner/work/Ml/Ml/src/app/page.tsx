@@ -21,7 +21,7 @@ export type ScreenProps = {
   favorites?: Partial<Favorites> | null;
   onCustomNameChange?: () => Promise<void>; 
   customNames?: any; 
-  setFavorites: (updater: React.SetStateAction<Partial<Favorites> | null>) => void;
+  setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>;
   isVisible?: boolean;
   headerActions?: React.ReactNode;
 };

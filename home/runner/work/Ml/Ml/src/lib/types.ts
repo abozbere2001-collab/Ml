@@ -151,6 +151,22 @@ export interface TeamStatistics {
   };
 }
 
+export interface PlayerStats {
+    team: Team;
+    league: { id: number; name: string; country: string; logo: string; flag: string | null; season: number };
+    games: { appearences: number; lineups: number; minutes: number; number: number | null; position: string; rating: string | null; captain: boolean };
+    substitutes: { in: number; out: number; bench: number };
+    shots: { total: number | null; on: number | null };
+    goals: { total: number | null; conceded: number | null; assists: number | null; saves: number | null };
+    passes: { total: number | null; key: number | null; accuracy: number | null };
+    tackles: { total: number | null; blocks: number | null; interceptions: number | null };
+    duels: { total: number | null; won: number | null };
+    dribbles: { attempts: number | null; success: number | null; past: number | null };
+    fouls: { drawn: number | null; committed: number | null };
+    cards: { yellow: number; yellowred: number; red: number };
+    penalty: { won: number | null; commited: number | null; scored: number; missed: number; saved: number | null };
+}
+
 // --- Firebase Firestore Types ---
 
 export interface FavoriteLeague {

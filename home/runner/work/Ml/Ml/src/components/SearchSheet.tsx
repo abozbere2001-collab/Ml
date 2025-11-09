@@ -16,81 +16,63 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useDebounce } from '@/hooks/use-debounce';
 import type { ScreenProps } from '@/app/page';
 import { useAdmin, useAuth, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, writeBatch, deleteField, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { RenameDialog } from '@/components/RenameDialog';
 import { cn } from '@/lib/utils';
-import type { Favorites, FavoriteLeague, FavoriteTeam, Team, CrownedTeam } from '@/lib/types';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { errorEmitter } from '@/firebase/error-emitter';
+import type { Favorites, FavoriteLeague, FavoriteTeam, Team } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { POPULAR_TEAMS, POPULAR_LEAGUES } from '@/lib/popular-data';
 import { hardcodedTranslations } from '@/lib/hardcoded-translations';
-import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
-
 
 const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
 const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
 
-// --- Cache Logic ---
-const COMPETITIONS_CACHE_KEY = 'goalstack_all_competitions_cache_v1';
-const TEAMS_CACHE_KEY = 'goalstack_national_teams_cache_v1';
-interface Cache<T> {
-    data: T;
-    lastFetched: number;
-}
-const getCachedData = <T,>(key: string): T | null => {
-    if (typeof window === 'undefined') return null;
-    try {
-        const cachedData = localStorage.getItem(key);
-        if (!cachedData) return null;
-        const parsed = JSON.parse(cachedData) as Cache<T>;
-        return parsed.data;
-    } catch (error) {
-        return null;
-    }
-};
-
-
-// --- Types ---
-interface SearchTeam {
-  id: number;
-  name: string;
-  logo: string;
-  national?: boolean;
-}
-interface SearchLeague {
-    id: number;
-    name: string;
-    logo: string;
-}
-
-type SearchItemOriginal = SearchTeam | SearchLeague;
+// --- TYPES ---
+interface SearchTeam extends Team {}
+interface SearchLeague { id: number; name: string; logo: string; }
 type ItemType = 'teams' | 'leagues';
 type RenameType = 'league' | 'team' | 'player' | 'continent' | 'country' | 'coach' | 'status' | 'crown';
+type SearchItemOriginal = SearchTeam | SearchLeague;
 
 interface SearchableItem {
     id: number;
     type: ItemType;
-    name: string; // The translated name
+    name: string;
     originalName: string;
     logo: string;
     originalItem: SearchItemOriginal;
 }
 
+interface RenameState {
+    id: string | number;
+    name: string;
+    note?: string;
+    type: RenameType;
+    purpose: 'rename' | 'note' | 'crown';
+    originalData?: any;
+    originalName?: string;
+}
+
+// --- HELPER FUNCTIONS ---
 const normalizeArabic = (text: string) => {
   if (!text) return '';
-  return text
-    .replace(/[\u064B-\u0652]/g, "") // Remove harakat
-    .replace(/[أإآ]/g, "ا")
-    .replace(/ة/g, "ه")
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
+  return text.replace(/[\u064B-\u0652]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/\s+/g, ' ').trim().toLowerCase();
+};
+
+const COMPETITIONS_CACHE_KEY = 'goalstack_all_competitions_cache_v1';
+const TEAMS_CACHE_KEY = 'goalstack_national_teams_cache_v1';
+interface Cache<T> { data: T; lastFetched: number; }
+const getCachedData = <T,>(key: string): T | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+        const cachedData = localStorage.getItem(key);
+        return cachedData ? (JSON.parse(cachedData) as Cache<T>).data : null;
+    } catch (error) { return null; }
 };
 
 
-const ItemRow = ({ item, type, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, type: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, type: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
-  return (
+// --- SUB-COMPONENTS ---
+const ItemRow = ({ item, type, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, type: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, type: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => (
     <div className="flex items-center gap-2 p-1.5 border-b last:border-b-0 hover:bg-accent/50 rounded-md">
        <div className="flex-1 flex items-center gap-2 cursor-pointer" onClick={onResultClick}>
             <Avatar className={cn('h-7 w-7', type === 'leagues' && 'p-0.5')}>
@@ -115,36 +97,33 @@ const ItemRow = ({ item, type, isFavorited, isCrowned, onFavoriteToggle, onCrown
             </Button>
         </div>
     </div>
-  );
-}
+);
 
 
-export function SearchSheet({ children, navigate, initialItemType, favorites, customNames: initialCustomNames, setFavorites, onCustomNameChange }: ScreenProps) {
+// --- MAIN COMPONENT ---
+export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  
   const [itemType, setItemType] = useState<ItemType>(initialItemType || 'teams');
   
   const { isAdmin } = useAdmin();
-  const { user } = useAuth();
-  const { db } = useFirestore();
+  const { user, db } = useFirestore();
   const { toast } = useToast();
   
-  const [renameItem, setRenameItem] = useState<{ id: string | number; name: string; note?: string; type: RenameType; purpose: 'rename' | 'note' | 'crown'; originalData?: any; originalName?: string; } | null>(null);
+  const [renameItem, setRenameItem] = useState<RenameState | null>(null);
 
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
-    if (!initialCustomNames) return defaultName;
-    const customMap = type === 'team' ? initialCustomNames.teams : initialCustomNames.leagues;
+    if (!customNames) return defaultName;
+    const customMap = type === 'team' ? customNames.teams : customNames.leagues;
     return customMap?.get(id) || hardcodedTranslations[`${type}s`]?.[id] || defaultName;
-  }, [initialCustomNames]);
+  }, [customNames]);
 
 
   const localSearchIndex = useMemo(() => {
-    if (!initialCustomNames) return [];
-    
+    if (!customNames) return [];
     const index: SearchableItem[] = [];
     const seen = new Set<string>();
 
@@ -155,237 +134,120 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
       competitionsCache.forEach(comp => {
         const league = comp.league;
         const key = `leagues-${league.id}`;
-        if (seen.has(key)) return;
-
-        index.push({
-          id: league.id,
-          type: 'leagues',
-          name: getDisplayName('league', league.id, league.name),
-          originalName: league.name,
-          logo: league.logo,
-          originalItem: { id: league.id, name: league.name, logo: league.logo }
-        });
-        seen.add(key);
+        if (!seen.has(key)) {
+            index.push({
+                id: league.id, type: 'leagues', name: getDisplayName('league', league.id, league.name),
+                originalName: league.name, logo: league.logo, originalItem: league as SearchLeague
+            });
+            seen.add(key);
+        }
       });
     }
-
     if (nationalTeamsCache) {
       nationalTeamsCache.forEach(team => {
         const key = `teams-${team.id}`;
-        if (seen.has(key)) return;
-
-        index.push({
-          id: team.id,
-          type: 'teams',
-          name: getDisplayName('team', team.id, team.name),
-          originalName: team.name,
-          logo: team.logo,
-          originalItem: { ...team }
-        });
-        seen.add(key);
+        if (!seen.has(key)) {
+            index.push({
+                id: team.id, type: 'teams', name: getDisplayName('team', team.id, team.name),
+                originalName: team.name, logo: team.logo, originalItem: team as SearchTeam
+            });
+            seen.add(key);
+        }
       });
     }
-
     return index;
-  }, [initialCustomNames, getDisplayName]);
-
+  }, [customNames, getDisplayName]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open) {
       setSearchTerm('');
       setSearchResults([]);
-      if (initialItemType) {
-        setItemType(initialItemType);
-      }
+      if (initialItemType) setItemType(initialItemType);
     }
   };
 
   const handleSearch = useCallback(async (query: string) => {
-    if (!query || !API_KEY) {
-      setSearchResults([]);
-      return;
-    }
+    if (!query || !API_KEY) { setSearchResults([]); return; }
     setLoading(true);
     const finalResults: SearchableItem[] = [];
     const seen = new Set<string>();
     const normalizedQuery = normalizeArabic(query);
 
-    // 1. Search local index (leagues and national teams)
+    // 1. Search local index
     localSearchIndex.forEach(item => {
-        const normalizedDisplayName = normalizeArabic(item.name);
-        const normalizedOriginalName = normalizeArabic(item.originalName);
-        if (normalizedDisplayName.includes(normalizedQuery) || normalizedOriginalName.includes(normalizedQuery)) {
-            const key = `${item.type}-${item.id}`;
-            if (!seen.has(key)) {
-                finalResults.push(item);
-                seen.add(key);
-            }
+      if (normalizeArabic(item.name).includes(normalizedQuery) || normalizeArabic(item.originalName).includes(normalizedQuery)) {
+        if (!seen.has(`${item.type}-${item.id}`)) {
+          finalResults.push(item);
+          seen.add(`${item.type}-${item.id}`);
         }
+      }
     });
 
-    // 2. Search translated club teams from Firestore
-    if (db) {
-        try {
-            const teamsCustomSnap = await getDocs(collection(db, 'teamCustomizations'));
-            const matchedTeamIds: number[] = [];
-            teamsCustomSnap.forEach(doc => {
-                const name = doc.data().customName;
-                if (normalizeArabic(name).includes(normalizedQuery)) {
-                    matchedTeamIds.push(Number(doc.id));
-                }
-            });
-            
-            if(matchedTeamIds.length > 0) {
-                const teamPromises = matchedTeamIds.map(id => fetch(`https://${API_FOOTBALL_HOST}/teams?id=${id}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.json()));
-                const teamResults = await Promise.all(teamPromises);
-                teamResults.forEach(data => {
-                    if (data.response?.[0]) {
-                        const team = data.response[0].team;
-                        const key = `teams-${team.id}`;
-                        if (!seen.has(key)) {
-                             finalResults.push({
-                                id: team.id,
-                                type: 'teams',
-                                name: getDisplayName('team', team.id, team.name),
-                                originalName: team.name,
-                                logo: team.logo,
-                                originalItem: team,
-                            });
-                            seen.add(key);
-                        }
-                    }
-                });
-            }
-        } catch (e) {
-            console.error("Error searching Firestore team customizations:", e);
-        }
-    }
-
-
-    // 3. Search API for additional results
+    // 2. Search API
     const apiSearchPromises = [
       fetch(`https://${API_FOOTBALL_HOST}/teams?search=${encodeURIComponent(query)}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.ok ? res.json() : { response: [] }),
       fetch(`https://${API_FOOTBALL_HOST}/leagues?search=${encodeURIComponent(query)}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.ok ? res.json() : { response: [] })
     ];
-    
     try {
         const [teamsData, leaguesData] = await Promise.all(apiSearchPromises);
-        
-        teamsData.response?.forEach((r: {team: SearchTeam}) => {
-            const key = `teams-${r.team.id}`;
-            if (!seen.has(key)) {
-                finalResults.push({
-                    id: r.team.id,
-                    type: 'teams',
-                    name: getDisplayName('team', r.team.id, r.team.name),
-                    originalName: r.team.name,
-                    logo: r.team.logo,
-                    originalItem: r.team,
-                });
-                seen.add(key);
+        teamsData.response?.forEach((r: { team: SearchTeam }) => {
+            if (!seen.has(`teams-${r.team.id}`)) {
+                finalResults.push({ id: r.team.id, type: 'teams', name: getDisplayName('team', r.team.id, r.team.name), originalName: r.team.name, logo: r.team.logo, originalItem: r.team });
+                seen.add(`teams-${r.team.id}`);
             }
         });
-
-        leaguesData.response?.forEach((r: {league: SearchLeague}) => {
-            const key = `leagues-${r.league.id}`;
-            if (!seen.has(key)) {
-                finalResults.push({
-                    id: r.league.id,
-                    type: 'leagues',
-                    name: getDisplayName('league', r.league.id, r.league.name),
-                    originalName: r.league.name,
-                    logo: r.league.logo,
-                    originalItem: r.league,
-                });
-                seen.add(key);
+        leaguesData.response?.forEach((r: { league: SearchLeague }) => {
+            if (!seen.has(`leagues-${r.league.id}`)) {
+                finalResults.push({ id: r.league.id, type: 'leagues', name: getDisplayName('league', r.league.id, r.league.name), originalName: r.league.name, logo: r.league.logo, originalItem: r.league });
+                seen.add(`leagues-${r.league.id}`);
             }
         });
-    } catch(e) {
-        console.error("API search failed", e);
-    } finally {
-        setSearchResults(finalResults);
-        setLoading(false);
-    }
-  }, [getDisplayName, localSearchIndex, db]);
-
+    } catch(e) { console.error("API search failed", e); }
+    
+    setSearchResults(finalResults);
+    setLoading(false);
+  }, [getDisplayName, localSearchIndex]);
 
   useEffect(() => {
-    if (debouncedSearchTerm && isOpen) {
-      handleSearch(debouncedSearchTerm);
-    } else {
-      setSearchResults([]);
-    }
+    if (debouncedSearchTerm && isOpen) handleSearch(debouncedSearchTerm);
+    else setSearchResults([]);
   }, [debouncedSearchTerm, handleSearch, isOpen]);
 
   const handleFavorite = useCallback((item: SearchItemOriginal, type: ItemType) => {
-      const itemId = item.id;
-  
-      if (!user) { // Guest mode logic
-          const isPopular = type === 'teams'
-              ? POPULAR_TEAMS.some(t => t.id === itemId)
-              : POPULAR_LEAGUES.some(l => l.id === itemId);
-  
-          if (!isPopular) {
-              toast({
-                  title: 'ميزة للمستخدمين المسجلين',
-                  description: 'تفضيل هذا العنصر متاح فقط للمستخدمين المسجلين. يمكنك تفضيل الفرق والبطولات الشائعة كزائر.',
-              });
-              return;
-          }
-      }
-  
-      if (!setFavorites) return;
+    const itemId = item.id;
+    if (!setFavorites) return;
 
-      setFavorites(prev => {
-          if (!prev) return null;
-          const newFavorites = JSON.parse(JSON.stringify(prev));
-          if (!newFavorites[type]) {
-              newFavorites[type] = {};
-          }
-  
-          const isCurrentlyFavorited = !!newFavorites[type]?.[itemId];
-  
-          if (isCurrentlyFavorited) {
-              delete newFavorites[type]![itemId];
-          } else {
-              if (type === 'leagues') {
-                  const leagueItem = item as SearchLeague;
-                  const favData: FavoriteLeague = { name: leagueItem.name, leagueId: itemId, logo: leagueItem.logo, notificationsEnabled: true };
-                  newFavorites.leagues![itemId] = favData;
-              } else {
-                  const teamItem = item as SearchTeam;
-                  const favData: FavoriteTeam = { name: teamItem.name, teamId: itemId, logo: teamItem.logo, type: teamItem.national ? 'National' : 'Club', notificationsEnabled: true };
-                  newFavorites.teams![itemId] = favData;
-              }
-          }
-          return newFavorites;
-      });
-  }, [user, setFavorites, toast]);
+    setFavorites(prev => {
+        if (!prev) return null;
+        const newFavorites = JSON.parse(JSON.stringify(prev));
+        if (!newFavorites[type]) newFavorites[type] = {};
+        
+        const isCurrentlyFavorited = !!newFavorites[type]?.[itemId];
 
+        if (isCurrentlyFavorited) {
+            delete newFavorites[type]![itemId];
+        } else {
+            const favData = type === 'leagues'
+                ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true } as FavoriteLeague
+                : { name: (item as SearchTeam).name, teamId: itemId, logo: item.logo, type: (item as SearchTeam).national ? 'National' : 'Club', notificationsEnabled: true } as FavoriteTeam;
+            newFavorites[type]![itemId] = favData as any;
+        }
+        return newFavorites;
+    });
+  }, [setFavorites]);
 
   const handleOpenCrownDialog = (team: SearchItemOriginal) => {
-    if (!user) {
-        toast({ title: 'مستخدم زائر', description: 'يرجى تسجيل الدخول لاستخدام هذه الميزة.' });
-        return;
-    }
+    if (!user) { toast({ title: 'مستخدم زائر', description: 'يرجى تسجيل الدخول لاستخدام هذه الميزة.' }); return; }
     setRenameItem({
-        id: team.id,
-        name: getDisplayName('team', team.id, team.name),
-        type: 'crown',
-        purpose: 'crown',
-        originalData: team,
-        note: favorites?.crownedTeams?.[team.id]?.note || '',
+        id: team.id, name: getDisplayName('team', team.id, team.name), type: 'crown', purpose: 'crown',
+        originalData: team, note: favorites?.crownedTeams?.[team.id]?.note || '',
     });
   };
 
-
   const handleResultClick = (result: SearchableItem) => {
-    if (result.type === 'teams') {
-      navigate('TeamDetails', { teamId: result.id });
-    } else {
-      navigate('CompetitionDetails', { leagueId: result.id, title: result.name, logo: result.logo });
-    }
+    if (result.type === 'teams') navigate('TeamDetails', { teamId: result.id });
+    else navigate('CompetitionDetails', { leagueId: result.id, title: result.name, logo: result.logo });
     handleOpenChange(false);
   }
 
@@ -398,118 +260,77 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     if (!renameItem || !db) return;
     const { purpose, originalData, originalName } = renameItem;
 
-    if (purpose === 'rename' && isAdmin) {
+    if (purpose === 'rename' && isAdmin && onCustomNameChange) {
         const collectionName = `${type}Customizations`;
         const docRef = doc(db, collectionName, String(id));
-        if (newName && newName !== originalName) {
-            setDoc(docRef, { customName: newName });
-        } else {
-            deleteDoc(docRef); 
-        }
-        if (onCustomNameChange) onCustomNameChange();
-    } else if (purpose === 'crown' && user) {
+        if (newName && newName !== originalName) setDoc(docRef, { customName: newName });
+        else deleteDoc(docRef);
+        onCustomNameChange();
+    } else if (purpose === 'crown' && user && setFavorites) {
         const teamId = Number(id);
-        
-        if (setFavorites) {
-            setFavorites(prev => {
-                if (!prev) return null;
-                const newFavorites = JSON.parse(JSON.stringify(prev));
-                if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
-                const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
-
-                if (isCurrentlyCrowned) {
-                    delete newFavorites.crownedTeams[teamId];
-                } else {
-                    newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as SearchTeam).name, logo: (originalData as SearchTeam).logo, note: newNote };
-                }
-                return newFavorites;
-            });
-        }
+        setFavorites(prev => {
+            if (!prev) return null;
+            const newFavorites = JSON.parse(JSON.stringify(prev));
+            if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
+            if (!!newFavorites.crownedTeams?.[teamId]) delete newFavorites.crownedTeams[teamId];
+            else newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as SearchTeam).name, logo: (originalData as SearchTeam).logo, note: newNote };
+            return newFavorites;
+        });
     }
     setRenameItem(null);
   };
   
   const popularItems = useMemo(() => {
-    if (!initialCustomNames) return [];
-    const seen = new Set<string>();
-
+    if (!customNames) return [];
     return [...POPULAR_TEAMS, ...POPULAR_LEAGUES].map(item => {
-        const type = 'national' in item || 'type' in item ? 'teams' : 'leagues';
-        const key = `${type}-${item.id}`;
-        if (seen.has(key)) return null;
-        seen.add(key);
-
+        const type: ItemType = 'national' in item || 'type' in item ? 'teams' : 'leagues';
         return {
-            id: item.id,
-            type: type as ItemType,
-            name: getDisplayName(type.slice(0, -1) as 'team' | 'league', item.id, item.name),
-            originalName: item.name,
-            logo: item.logo,
-            originalItem: item as SearchItemOriginal,
+            id: item.id, type, name: getDisplayName(type.slice(0, -1) as 'team' | 'league', item.id, item.name),
+            originalName: item.name, logo: item.logo, originalItem: item as SearchItemOriginal,
         };
-    }).filter(Boolean) as SearchableItem[];
-
-  }, [getDisplayName, initialCustomNames]);
+    }).filter((item, index, self) => index === self.findIndex(t => t.id === item.id && t.type === item.type));
+  }, [getDisplayName, customNames]);
 
   const renderContent = () => {
-    if (!initialCustomNames || !favorites) {
-      return <div className="flex justify-center items-center h-full"><Loader2 className="h-6 w-6 animate-spin" /></div>;
-    }
-
-    if (loading) {
-        return <div className="flex justify-center items-center h-full"><Loader2 className="h-6 w-6 animate-spin" /></div>;
-    }
+    if (!favorites || !customNames) return <div className="flex justify-center items-center h-full"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+    if (loading) return <div className="flex justify-center items-center h-full"><Loader2 className="h-6 w-6 animate-spin" /></div>;
     
     const itemsToDisplay = debouncedSearchTerm ? searchResults : popularItems.filter(item => item.type === itemType);
-
-    if (itemsToDisplay.length === 0 && debouncedSearchTerm) {
-        return <p className="text-muted-foreground text-center pt-8">لا توجد نتائج بحث.</p>;
-    }
-
-    if(itemsToDisplay.length === 0 && !debouncedSearchTerm) {
-        return <p className="text-muted-foreground text-center pt-8">لا توجد عناصر شائعة لعرضها.</p>;
-    }
-
+    if (itemsToDisplay.length === 0) return <p className="text-muted-foreground text-center pt-8">{debouncedSearchTerm ? "لا توجد نتائج بحث." : "لا توجد عناصر شائعة."}</p>;
 
     return (
         <div className="space-y-2">
             {!debouncedSearchTerm && <h3 className="font-bold text-md text-center text-muted-foreground">{itemType === 'teams' ? 'الفرق الأكثر شعبية' : 'البطولات الأكثر شعبية'}</h3>}
-             {itemsToDisplay.map(result => {
-                    const isFavorited = !!favorites?.[result.type]?.[result.id];
-                    const isCrowned = result.type === 'teams' && !!favorites?.crownedTeams?.[result.id];
-                    return <ItemRow 
-                                key={`${result.type}-${result.id}`} 
-                                item={{...result.originalItem, name: result.name}}
-                                type={result.type} 
-                                isFavorited={isFavorited} 
-                                isCrowned={isCrowned}
-                                onFavoriteToggle={handleFavorite} 
-                                onCrownToggle={(item) => handleOpenCrownDialog(item)}
-                                onResultClick={() => handleResultClick(result)} 
-                                isAdmin={isAdmin} 
-                                onRename={() => handleOpenRename(result.type as RenameType, result.id, result.originalItem)} 
-                            />;
-                })
-            }
+            {itemsToDisplay.map(result => {
+                const isFavorited = !!favorites?.[result.type]?.[result.id];
+                const isCrowned = result.type === 'teams' && !!favorites?.crownedTeams?.[result.id];
+                return (
+                    <ItemRow
+                        key={`${result.type}-${result.id}`}
+                        item={{...result.originalItem, name: result.name}}
+                        type={result.type}
+                        isFavorited={isFavorited}
+                        isCrowned={isCrowned}
+                        onFavoriteToggle={handleFavorite}
+                        onCrownToggle={handleOpenCrownDialog}
+                        onResultClick={() => handleResultClick(result)}
+                        isAdmin={isAdmin}
+                        onRename={() => handleOpenRename(result.type as RenameType, result.id, result.originalItem)}
+                    />
+                );
+            })}
         </div>
-    )
+    );
   }
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild onClick={(e) => { e.stopPropagation(); setIsOpen(true) }}>{children}</SheetTrigger>
       <SheetContent side="bottom" className="flex flex-col h-[90vh] top-0 rounded-t-none">
-        <SheetHeader>
-          <SheetTitle>اكتشف</SheetTitle>
-        </SheetHeader>
+        <SheetHeader><SheetTitle>اكتشف</SheetTitle></SheetHeader>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="ابحث عن فريق أو بطولة..."
-            className="pl-10 text-md"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <Input placeholder="ابحث عن فريق أو بطولة..." className="pl-10 text-md" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
         {!debouncedSearchTerm && (
              <div className="flex items-center justify-center pt-2">
@@ -517,18 +338,8 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
                 <Button variant={itemType === 'leagues' ? 'secondary' : 'ghost'} size="sm" onClick={() => setItemType('leagues')}>البطولات</Button>
             </div>
         )}
-        <div className="mt-4 flex-1 overflow-y-auto space-y-1 pr-2 relative">
-          {renderContent()}
-        </div>
-        
-        {renameItem && (
-          <RenameDialog 
-            isOpen={!!renameItem}
-            onOpenChange={(isOpen) => !isOpen && setRenameItem(null)}
-            item={renameItem}
-            onSave={(type, id, name, note) => handleSaveRenameOrNote(type as RenameType, id, name, note || '')}
-          />
-        )}
+        <div className="mt-4 flex-1 overflow-y-auto space-y-1 pr-2 relative">{renderContent()}</div>
+        {renameItem && <RenameDialog isOpen={!!renameItem} onOpenChange={(isOpen) => !isOpen && setRenameItem(null)} item={renameItem} onSave={(type, id, name, note) => handleSaveRenameOrNote(type, id, name, note || '')} />}
       </SheetContent>
     </Sheet>
   );
