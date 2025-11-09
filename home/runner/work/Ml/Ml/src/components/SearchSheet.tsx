@@ -19,7 +19,7 @@ import { useAdmin, useAuth, useFirestore } from '@/firebase';
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, writeBatch, deleteField, onSnapshot, updateDoc } from 'firebase/firestore';
 import { RenameDialog } from '@/components/RenameDialog';
 import { cn } from '@/lib/utils';
-import type { Favorites, AdminFavorite, ManagedCompetition, Team, CrownedTeam, FavoriteLeague, FavoriteTeam } from '@/lib/types';
+import type { Favorites, FavoriteLeague, FavoriteTeam, Team, CrownedTeam } from '@/lib/types';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { useToast } from '@/hooks/use-toast';
@@ -52,15 +52,19 @@ const getCachedData = <T,>(key: string): T | null => {
 
 
 // --- Types ---
-interface TeamResult {
-  team: { id: number; name: string; logo: string; national?: boolean; };
+interface SearchTeam {
+  id: number;
+  name: string;
+  logo: string;
+  national?: boolean;
 }
-interface LeagueResult {
-    league: { id: number; name: string; logo: string; };
-    country: { name: string; };
+interface SearchLeague {
+    id: number;
+    name: string;
+    logo: string;
 }
 
-type SearchItemOriginal = TeamResult['team'] | LeagueResult['league'];
+type SearchItemOriginal = SearchTeam | SearchLeague;
 type ItemType = 'teams' | 'leagues';
 type RenameType = 'league' | 'team' | 'player' | 'continent' | 'country' | 'coach' | 'status' | 'crown';
 
@@ -115,7 +119,7 @@ const ItemRow = ({ item, type, isFavorited, isCrowned, onFavoriteToggle, onCrown
 }
 
 
-export function SearchSheet({ children, navigate, initialItemType, favorites, customNames: initialCustomNames, setFavorites, onCustomNameChange }: { children: React.ReactNode, navigate: ScreenProps['navigate'], initialItemType?: ItemType, favorites: Partial<Favorites> | null, customNames: any, setFavorites: (updater: React.SetStateAction<Partial<import("@/lib/types").Favorites> | null>) => void, onCustomNameChange?: () => void }) {
+export function SearchSheet({ children, navigate, initialItemType, favorites, customNames: initialCustomNames, setFavorites, onCustomNameChange }: ScreenProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
@@ -268,7 +272,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     try {
         const [teamsData, leaguesData] = await Promise.all(apiSearchPromises);
         
-        teamsData.response?.forEach((r: TeamResult) => {
+        teamsData.response?.forEach((r: {team: SearchTeam}) => {
             const key = `teams-${r.team.id}`;
             if (!seen.has(key)) {
                 finalResults.push({
@@ -283,7 +287,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             }
         });
 
-        leaguesData.response?.forEach((r: LeagueResult) => {
+        leaguesData.response?.forEach((r: {league: SearchLeague}) => {
             const key = `leagues-${r.league.id}`;
             if (!seen.has(key)) {
                 finalResults.push({
@@ -331,6 +335,8 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
           }
       }
   
+      if (!setFavorites) return;
+
       setFavorites(prev => {
           if (!prev) return null;
           const newFavorites = JSON.parse(JSON.stringify(prev));
@@ -344,10 +350,12 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
               delete newFavorites[type]![itemId];
           } else {
               if (type === 'leagues') {
-                  const favData: FavoriteLeague = { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true };
+                  const leagueItem = item as SearchLeague;
+                  const favData: FavoriteLeague = { name: leagueItem.name, leagueId: itemId, logo: leagueItem.logo, notificationsEnabled: true };
                   newFavorites.leagues![itemId] = favData;
               } else {
-                  const favData: FavoriteTeam = { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club', notificationsEnabled: true };
+                  const teamItem = item as SearchTeam;
+                  const favData: FavoriteTeam = { name: teamItem.name, teamId: itemId, logo: teamItem.logo, type: teamItem.national ? 'National' : 'Club', notificationsEnabled: true };
                   newFavorites.teams![itemId] = favData;
               }
           }
@@ -402,19 +410,21 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     } else if (purpose === 'crown' && user) {
         const teamId = Number(id);
         
-        setFavorites(prev => {
-            if (!prev) return null;
-            const newFavorites = JSON.parse(JSON.stringify(prev));
-            if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
-            const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
+        if (setFavorites) {
+            setFavorites(prev => {
+                if (!prev) return null;
+                const newFavorites = JSON.parse(JSON.stringify(prev));
+                if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
+                const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
 
-            if (isCurrentlyCrowned) {
-                delete newFavorites.crownedTeams[teamId];
-            } else {
-                newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
-            }
-            return newFavorites;
-        });
+                if (isCurrentlyCrowned) {
+                    delete newFavorites.crownedTeams[teamId];
+                } else {
+                    newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as SearchTeam).name, logo: (originalData as SearchTeam).logo, note: newNote };
+                }
+                return newFavorites;
+            });
+        }
     }
     setRenameItem(null);
   };
