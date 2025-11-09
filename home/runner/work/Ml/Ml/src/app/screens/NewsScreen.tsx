@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -30,7 +31,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { SearchSheet } from '@/components/SearchSheet';
 import { ProfileButton } from '../AppContentWrapper';
 
-export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & {setFavorites: (favorites: any) => void, customNames: any, onCustomNameChange: () => void}) {
+export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps) {
   const { isAdmin } = useAdmin();
   const { db } = useFirestore();
   const [news, setNews] = useState<NewsArticle[]>([]);

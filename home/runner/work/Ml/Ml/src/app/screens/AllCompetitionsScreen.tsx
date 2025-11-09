@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -290,7 +291,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
 
     const handleFavoriteToggle = useCallback((item: { id: number, name: string, logo: string, national?: boolean }, itemType: 'leagues' | 'teams') => {
         const itemId = item.id;
-        
+        if (!setFavorites) return;
         setFavorites(prev => {
             if (!prev) return null;
             const newFavorites = JSON.parse(JSON.stringify(prev));
@@ -347,21 +348,23 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     
         } else if (purpose === 'crown' && user) {
             const teamId = Number(id);
-            setFavorites(prev => {
-                if (!prev) return null;
-                const newFavorites = JSON.parse(JSON.stringify(prev));
-                if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
-                const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
-                
-                if (isCurrentlyCrowned) {
-                    delete newFavorites.crownedTeams[teamId];
-                } else {
-                    const crownedData = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
-                    newFavorites.crownedTeams[teamId] = crownedData;
-                }
-                
-                return newFavorites;
-            });
+            if(setFavorites) {
+                setFavorites(prev => {
+                    if (!prev) return null;
+                    const newFavorites = JSON.parse(JSON.stringify(prev));
+                    if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
+                    const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
+                    
+                    if (isCurrentlyCrowned) {
+                        delete newFavorites.crownedTeams[teamId];
+                    } else {
+                        const crownedData = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
+                        newFavorites.crownedTeams[teamId] = crownedData;
+                    }
+                    
+                    return newFavorites;
+                });
+            }
         }
     
         setRenameItem(null);

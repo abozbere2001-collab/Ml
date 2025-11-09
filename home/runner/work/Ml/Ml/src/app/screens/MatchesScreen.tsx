@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -255,7 +256,7 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
 }
 
 // Main Screen Component
-export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & { isVisible: boolean, setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>, customNames: any, onCustomNameChange: () => void }) {
+export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps) {
   const { user } = useAuth();
   const { db, isAdmin, isCheckingAdmin } = useAdmin();
   const { toast } = useToast();

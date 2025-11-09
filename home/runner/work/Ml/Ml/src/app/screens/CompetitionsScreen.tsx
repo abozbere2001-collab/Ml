@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
@@ -16,7 +17,7 @@ import { hardcodedTranslations } from '@/lib/hardcoded-translations';
 import { collection, getDocs } from 'firebase/firestore';
 
 // --- MAIN SCREEN COMPONENT ---
-export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps & {setFavorites: (favorites: Partial<Favorites> | null) => void, customNames: any, onCustomNameChange: () => void}) {
+export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps) {
     const { user, db } = useAuth();
     
      const getDisplayName = useCallback((type: 'league' | 'team', id: number, defaultName: string) => {
