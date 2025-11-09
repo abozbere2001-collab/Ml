@@ -290,8 +290,8 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
 
 
     const handleFavoriteToggle = useCallback((item: { id: number, name: string, logo: string, national?: boolean }, itemType: 'leagues' | 'teams') => {
-        const itemId = item.id;
         if (!setFavorites) return;
+        const itemId = item.id;
         setFavorites(prev => {
             if (!prev) return null;
             const newFavorites = JSON.parse(JSON.stringify(prev));
@@ -334,37 +334,35 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         if (!renameItem || !db) return;
         const { purpose, originalData, originalName } = renameItem;
     
-        if (purpose === 'rename' && isAdmin) {
+        if (purpose === 'rename' && isAdmin && onCustomNameChange) {
             const collectionName = `${type}Customizations`;
             const docRef = doc(db, collectionName, String(id));
             const data = { customName: newName };
     
             const op = (newName && newName.trim() && newName !== originalName) ? setDoc(docRef, data) : deleteDoc(docRef);
     
-            op.then(() => onCustomNameChange && onCustomNameChange())
+            op.then(() => onCustomNameChange())
             .catch(serverError => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'write', requestResourceData: data }));
             });
     
-        } else if (purpose === 'crown' && user) {
+        } else if (purpose === 'crown' && user && setFavorites) {
             const teamId = Number(id);
-            if(setFavorites) {
-                setFavorites(prev => {
-                    if (!prev) return null;
-                    const newFavorites = JSON.parse(JSON.stringify(prev));
-                    if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
-                    const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
-                    
-                    if (isCurrentlyCrowned) {
-                        delete newFavorites.crownedTeams[teamId];
-                    } else {
-                        const crownedData = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
-                        newFavorites.crownedTeams[teamId] = crownedData;
-                    }
-                    
-                    return newFavorites;
-                });
-            }
+            setFavorites(prev => {
+                if (!prev) return null;
+                const newFavorites = JSON.parse(JSON.stringify(prev));
+                if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
+                const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
+                
+                if (isCurrentlyCrowned) {
+                    delete newFavorites.crownedTeams[teamId];
+                } else {
+                    const crownedData = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
+                    newFavorites.crownedTeams[teamId] = crownedData;
+                }
+                
+                return newFavorites;
+            });
         }
     
         setRenameItem(null);

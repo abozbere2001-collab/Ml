@@ -9,6 +9,8 @@ import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { FavoriteSelectionScreen } from '@/app/screens/FavoriteSelectionScreen';
 import { OnboardingHints } from '@/components/OnboardingHints';
+import type { Favorites } from '@/lib/types';
+
 
 export type ScreenKey = 'Welcome' | 'SignUp' | 'Matches' | 'Competitions' | 'AllCompetitions' | 'News' | 'Settings' | 'CompetitionDetails' | 'TeamDetails' | 'PlayerDetails' | 'AdminFavoriteTeamDetails' | 'Profile' | 'SeasonPredictions' | 'SeasonTeamSelection' | 'SeasonPlayerSelection' | 'AddEditNews' | 'ManageTopScorers' | 'MatchDetails' | 'NotificationSettings' | 'GeneralSettings' | 'ManagePinnedMatch' | 'PrivacyPolicy' | 'TermsOfService' | 'FavoriteSelection' | 'GoPro' | 'MyCountry' | 'Predictions';
 
@@ -16,10 +18,10 @@ export type ScreenProps = {
   navigate: (screen: ScreenKey, props?: Record<string, any>) => void;
   goBack: () => void;
   canGoBack: boolean;
-  favorites?: any; // To accept props from wrapper
-  onCustomNameChange?: () => Promise<void>; // Added for screens that need to trigger a re-fetch
-  customNames?: any; // To accept props from wrapper
-  setFavorites?: React.Dispatch<React.SetStateAction<Partial<import('@/lib/types').Favorites> | null>>;
+  favorites?: Partial<Favorites> | null;
+  onCustomNameChange?: () => Promise<void>; 
+  customNames?: any; 
+  setFavorites: (updater: React.SetStateAction<Partial<Favorites> | null>) => void;
   isVisible?: boolean;
   headerActions?: React.ReactNode;
 };
