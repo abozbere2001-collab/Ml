@@ -19,7 +19,7 @@ import { useAdmin, useAuth, useFirestore } from '@/firebase';
 import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { RenameDialog } from '@/components/RenameDialog';
 import { cn } from '@/lib/utils';
-import type { Favorites, FavoriteLeague, FavoriteTeam, Team } from '@/lib/types';
+import type { Favorites, Team, FavoriteTeam, FavoriteLeague } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { POPULAR_TEAMS, POPULAR_LEAGUES } from '@/lib/popular-data';
 import { hardcodedTranslations } from '@/lib/hardcoded-translations';
@@ -101,7 +101,7 @@ const ItemRow = ({ item, type, isFavorited, isCrowned, onFavoriteToggle, onCrown
 
 
 // --- MAIN COMPONENT ---
-export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps) {
+export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps & {children: React.ReactNode}) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);

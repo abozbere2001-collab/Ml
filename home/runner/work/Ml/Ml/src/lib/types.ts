@@ -200,11 +200,11 @@ export interface CrownedLeague {
 
 export interface Favorites {
   userId: string;
-  leagues?: { [key: number]: FavoriteLeague };
-  teams?: { [key: number]: FavoriteTeam };
-  players?: { [key: number]: any };
-  crownedTeams?: { [key: number]: CrownedTeam };
-  notificationsEnabled?: {
+  leagues: { [key: number]: FavoriteLeague };
+  teams: { [key: number]: FavoriteTeam };
+  players: { [key: number]: any };
+  crownedTeams: { [key: number]: CrownedTeam };
+  notificationsEnabled: {
     news?: boolean;
     comments?: boolean;
   }
