@@ -1,82 +1,73 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /** ========================= HELPER FUNCTIONS ========================= **/
+    // --- Helper Functions ---
     function isSignedIn() {
       return request.auth != null;
     }
-
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == "sagralnarey@gmail.com";
+      return isSignedIn() && request.auth.token.email == "sagralnarey@gmail.com";
     }
 
-    /** ========================= USERS ========================= **/
-    match /users/{userId}/{document=**} {
-      allow read, write: if isOwner(userId);
+    // --- Admin-specific Overrides ---
+    // The admin has full read/write access to everything.
+    match /{document=**} {
+      allow read, write: if isAdmin();
     }
+    
+    // --- Public & User-Specific Rules for non-admins ---
 
-    /** ========================= PREDICTIONS ========================= **/
+    // Publicly readable collections
+    match /news/{newsId} {
+      allow read: if true;
+    }
+    match /leagueCustomizations/{leagueId} {
+      allow read: if true;
+    }
+    match /teamCustomizations/{teamId} {
+      allow read: if true;
+    }
+    match /playerCustomizations/{playerId} {
+      allow read: if true;
+    }
+    match /coachCustomizations/{coachId} {
+      allow read: if true;
+    }
+    match /countryCustomizations/{countryId} {
+      allow read: if true;
+    }
+    match /continentCustomizations/{continentId} {
+      allow read: if true;
+    }
+    match /matchCustomizations/{matchId} {
+      allow read: if true;
+    }
+    match /iraqiLeagueTopScorers/{scorerId} {
+      allow read: if true;
+    }
+    match /pinnedIraqiMatches/{matchId} {
+      allow read: if true;
+    }
     match /predictionFixtures/{fixtureId} {
       allow read: if true;
-      allow write: if isAdmin();
+    }
+    match /leaderboard/{userId} {
+      allow read: if true;
+    }
+
+    // User-specific data
+    match /users/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
     }
     match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
       allow read: if true;
       allow write: if isOwner(userId);
-    }
-    match /leaderboard/{userId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    /** ========================= NEWS ========================= **/
-    match /news/{newsId} {
-      allow read: if true;
-      allow write: if isAdmin(); // write includes create, update, and delete
-    }
-
-    /** ========================= CUSTOMIZATIONS & PUBLIC DATA ========================= **/
-    match /leagueCustomizations/{leagueId} { 
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /teamCustomizations/{teamId} { 
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /playerCustomizations/{playerId} { 
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /coachCustomizations/{coachId} { 
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /countryCustomizations/{countryId} { 
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /continentCustomizations/{continentId} { 
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /matchCustomizations/{matchId} { 
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /iraqiLeagueTopScorers/{scorerId} { 
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    match /pinnedIraqiMatches/{matchId} { 
-      allow read: if true;
-      allow write: if isAdmin();
     }
   }
 }
