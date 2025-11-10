@@ -182,3 +182,4 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
     </div>
   );
 }
+

@@ -292,3 +292,4 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
     </div>
   );
 }
+
