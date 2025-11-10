@@ -3,15 +3,21 @@ import type {NextConfig} from 'next';
 import withPWAInit from 'next-pwa';
 
 const isProd = process.env.NODE_ENV === 'production';
+const basePath = isProd ? '/Ml' : '';
 
 const withPWA = withPWAInit({
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: !isProd,
+  publicExcludes: ['!sw.js', '!sw.js.map', '!workbox-*.js', '!workbox-*.js.map'],
+  buildExcludes: [/app-build-manifest\.json$/],
 });
 
 const nextConfig: NextConfig = {
+  output: 'export',
+  basePath: basePath,
+  assetPrefix: basePath,
   // This is required to allow the Next.js dev server to be accessed from the cloud workstation preview.
   // This is not required for production builds.
   allowedDevOrigins: ["https://*.cloudworkstations.dev"],
@@ -51,6 +57,7 @@ const nextConfig: NextConfig = {
     ],
   },
   env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
     NEXT_PUBLIC_API_FOOTBALL_KEY: "e931ffb3ccda478e60b74c6e36913c90",
     NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyDKQK4mfCGlSCwJS7oOdMhJa0SIJAv3nXM",
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "nabd-d71ab.firebaseapp.com",

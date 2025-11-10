@@ -9,6 +9,7 @@ import { FirebaseClientProvider } from '@/firebase';
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://sagralnarey.github.io' : 'http://localhost:3000'),
   title: 'نبض الملاعب',
   description: 'عالم كرة القدم بين يديك',
   manifest: `${basePath}/manifest.json`,
@@ -39,8 +40,7 @@ export default function RootLayout({
           <meta name="apple-mobile-web-app-title" content="نبض الملاعب" />
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="theme-color" content="#29ABE2" />
-          <link rel="manifest" href={`${basePath}/manifest.json`} />
+          <meta name="theme-color" content="#000000" />
           <link rel="apple-touch-icon" href={`${basePath}/icon-192x192.png`} />
         </head>
         <body className={`${cairo.variable} font-body antialiased`}>
