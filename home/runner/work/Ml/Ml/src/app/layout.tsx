@@ -3,7 +3,7 @@ import type {Metadata} from 'next';
 import '@/app/globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from '@/components/theme-provider';
-import { Inter } from 'next/font/google';
+import { Cairo } from 'next/font/google';
 import { FirebaseClientProvider } from '@/firebase';
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   },
 };
 
-const inter = Inter({
+const cairo = Cairo({
   subsets: ['arabic', 'latin'],
-  variable: '--font-inter',
+  variable: '--font-cairo',
 });
 
 export default function RootLayout({
@@ -39,11 +39,11 @@ export default function RootLayout({
           <meta name="apple-mobile-web-app-title" content="نبض الملاعب" />
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="theme-color" content="#000000" />
+          <meta name="theme-color" content="#29ABE2" />
           <link rel="manifest" href={`${basePath}/manifest.json`} />
           <link rel="apple-touch-icon" href={`${basePath}/icon-192x192.png`} />
         </head>
-        <body className={`${inter.variable} font-body antialiased`}>
+        <body className={`${cairo.variable} font-body antialiased`}>
             <ThemeProvider
                 attribute="class"
                 defaultTheme="system"
