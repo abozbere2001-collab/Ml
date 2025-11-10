@@ -1,0 +1,77 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    function isAdmin() {
+      // Admin access is granted based on a specific email address.
+      return request.auth != null && request.auth.token.email == "sagralnarey@gmail.com";
+    }
+    
+    // --- Admin Override ---
+    // The admin has full read/write access to everything.
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // --- Publicly Readable Data ---
+    // Anyone can read these collections, but only admins can write to them.
+    match /news/{newsId} {
+      allow read: if true;
+    }
+    match /leagueCustomizations/{leagueId} {
+      allow read: if true;
+    }
+    match /teamCustomizations/{teamId} {
+      allow read: if true;
+    }
+    match /playerCustomizations/{playerId} {
+      allow read: if true;
+    }
+    match /coachCustomizations/{coachId} {
+      allow read: if true;
+    }
+    match /countryCustomizations/{countryId} {
+      allow read: if true;
+    }
+    match /continentCustomizations/{continentId} {
+      allow read: if true;
+    }
+    match /matchCustomizations/{matchId} {
+      allow read: if true;
+    }
+    match /iraqiLeagueTopScorers/{scorerId} {
+      allow read: if true;
+    }
+    match /pinnedIraqiMatches/{matchId} {
+      allow read: if true;
+    }
+     match /predictionFixtures/{fixtureId} {
+      allow read: if true;
+    }
+    match /leaderboard/{userId} {
+      allow read: if true;
+    }
+
+    // --- User-Specific Data ---
+    // Users can only read and write their own data.
+    match /users/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // --- Predictions ---
+    // Users can read all prediction fixtures, but can only write their own prediction.
+    match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId);
+    }
+  }
+}
