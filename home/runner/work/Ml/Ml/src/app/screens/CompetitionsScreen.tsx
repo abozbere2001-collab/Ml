@@ -19,7 +19,7 @@ import { collection, getDocs } from 'firebase/firestore';
 // --- MAIN SCREEN COMPONENT ---
 export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps) {
     const { user, db } = useAuth();
-    
+
      const getDisplayName = useCallback((type: 'league' | 'team', id: number, defaultName: string) => {
         if (!customNames) return defaultName;
         const key = `${type}s` as 'leagues' | 'teams';
@@ -52,7 +52,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
     }, [favorites, customNames, getDisplayName]);
 
     const favoritePlayers = useMemo(() => favorites?.players ? Object.values(favorites.players) : [], [favorites?.players]);
-    
+
     const handleLoginClick = () => {
         if ((window as any).appNavigate) {
             (window as any).appNavigate('Welcome');
@@ -66,10 +66,10 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
 
     return (
         <div className="flex h-full flex-col bg-background">
-             <ScreenHeader 
-                title={"اختياراتي"} 
-                onBack={goBack} 
-                canGoBack={canGoBack} 
+             <ScreenHeader
+                title={"اختياراتي"}
+                onBack={goBack}
+                canGoBack={canGoBack}
                 actions={
                   <div className="flex items-center gap-1">
                       <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
@@ -116,7 +116,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                                     <TabsTrigger value="teams" className="data-[state=active]:shadow-none"><Users className="ml-1 h-4 w-4"/>الفرق</TabsTrigger>
                                 </TabsList>
                             </div>
-                            
+
                             <TabsContent value="teams" className="mt-4 px-3">
                                 <div className="grid grid-cols-4 gap-4">
                                      <div className="h-[76px] w-full">
@@ -128,7 +128,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                                             </div>
                                          </SearchSheet>
                                     </div>
-                                    {favoriteTeams.map((team, index) => 
+                                    {favoriteTeams.map((team, index) =>
                                         <div key={`${team.teamId}-${index}`} className="relative flex flex-col items-center justify-start gap-1 text-center cursor-pointer h-[76px]" onClick={() => navigate('TeamDetails', { teamId: team.teamId })}>
                                             <Avatar className="h-12 w-12 border-2 border-border">
                                                 <AvatarImage src={team.logo} />
@@ -140,7 +140,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                                     )}
                                 </div>
                             </TabsContent>
-                            
+
                             <TabsContent value="competitions" className="mt-4 px-3">
                                 <div className="grid grid-cols-4 gap-4">
                                     <div className="h-[76px] w-full">
@@ -152,7 +152,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
                                             </div>
                                         </SearchSheet>
                                     </div>
-                                    {favoriteLeagues.map((comp, index) => 
+                                    {favoriteLeagues.map((comp, index) =>
                                         <div key={`${comp.leagueId}-${index}`} className="relative flex flex-col items-center justify-start gap-1 text-center cursor-pointer h-[76px]" onClick={() => navigate('CompetitionDetails', { title: comp.name, leagueId: comp.leagueId, logo: comp.logo })}>
                                             <Avatar className="h-12 w-12 border-2 border-border p-1">
                                                 <AvatarImage src={comp.logo} className="object-contain" />

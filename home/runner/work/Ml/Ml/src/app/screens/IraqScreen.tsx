@@ -71,7 +71,7 @@ const CrownedTeamScroller = ({
             </Avatar>
             <span className="text-[11px] font-medium truncate w-full">{team.name}</span>
             <p className="text-[10px] text-muted-foreground truncate w-full">{team.note}</p>
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); onRemove(team.teamId); }}
               className="absolute top-0 left-0 h-5 w-5 bg-background/80 rounded-full flex items-center justify-center border border-destructive"
             >
@@ -105,11 +105,11 @@ const TeamFixturesDisplay = ({ teamId, navigate }: { teamId: number; navigate: S
                 const res = await fetch(url, { headers: { 'x-rapidapi-key': process.env.NEXT_PUBLIC_API_FOOTBALL_KEY || '' } });
                 if (!isMounted) return;
                 if (!res.ok) throw new Error(`API fetch failed with status: ${res.status}`);
-                
+
                 const data = await res.json();
                 const fixtures: Fixture[] = data.response || [];
                 fixtures.sort((a, b) => a.fixture.timestamp - b.fixture.timestamp);
-                
+
                 const now = new Date();
                 const upcomingIndex = fixtures.findIndex(f => {
                     const fixtureDate = new Date(f.fixture.timestamp * 1000);
@@ -186,7 +186,7 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
   const { user } = useAuth();
   const { db } = useFirestore();
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
-  
+
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
     if (!customNames) return defaultName;
     const key = `${type}s` as 'teams' | 'leagues';
@@ -200,7 +200,7 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
 
     return defaultName;
   }, [customNames]);
-  
+
   const crownedTeams = useMemo(() => {
     if (!favorites?.crownedTeams) return [];
     return Object.values(favorites.crownedTeams).map(team => ({
@@ -208,7 +208,7 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
         name: getDisplayName('team', team.teamId, team.name)
     }));
   }, [favorites?.crownedTeams, getDisplayName]);
-  
+
   useEffect(() => {
     if(crownedTeams.length > 0 && !selectedTeamId) {
       setSelectedTeamId(crownedTeams[0].teamId);
@@ -230,11 +230,11 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
         return newFavorites;
     });
 }, [setFavorites]);
-  
+
   const handleSelectTeam = (teamId: number) => {
     setSelectedTeamId(teamId);
   }
-  
+
   if (!user) {
     return (
        <div className="flex h-full flex-col bg-background">
@@ -270,10 +270,10 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
       />
       <div className="flex-1 flex flex-col min-h-0">
           <div className="py-4 border-b">
-            <CrownedTeamScroller 
-              crownedTeams={crownedTeams} 
+            <CrownedTeamScroller
+              crownedTeams={crownedTeams}
               onSelectTeam={handleSelectTeam}
-              onRemove={handleRemoveCrowned} 
+              onRemove={handleRemoveCrowned}
               selectedTeamId={selectedTeamId}
               navigate={navigate}
             />

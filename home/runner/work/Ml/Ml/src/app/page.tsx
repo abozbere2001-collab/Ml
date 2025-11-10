@@ -18,8 +18,8 @@ export type ScreenProps = {
   goBack: () => void;
   canGoBack: boolean;
   favorites: Partial<Favorites> | null;
-  onCustomNameChange: () => Promise<void>; 
-  customNames: any; 
+  onCustomNameChange: () => Promise<void>;
+  customNames: any;
   setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>;
   isVisible?: boolean;
   headerActions?: React.ReactNode;
@@ -38,7 +38,7 @@ export default function Home() {
     React.useEffect(() => {
         setIsClient(true);
         // Force hints to be dismissed for a better studio experience
-        setHintsDismissed(true); 
+        setHintsDismissed(true);
     }, []);
 
     React.useEffect(() => {
@@ -53,7 +53,7 @@ export default function Home() {
         }
         setIsOnboardingComplete(true);
     };
-    
+
     if (isUserLoading || !isClient) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-background">
@@ -61,7 +61,7 @@ export default function Home() {
             </div>
         );
     }
-    
+
     if (!user) {
         return <WelcomeScreen />;
     }
@@ -73,10 +73,10 @@ export default function Home() {
     return (
         <AdProvider>
             <AppContentWrapper activeTab={activeTab} setActiveTab={setActiveTab} />
-            {/* 
-              This component is disabled to prevent editor interference. 
+            {/*
+              This component is disabled to prevent editor interference.
               Uncomment it for production if needed.
-            
+
               !hintsDismissed && user && !user.isAnonymous && (
                 <OnboardingHints onDismiss={() => {
                     localStorage.setItem(HINTS_DISMISSED_KEY, 'true');

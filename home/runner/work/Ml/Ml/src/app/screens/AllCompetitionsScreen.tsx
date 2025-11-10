@@ -125,7 +125,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     const { isAdmin } = useAdmin();
     const { user, db } = useAuth();
     const { toast } = useToast();
-    
+
     const [renameItem, setRenameItem] = useState<RenameState | null>(null);
     const [isAddOpen, setAddOpen] = useState(false);
 
@@ -138,10 +138,10 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         if (!customNames || !id) return defaultName || '';
         const mapKey = type === 'league' ? 'leagues' : type === 'team' ? 'teams' : type === 'country' ? 'countries' : 'continents';
         const firestoreMap = customNames[mapKey];
-        
+
         const customName = firestoreMap?.get(id as any);
         if (customName) return customName;
-        
+
         const hardcodedKey = `${type}s` as 'leagues' | 'teams' | 'countries' | 'continents';
         const hardcodedName = hardcodedTranslations[hardcodedKey]?.[id as any];
         if (hardcodedName) return hardcodedName;
@@ -164,13 +164,13 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
 
         setLoadingClubData(true);
         toast({ title: 'جاري جلب بيانات البطولات...', description: 'قد تستغرق هذه العملية دقيقة في المرة الأولى.' });
-        
+
         try {
             const res = await fetch(`https://${API_FOOTBALL_HOST}/leagues`, { headers: { 'x-rapidapi-key': API_KEY } });
             if (!res.ok) throw new Error("Failed to fetch leagues");
             const data = await res.json();
             const leaguesData: FullLeague[] = data.response || [];
-            
+
             setAllLeagues(leaguesData);
             setCachedData(COMPETITIONS_CACHE_KEY, leaguesData);
         } catch (error) {
@@ -181,7 +181,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         }
     }, [toast]);
 
-    
+
     const sortedGroupedCompetitions = useMemo(() => {
         if (!customNames || !allLeagues) return {};
         const grouped: NestedGroupedCompetitions = {};
@@ -208,7 +208,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 }
                 grouped[continent][countryKey].push(league);
             });
-        
+
         for (const continent in grouped) {
             for (const country in grouped[continent]) {
                 grouped[continent][country].sort((a, b) => {
@@ -223,11 +223,11 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 });
             }
         }
-        
+
         return grouped;
     }, [allLeagues, getName, customNames]);
 
-    
+
     const fetchNationalTeams = useCallback(async () => {
         const cachedTeams = getCachedData<Team[]>(TEAMS_CACHE_KEY);
         if (cachedTeams) {
@@ -242,7 +242,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
 
         setLoadingNationalTeams(true);
         toast({ title: 'جاري جلب بيانات المنتخبات...', description: 'قد تستغرق هذه العملية دقيقة في المرة الأولى.' });
-    
+
         try {
             const res = await fetch(`https://${API_FOOTBALL_HOST}/teams?country=`, { headers: { 'x-rapidapi-key': API_KEY } });
             if(!res.ok) throw new Error("Failed to fetch teams");
@@ -259,7 +259,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
             setLoadingNationalTeams(false);
         }
     }, [toast]);
-    
+
     const groupedNationalTeams = useMemo(() => {
         if (!nationalTeams || !customNames) return null;
 
@@ -284,7 +284,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 return a.name.localeCompare(b.name, 'ar');
             });
         });
-        
+
         return grouped;
     }, [nationalTeams, getName, customNames]);
 
@@ -299,7 +299,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 newFavorites[itemType] = {};
             }
             const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
-    
+
             if (isCurrentlyFavorited) {
                 delete newFavorites[itemType]![itemId];
             } else {
@@ -311,9 +311,9 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
             }
             return newFavorites;
         });
-        
+
     }, [setFavorites]);
-    
+
 
     const handleOpenCrownDialog = (team: Team) => {
         if (!user) {
@@ -333,19 +333,19 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     const handleSaveRenameOrNote = (type: RenameType, id: string | number, newName: string, newNote: string = '') => {
         if (!renameItem || !db || !setFavorites || !onCustomNameChange) return;
         const { purpose, originalData, originalName } = renameItem;
-    
+
         if (purpose === 'rename' && isAdmin) {
             const collectionName = `${type}Customizations`;
             const docRef = doc(db, collectionName, String(id));
             const data = { customName: newName };
-    
+
             const op = (newName && newName.trim() && newName !== originalName) ? setDoc(docRef, data) : deleteDoc(docRef);
-    
+
             op.then(() => onCustomNameChange())
             .catch(serverError => {
                 errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'write', requestResourceData: data }));
             });
-    
+
         } else if (purpose === 'crown' && user) {
             const teamId = Number(id);
             setFavorites(prev => {
@@ -353,21 +353,21 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 const newFavorites = JSON.parse(JSON.stringify(prev));
                 if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
                 const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
-                
+
                 if (isCurrentlyCrowned) {
                     delete newFavorites.crownedTeams[teamId];
                 } else {
                     const crownedData = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
                     newFavorites.crownedTeams[teamId] = crownedData;
                 }
-                
+
                 return newFavorites;
             });
         }
-    
+
         setRenameItem(null);
     };
-    
+
     const handleOpenRename = (type: RenameType, id: number | string, name: string, originalName?: string) => {
         if (!isAdmin) return;
         setRenameItem({
@@ -378,7 +378,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
             purpose: 'rename',
         });
     };
-    
+
     const handleAdminRefresh = async () => {
         if (!isAdmin) return;
         localStorage.removeItem(COMPETITIONS_CACHE_KEY);
@@ -446,7 +446,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     const renderClubCompetitions = () => {
         if (loadingClubData) return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin"/></div>;
         if (!allLeagues) return <p className="p-4 text-center text-muted-foreground">اضغط على زر الفتح لعرض البطولات.</p>;
-        
+
         return continentOrder.filter(c => sortedGroupedCompetitions[c]).map(continent => (
              <AccordionItem value={`club-${continent}`} key={`club-${continent}`} className="rounded-lg border bg-card/50">
                 <div className="flex items-center px-4 py-3">
@@ -503,10 +503,10 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     if (favorites === null || customNames === null) {
          return (
             <div className="flex h-full flex-col bg-background">
-                <ScreenHeader 
-                    title={"البطولات"} 
-                    onBack={goBack} 
-                    canGoBack={canGoBack} 
+                <ScreenHeader
+                    title={"البطولات"}
+                    onBack={goBack}
+                    canGoBack={canGoBack}
                 />
                 <div className="flex-1 flex items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -517,10 +517,10 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
 
     return (
         <div className="flex h-full flex-col bg-background">
-            <ScreenHeader 
-                title={"البطولات"} 
-                onBack={goBack} 
-                canGoBack={canGoBack} 
+            <ScreenHeader
+                title={"البطولات"}
+                onBack={goBack}
+                canGoBack={canGoBack}
                 actions={
                   <div className="flex items-center gap-1">
                       <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
@@ -558,7 +558,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                         </AccordionContent>
                     </AccordionItem>
                  </Accordion>
-                 
+
                  <Accordion type="multiple" className="w-full space-y-2">
                     <AccordionItem value="club-competitions-section" className="rounded-lg border bg-card/50">
                         <AccordionTrigger className="px-4 py-3 hover:no-underline" onClick={() => !allLeagues && fetchAllCompetitions()}>
@@ -575,7 +575,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                     </AccordionItem>
                  </Accordion>
             </div>
-            
+
             {renameItem && <RenameDialog
                 isOpen={!!renameItem}
                 onOpenChange={(isOpen) => !isOpen && setRenameItem(null)}

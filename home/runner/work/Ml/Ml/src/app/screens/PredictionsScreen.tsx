@@ -82,7 +82,7 @@ const LeaderboardDisplay = React.memo(({ leaderboard, loadingLeaderboard, userSc
     if (leaderboard.length === 0) {
         return <p className="text-center text-muted-foreground p-8">لا يوجد مشاركون في لوحة الصدارة بعد.</p>;
     }
-    
+
     const isUserInTop100 = leaderboard.some(s => s.userId === userId);
 
     return (
@@ -143,7 +143,7 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
         const today = new Date();
         return Array.from({ length: 30 }, (_, i) => addDays(today, i - 15));
     }, []);
-    
+
     const scrollerRef = useRef<HTMLDivElement>(null);
     const selectedButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -161,8 +161,8 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
 
     return (
         <div className="relative bg-card py-2 border-x border-b rounded-b-lg shadow-md -mt-1 flex items-center justify-center">
-             <Button 
-                variant="ghost" 
+             <Button
+                variant="ghost"
                 size="icon"
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={() => onDateSelect(formatDateKey(addDays(new Date(selectedDateKey), 1)))}
@@ -191,8 +191,8 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
                     )
                 })}
             </div>
-             <Button 
-                variant="ghost" 
+             <Button
+                variant="ghost"
                 size="icon"
                 className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={() => onDateSelect(formatDateKey(subDays(new Date(selectedDateKey), 1)))}
@@ -224,7 +224,7 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
 
     useEffect(() => {
         if (isCheckingAdmin || !db) return;
-        
+
         const fetchMatches = async () => {
             setLoadingMatches(true);
             const q = query(collection(db, 'predictionFixtures'));
@@ -241,7 +241,7 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
                 setLoadingMatches(false);
             }
         };
-        
+
         fetchMatches();
     }, [db, isAdmin, isCheckingAdmin]);
 
@@ -267,21 +267,21 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
             setAllUserPredictions(predictions);
             setLoadingUserPredictions(false);
         };
-        
+
         fetchPredictions();
 
     }, [db, user, pinnedMatches]);
-    
+
     const fetchLeaderboard = useCallback(async () => {
         if (!db) return;
         setLoadingLeaderboard(true);
-        
+
         try {
             const q = query(collection(db, 'leaderboard'), orderBy('rank', 'asc'), limit(100));
             const top100Snapshot = await getDocs(q);
             const top100Scores = top100Snapshot.docs.map(doc => ({ userId: doc.id, ...(doc.data() as Omit<UserScore, 'userId'>) }));
             setLeaderboard(top100Scores);
-            
+
             if (user) {
                 const userScoreRef = doc(db, 'leaderboard', user.uid);
                 const userScoreSnap = await getDoc(userScoreRef);
@@ -309,23 +309,23 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
 
     const handleSavePrediction = useCallback(async (fixtureId: number, homeGoalsStr: string, awayGoalsStr: string) => {
         if (!user || homeGoalsStr === '' || awayGoalsStr === '' || !db) return;
-        
+
         const homePrediction = parseInt(homeGoalsStr, 10);
         const awayPrediction = parseInt(awayGoalsStr, 10);
 
         if (isNaN(homePrediction) || isNaN(awayPrediction)) return;
-    
+
         const predictionRef = doc(db, 'predictionFixtures', String(fixtureId), 'userPredictions', user.uid);
-        
+
         const predictionData: Prediction = {
             userId: user.uid,
             fixtureId,
-            homeGoals: awayPrediction, 
+            homeGoals: awayPrediction,
             awayGoals: homePrediction,
             points: allUserPredictions[String(fixtureId)]?.points || 0,
             timestamp: new Date().toISOString()
         };
-        
+
         try {
             await setDoc(predictionRef, predictionData, { merge: true });
         } catch (serverError) {
@@ -354,7 +354,7 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
             const fixtureIds = pinnedFixturesSnapshot.docs.map(doc => doc.id);
             const apiFixturePromises = fixtureIds.map(id => fetch(`https://${API_FOOTBALL_HOST}/fixtures?id=${id}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.json()));
             const apiFixtureResults = await Promise.all(apiFixturePromises);
-            
+
             const liveFixturesMap = new Map<number, Fixture>();
             apiFixtureResults.forEach(result => {
                 const fixture = result.response?.[0];
@@ -386,13 +386,13 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
                     }
                 });
             }
-            
+
             await pointsUpdateBatch.commit();
-            
+
             if (user && Object.keys(locallyUpdatedUserPredictions).length > 0) {
                  setAllUserPredictions(prev => ({ ...prev, ...locallyUpdatedUserPredictions as { [key: string]: Prediction } }));
             }
-            
+
             toast({ title: "تم تحديث نقاط التوقعات", description: "جاري الآن تحديث لوحة الصدارة." });
 
             const userPoints = new Map<string, number>();
@@ -442,7 +442,7 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
                 }, { merge: true });
                 rank++;
             }
-            
+
             await leaderboardBatch.commit();
             toast({ title: "اكتمل التحديث!", description: "تم تحديث لوحة الصدارة بنجاح." });
             await fetchLeaderboard();
@@ -488,7 +488,7 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
                    <TabsTrigger value="leaderboard"><BarChart className="ml-2 h-4 w-4" />الترتيب</TabsTrigger>
                    <TabsTrigger value="voting"><ThumbsUp className="ml-2 h-4 w-4" />تصويت</TabsTrigger>
                </TabsList>
-               
+
                <TabsContent value="voting" className="flex-1 flex flex-col mt-0 data-[state=inactive]:hidden min-h-0">
                     <DateScroller selectedDateKey={selectedDateKey} onDateSelect={setSelectedDateKey} />
                     <div className="flex-1 overflow-y-auto p-1 space-y-4 pt-4">
@@ -501,7 +501,7 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
                              </div>
                         ) : filteredMatches.length > 0 ? (
                             filteredMatches.map(match => (
-                                <PredictionCard 
+                                <PredictionCard
                                     key={match.id}
                                     predictionMatch={match}
                                     userPrediction={allUserPredictions[match.id!]}
@@ -516,7 +516,7 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
                         )}
                     </div>
                </TabsContent>
-    
+
                <TabsContent value="leaderboard" className="mt-4 flex-1 overflow-y-auto">
                    <Card>
                       <CardHeader className="flex-row items-center justify-between">

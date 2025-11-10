@@ -36,8 +36,8 @@ interface GroupedFixtures {
 
 const popularLeagueIds = new Set(POPULAR_LEAGUES.slice(0, 15).map(l => l.id));
 
-const FixturesList = React.memo((props: { 
-    fixtures: FixtureType[], 
+const FixturesList = React.memo((props: {
+    fixtures: FixtureType[],
     loading: boolean,
     error: string | null,
     hasAnyFavorites: boolean,
@@ -49,7 +49,7 @@ const FixturesList = React.memo((props: {
     isAdmin: boolean,
     showOdds?: boolean,
 }) => {
-    
+
     const { favoriteTeamMatches, otherFixtures } = useMemo(() => {
         let favoriteTeamMatches: FixtureType[] = [];
         let otherFixturesList: FixtureType[] = [];
@@ -91,7 +91,7 @@ const FixturesList = React.memo((props: {
             </div>
         );
     }
-    
+
     if (props.error) {
         return (
             <div className="flex flex-col items-center justify-center text-center text-destructive h-64 p-4">
@@ -100,7 +100,7 @@ const FixturesList = React.memo((props: {
             </div>
         )
     }
-    
+
     const totalFixturesToShow = favoriteTeamMatches.length + otherFixtures.length;
 
     if (totalFixturesToShow === 0) {
@@ -112,7 +112,7 @@ const FixturesList = React.memo((props: {
             </div>
         );
     }
-    
+
     const sortedLeagues = Object.keys(groupedOtherFixtures).sort((a,b) => a.localeCompare(b));
 
     return (
@@ -125,9 +125,9 @@ const FixturesList = React.memo((props: {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1">
                         {favoriteTeamMatches.map(f => (
-                            <FixtureItem 
-                                key={f.fixture.id} 
-                                fixture={f} 
+                            <FixtureItem
+                                key={f.fixture.id}
+                                fixture={f}
                                 navigate={props.navigate}
                                 isPinnedForPrediction={props.pinnedPredictionMatches.has(f.fixture.id)}
                                 onPinToggle={props.onPinToggle}
@@ -149,9 +149,9 @@ const FixturesList = React.memo((props: {
                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1">
                             {leagueFixtures.map(f => (
-                                <FixtureItem 
-                                    key={f.fixture.id} 
-                                    fixture={f} 
+                                <FixtureItem
+                                    key={f.fixture.id}
+                                    fixture={f}
                                     navigate={props.navigate}
                                     isPinnedForPrediction={props.pinnedPredictionMatches.has(f.fixture.id)}
                                     onPinToggle={props.onPinToggle}
@@ -185,14 +185,14 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
         }
         return days;
     }, []);
-    
+
     const scrollerRef = useRef<HTMLDivElement>(null);
     const selectedButtonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         const scroller = scrollerRef.current;
         const selectedButton = selectedButtonRef.current;
-        
+
         const centerOnSelected = () => {
             if (scroller && selectedButton) {
                 const scrollerRect = scroller.getBoundingClientRect();
@@ -203,15 +203,15 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
         };
         setTimeout(centerOnSelected, 100);
     }, [selectedDateKey]);
-    
+
     const selectedDayName = getDayLabel(new Date(selectedDateKey));
 
     return (
         <div className="relative bg-card py-2 border-x border-b rounded-b-lg shadow-md flex flex-col items-center">
             <h3 className="text-sm font-semibold mb-2 text-center text-primary">{selectedDayName}</h3>
             <div className="flex items-center w-full px-1">
-                <Button 
-                    variant="ghost" 
+                <Button
+                    variant="ghost"
                     size="icon"
                     className="h-9 w-9 z-10 flex-shrink-0"
                     onClick={() => onDateSelect(formatDateKey(subDays(new Date(selectedDateKey), 1)))}
@@ -242,8 +242,8 @@ const DateScroller = ({ selectedDateKey, onDateSelect }: {selectedDateKey: strin
                     </div>
                     <ScrollBar orientation="horizontal" className="h-0" />
                 </ScrollArea>
-                <Button 
-                    variant="ghost" 
+                <Button
+                    variant="ghost"
                     size="icon"
                     className="h-9 w-9 z-10 flex-shrink-0"
                     onClick={() => onDateSelect(formatDateKey(addDays(new Date(selectedDateKey), 1)))}
@@ -261,19 +261,19 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   const { db, isAdmin, isCheckingAdmin } = useAdmin();
   const { toast } = useToast();
   const [showOdds, setShowOdds] = useState(false);
-  
+
   const [selectedDateKey, setSelectedDateKey] = useState<string>(formatDateKey(new Date()));
-  
+
   const [matchesCache, setMatchesCache] = useState<Map<string, FixtureType[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-    
+
   const [pinnedPredictionMatches, setPinnedPredictionMatches] = useState(new Set<number>());
-  
+
 
   useEffect(() => {
     if (!db || !isAdmin) return;
-    
+
     const q = collection(db, "predictionFixtures");
     const unsub = onSnapshot(q, (snapshot) => {
         const newPinnedSet = new Set<number>();
@@ -331,7 +331,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         setError(null);
 
         try {
-            const res = await fetch(`https://${API_FOOTBALL_HOST}/fixtures?date=${dateKey}`, { 
+            const res = await fetch(`https://${API_FOOTBALL_HOST}/fixtures?date=${dateKey}`, {
                 signal: abortSignal,
                 headers: { 'x-rapidapi-key': API_KEY || '' },
              });
@@ -340,12 +340,12 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
                  const errorMessage = errorData?.message || `API fetch failed with status ${res.status}`;
                  throw new Error(errorMessage);
             }
-            
+
             const data = await res.json();
             if (abortSignal.aborted) return;
-            
+
             const allFixturesToday: FixtureType[] = data.response || [];
-            
+
             const processedFixtures = allFixturesToday.map(fixture => ({
                 ...fixture,
                 league: { ...fixture.league, name: getDisplayName('league', fixture.league.id, fixture.league.name) },
@@ -354,7 +354,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
                     away: { ...fixture.teams.away, name: getDisplayName('team', fixture.teams.away.id, fixture.teams.away.name) }
                 }
             }));
-            
+
             setMatchesCache(prev => new Map(prev).set(dateKey, processedFixtures));
 
         } catch (error: any) {
@@ -377,9 +377,9 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
             .map(f => f.fixture.id);
 
         if (liveFixtureIds.length === 0) return;
-        
+
         try {
-            const res = await fetch(`https://${API_FOOTBALL_HOST}/fixtures?ids=${liveFixtureIds.join('-')}`, { 
+            const res = await fetch(`https://${API_FOOTBALL_HOST}/fixtures?ids=${liveFixtureIds.join('-')}`, {
                 signal: abortSignal,
                 headers: { 'x-rapidapi-key': API_KEY || '' },
             });
@@ -389,7 +389,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
             if (abortSignal.aborted || !data.response) return;
 
             const updatedFixturesMap = new Map(data.response.map((f: FixtureType) => [f.fixture.id, f]));
-            
+
             const newFixtures = cachedFixtures.map(oldFixture => {
                 const updatedFixture = updatedFixturesMap.get(oldFixture.fixture.id);
                 return updatedFixture ? {
@@ -401,7 +401,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
                     }
                 } : oldFixture;
             });
-            
+
             setMatchesCache(prev => new Map(prev).set(dateKey, newFixtures));
 
         } catch (error: any) {
@@ -410,19 +410,19 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
 
     }, [matchesCache, getDisplayName]);
 
-  
+
   useEffect(() => {
       if (!isVisible || !customNames || !API_KEY) return;
 
       const controller = new AbortController();
-      
+
       if (!matchesCache.has(selectedDateKey)) {
           fetchAndProcessData(selectedDateKey, controller.signal);
       } else {
           setLoading(false);
           setError(null);
       }
-      
+
       const interval = setInterval(() => {
           if (document.visibilityState === 'visible') {
             updateLiveData(selectedDateKey, controller.signal);
@@ -440,11 +440,11 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   const handleDateChange = (dateKey: string) => {
       setSelectedDateKey(dateKey);
   };
-  
+
   const favoritedTeamIds = useMemo(() => (favorites && favorites.teams) ? Object.keys(favorites.teams).map(Number) : [], [favorites]);
   const favoritedLeagueIds = useMemo(() => (favorites && favorites.leagues) ? Object.keys(favorites.leagues).map(Number) : [], [favorites]);
   const hasAnyFavorites = favoritedLeagueIds.length > 0 || favoritedTeamIds.length > 0;
-  
+
   const allFixturesForDay = matchesCache.get(selectedDateKey) || [];
 
   if (customNames === null || favorites === null) {
@@ -457,13 +457,13 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         </div>
       );
   }
-    
+
   return (
     <div className="flex h-full flex-col bg-background">
-        <ScreenHeader 
-            title="نبض الملاعب" 
+        <ScreenHeader
+            title="نبض الملاعب"
             canGoBack={false}
-            onBack={() => {}} 
+            onBack={() => {}}
             actions={
                <div className="flex items-center gap-0.5">
                   <div
@@ -481,14 +481,14 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
               </div>
             }
         />
-        
+
         <div className="flex flex-1 flex-col min-h-0">
              <div className="sticky top-0 z-10 px-1 pt-1 bg-background">
                  <DateScroller selectedDateKey={selectedDateKey} onDateSelect={handleDateChange} />
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-1 space-y-4 mt-2">
-                <FixturesList 
+                <FixturesList
                     fixtures={allFixturesForDay}
                     loading={loading}
                     error={error}

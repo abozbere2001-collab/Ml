@@ -117,14 +117,14 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const [itemType, setItemType] = useState<ItemType>(initialItemType || 'teams');
-  
+
   const { isAdmin } = useAdmin();
   const { user } = useAuth();
   const { db } = useFirestore();
   const { toast } = useToast();
-  
+
   const [renameItem, setRenameItem] = useState<{ id: string | number; name: string; note?: string; type: RenameType; purpose: 'rename' | 'note' | 'crown'; originalData?: any; originalName?: string; } | null>(null);
 
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
@@ -135,7 +135,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
 
   const localSearchIndex = useMemo(() => {
     if (!customNames) return [];
-    
+
     const index: SearchableItem[] = [];
     const seen = new Set<string>();
 
@@ -223,7 +223,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
                     matchedTeamIds.push(Number(doc.id));
                 }
             });
-            
+
             if(matchedTeamIds.length > 0) {
                 const teamPromises = matchedTeamIds.map(id => fetch(`https://${API_FOOTBALL_HOST}/teams?id=${id}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.json()));
                 const teamResults = await Promise.all(teamPromises);
@@ -254,10 +254,10 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
       fetch(`https://${API_FOOTBALL_HOST}/teams?search=${encodeURIComponent(query)}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.ok ? res.json() : { response: [] }),
       fetch(`https://${API_FOOTBALL_HOST}/leagues?search=${encodeURIComponent(query)}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.ok ? res.json() : { response: [] })
     ];
-    
+
     try {
         const [teamsData, leaguesData] = await Promise.all(apiSearchPromises);
-        
+
         teamsData.response?.forEach((r: TeamResult) => {
             const key = `teams-${r.team.id}`;
             if (!seen.has(key)) {
@@ -306,16 +306,16 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   const handleFavorite = useCallback((item: SearchItemOriginal, itemType: ItemType) => {
       if (!setFavorites) return;
       const itemId = item.id;
-  
+
       setFavorites(prev => {
           if (!prev) return null;
           const newFavorites = JSON.parse(JSON.stringify(prev));
           if (!newFavorites[itemType]) {
               newFavorites[itemType] = {};
           }
-  
+
           const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
-  
+
           if (isCurrentlyFavorited) {
               delete newFavorites[itemType]![itemId];
           } else {
@@ -326,7 +326,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
           }
           return newFavorites;
       });
-      
+
   }, [setFavorites]);
 
   const handleOpenCrownDialog = (team: SearchItemOriginal) => {
@@ -358,7 +358,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     const currentName = getDisplayName(type as 'team' | 'league', id, originalItem.name);
     setRenameItem({ id, name: currentName, type, originalData: originalItem, purpose: 'rename', originalName: originalItem.name });
   };
-  
+
   const handleSaveRenameOrNote = (type: RenameType, id: string | number, newName: string, newNote: string = '') => {
     if (!renameItem || !db || !onCustomNameChange || !setFavorites) return;
     const { purpose, originalData, originalName } = renameItem;
@@ -369,12 +369,12 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         if (newName && newName !== originalName) {
             setDoc(docRef, { customName: newName });
         } else {
-            deleteDoc(docRef); 
+            deleteDoc(docRef);
         }
         onCustomNameChange();
     } else if (purpose === 'crown' && user) {
         const teamId = Number(id);
-        
+
         setFavorites(prev => {
             if (!prev) return null;
             const newFavorites = JSON.parse(JSON.stringify(prev));
@@ -391,7 +391,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }
     setRenameItem(null);
   };
-  
+
   const popularItems = useMemo(() => {
     if (!customNames) return [];
     const seen = new Set<string>();
@@ -422,7 +422,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-6 w-6 animate-spin" /></div>;
     }
-    
+
     const itemsToDisplay = debouncedSearchTerm ? searchResults : popularItems.filter(item => item.type === itemType);
 
     if (itemsToDisplay.length === 0 && debouncedSearchTerm) {
@@ -439,17 +439,17 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
              {itemsToDisplay.map(result => {
                     const isFavorited = !!favorites?.[result.type]?.[result.id];
                     const isCrowned = result.type === 'teams' && !!favorites?.crownedTeams?.[result.id];
-                    return <ItemRow 
-                                key={`${result.type}-${result.id}`} 
+                    return <ItemRow
+                                key={`${result.type}-${result.id}`}
                                 item={{...result.originalItem, name: result.name}}
-                                itemType={result.type} 
-                                isFavorited={isFavorited} 
+                                itemType={result.type}
+                                isFavorited={isFavorited}
                                 isCrowned={isCrowned}
-                                onFavoriteToggle={handleFavorite} 
+                                onFavoriteToggle={handleFavorite}
                                 onCrownToggle={(item) => handleOpenCrownDialog(item)}
-                                onResultClick={() => handleResultClick(result)} 
-                                isAdmin={isAdmin} 
-                                onRename={() => handleOpenRename(result.type as RenameType, result.id, result.originalItem)} 
+                                onResultClick={() => handleResultClick(result)}
+                                isAdmin={isAdmin}
+                                onRename={() => handleOpenRename(result.type as RenameType, result.id, result.originalItem)}
                             />;
                 })
             }
@@ -482,9 +482,9 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         <div className="mt-4 flex-1 overflow-y-auto space-y-1 pr-2 relative">
           {renderContent()}
         </div>
-        
+
         {renameItem && (
-          <RenameDialog 
+          <RenameDialog
             isOpen={!!renameItem}
             onOpenChange={(isOpen) => !isOpen && setRenameItem(null)}
             item={renameItem}

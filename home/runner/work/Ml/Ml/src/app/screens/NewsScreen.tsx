@@ -38,7 +38,7 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
-  
+
   useEffect(() => {
     if (!db) {
         setLoading(false);
@@ -47,7 +47,7 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
     setLoading(true);
     const newsCollectionRef = collection(db, 'news');
     const q = query(newsCollectionRef, orderBy('timestamp', 'desc'));
-    
+
     getDocs(q).then(snapshot => {
       const fetchedNews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as NewsArticle));
       setNews(fetchedNews);
@@ -65,7 +65,7 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
     });
 
   }, [db, toast]);
-  
+
   const handleDelete = (articleId: string) => {
     if (!db) return;
     setDeletingId(articleId);
@@ -85,10 +85,10 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <ScreenHeader 
-        title={"أخبار"} 
-        onBack={goBack} 
-        canGoBack={canGoBack} 
+      <ScreenHeader
+        title={"أخبار"}
+        onBack={goBack}
+        canGoBack={canGoBack}
         actions={
           <div className="flex items-center gap-1">
               <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
@@ -118,7 +118,7 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
                 {article.imageUrl && (
                     <CardHeader>
                         <div className="relative aspect-video w-full mb-4">
-                        <Image 
+                        <Image
                             src={article.imageUrl}
                             alt={article.title}
                             fill

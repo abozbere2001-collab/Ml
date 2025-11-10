@@ -24,7 +24,7 @@ import { ProfileButton } from '../AppContentWrapper';
 
 export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavorites, customNames, onCustomNameChange }: ScreenProps) {
   const { toast } = useToast();
-  
+
   const mainSettingsItems = [
       { label: "الملف الشخصي", icon: User, action: (navigate: ScreenProps['navigate']) => navigate('Profile') },
       { label: "كل البطولات", icon: Trophy, action: (navigate: ScreenProps['navigate']) => navigate('AllCompetitions') },
@@ -55,10 +55,10 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavo
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <ScreenHeader 
-        title={"المزيد"} 
-        onBack={goBack} 
-        canGoBack={canGoBack} 
+      <ScreenHeader
+        title={"المزيد"}
+        onBack={goBack}
+        canGoBack={canGoBack}
         actions={
           <div className="flex items-center gap-1">
               <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
@@ -71,7 +71,7 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavo
         }
       />
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        
+
         <div className="space-y-2">
             {mainSettingsItems.map(item => (
                 <button key={item.label} onClick={() => item.action(navigate)} className="flex w-full items-center justify-between rounded-lg bg-card p-4 text-right transition-colors hover:bg-accent/50">
