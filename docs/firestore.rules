@@ -3,72 +3,80 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // القاعدة العليا: صلاحيات كاملة للمدير العام المحدد
-    // This rule grants full read/write access to the specified admin email.
-    match /{document=**} {
-      allow read, write: if request.auth != null && request.auth.token.email == "sagralnarey@gmail.com";
-    }
-
-    // --- الوظائف المساعدة ---
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // --- قواعد المستخدمين العاديين ---
-
-    // بيانات المستخدم: يمكن للمالك فقط الوصول إليها
+    /** ========================= USERS ========================= **/
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
-    }
-    match /users/{userId}/{document=**} {
-      allow read, write: if isOwner(userId);
-    }
-    
-    // التوقعات: يمكن للجميع القراءة، ولكن المالك فقط يمكنه كتابة توقعه
-    match /predictionFixtures/{fixtureId} {
-      allow get, list: if true;
-    }
-    match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
-      allow get, list: if true;
-      allow write: if isOwner(userId);
-    }
-    match /leaderboard/{userId} {
-      allow get, list: if true;
+      allow get, create, update, delete: if isOwner(userId) || isAdmin();
+      allow list: if false;
+
+      match /favorites/{favoriteId} {
+        allow get, create, update, delete: if isOwner(userId) || isAdmin();
+        allow list: if false;
+      }
     }
 
-    // الأخبار وتخصيصات الأسماء: يمكن للجميع القراءة
+    /** ========================= MATCHES ========================= **/
+    match /matches/{matchId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /** ========================= COMPETITIONS ========================= **/
+    match /competitions/{competitionId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /** ========================= TEAMS ========================= **/
+    match /teams/{teamId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /** ========================= NEWS ========================= **/
     match /news/{newsId} {
       allow get, list: if true;
+      allow create, update, delete: if isAdmin();
     }
-    match /leagueCustomizations/{leagueId} {
+
+    /** ========================= ADMINS ========================= **/
+    match /admins/{adminId} {
+      // المدير نفسه فقط يمكنه قراءة بياناته، ولا يمكن لأي مستخدم آخر معرفة من هم المدراء
+      allow get: if isAdmin() || isOwner(adminId);
+      allow list: if false;
+      allow create, update, delete: if false; // تتم إدارة الأدمن من Functions فقط
+    }
+
+    /** ========================= PREDICTIONS ========================= **/
+    match /predictionFixtures/{fixtureId} {
       allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+
+      match /userPredictions/{userId} {
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isAdmin();
+        allow create: if isOwner(userId) && !exists(resource.path);
+        allow update: if isOwner(userId) && (!('finished' in resource.data) || resource.data.finished == false);
+        allow delete: if false;
+      }
     }
-    match /teamCustomizations/{teamId} {
-      allow get, list: if true;
+    
+    // Fallback for all other collections to be readable by anyone, but writable only by admin
+    match /{path=**} {
+        allow read: if true;
+        allow write: if isAdmin();
     }
-    match /playerCustomizations/{playerId} {
-      allow get, list: if true;
-    }
-    match /coachCustomizations/{coachId} {
-      allow get, list: if true;
-    }
-    match /countryCustomizations/{countryId} {
-      allow get, list: if true;
-    }
-    match /continentCustomizations/{continentId} {
-      allow get, list: if true;
-    }
-    match /matchCustomizations/{matchId} {
-      allow get, list: if true;
-    }
-    match /iraqiLeagueTopScorers/{scorerId} {
-      allow get, list: if true;
-    }
-    match /pinnedIraqiMatches/{matchId} {
-      allow get, list: if true;
-    }
+  }
+
+  /* ========================= HELPER FUNCTIONS ========================= */
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return isSignedIn() && request.auth.uid == userId;
+  }
+
+  function isAdmin() {
+    return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
   }
 }
