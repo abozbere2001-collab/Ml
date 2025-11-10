@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -446,7 +447,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   
   const allFixturesForDay = matchesCache.get(selectedDateKey) || [];
 
-  if (customNames === null || favorites === null || !setFavorites || !onCustomNameChange) {
+  if (customNames === null || favorites === null) {
       return (
         <div className="flex h-full flex-col bg-background">
             <ScreenHeader title="" canGoBack={false} onBack={() => {}} />
@@ -471,7 +472,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
                   >
                     <span className="text-xs font-mono select-none">1x2</span>
                   </div>
-                  <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
+                   <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                       <Button variant="ghost" size="icon" className="h-7 w-7">
                           <Search className="h-5 w-5" />
                       </Button>

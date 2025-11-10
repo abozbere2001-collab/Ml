@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -464,10 +465,6 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
             return matchDateKey === selectedDateKey;
         }).sort((a,b) => a.fixtureData.fixture.timestamp - b.fixtureData.fixture.timestamp);
     }, [pinnedMatches, selectedDateKey]);
-
-    if (!onCustomNameChange || !setFavorites) {
-        return null; // Or a loading spinner
-    }
 
     return (
         <div className="flex h-full flex-col bg-background">

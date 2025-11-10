@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
@@ -51,10 +52,6 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavo
       });
     }
   };
-
-  if (!onCustomNameChange || !setFavorites) {
-    return null; // Or a loading spinner
-  }
 
   return (
     <div className="flex h-full flex-col bg-background">

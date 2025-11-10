@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
@@ -58,7 +59,7 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
         }
     }
 
-    if (!favorites || !customNames || !setFavorites || !onCustomNameChange) {
+    if (favorites === null || customNames === null) {
         // You can return a loading spinner here if you want
         return null;
     }

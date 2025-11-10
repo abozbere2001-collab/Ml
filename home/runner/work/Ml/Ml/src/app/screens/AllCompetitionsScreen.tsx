@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -289,7 +290,6 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
 
 
     const handleFavoriteToggle = useCallback((item: { id: number, name: string, logo: string, national?: boolean }, itemType: 'leagues' | 'teams') => {
-        if (!setFavorites) return;
         const itemId = item.id;
         setFavorites(prev => {
             if (!prev) return null;
@@ -305,7 +305,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 if (itemType === 'leagues') {
                     newFavorites.leagues![itemId] = { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true };
                 } else {
-                    newFavorites.teams![itemId] = { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club', notificationsEnabled: true };
+                    newFavorites.teams![itemId] = { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
                 }
             }
             return newFavorites;
@@ -330,7 +330,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     };
 
     const handleSaveRenameOrNote = (type: RenameType, id: string | number, newName: string, newNote: string = '') => {
-        if (!renameItem || !db || !onCustomNameChange || !setFavorites) return;
+        if (!renameItem || !db) return;
         const { purpose, originalData, originalName } = renameItem;
     
         if (purpose === 'rename' && isAdmin) {
@@ -499,7 +499,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         ));
     };
 
-    if (!favorites || !customNames || !setFavorites || !onCustomNameChange) {
+    if (favorites === null || customNames === null) {
          return (
             <div className="flex h-full flex-col bg-background">
                 <ScreenHeader 

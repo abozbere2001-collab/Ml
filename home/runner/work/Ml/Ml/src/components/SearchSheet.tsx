@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
@@ -113,8 +114,12 @@ const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onC
   );
 }
 
+type SearchSheetProps = Pick<ScreenProps, 'navigate' | 'favorites' | 'customNames' | 'setFavorites' | 'onCustomNameChange'> & {
+    children: React.ReactNode;
+    initialItemType?: ItemType;
+}
 
-export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps & { children: React.ReactNode, initialItemType?: ItemType }) {
+export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: SearchSheetProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
@@ -441,7 +446,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   }, [getDisplayName, customNames]);
 
   const renderContent = () => {
-    if (!customNames || !favorites) {
+    if (customNames === null || favorites === null) {
       return <div className="flex justify-center items-center h-full"><Loader2 className="h-6 w-6 animate-spin" /></div>;
     }
 

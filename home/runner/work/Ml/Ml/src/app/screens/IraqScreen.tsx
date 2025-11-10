@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -219,7 +220,6 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
 
 
  const handleRemoveCrowned = useCallback((teamIdToRemove: number) => {
-    if (!setFavorites) return;
     setFavorites(prev => {
         if (!prev) return null;
         const newFavorites = JSON.parse(JSON.stringify(prev));
@@ -234,7 +234,7 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
     setSelectedTeamId(teamId);
   }
   
-  if (!user || !setFavorites || !onCustomNameChange) {
+  if (!user) {
     return (
        <div className="flex h-full flex-col bg-background">
           <ScreenHeader title="ملعبي" onBack={goBack} canGoBack={canGoBack} />

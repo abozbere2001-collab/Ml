@@ -18,9 +18,9 @@ export type ScreenProps = {
   navigate: (screen: ScreenKey, props?: Record<string, any>) => void;
   goBack: () => void;
   canGoBack: boolean;
-  favorites?: Partial<Favorites> | null;
-  onCustomNameChange?: () => Promise<void>; 
-  customNames?: any; 
+  favorites: Partial<Favorites> | null;
+  onCustomNameChange: () => Promise<void>; 
+  customNames: any; 
   setFavorites: React.Dispatch<React.SetStateAction<Partial<Favorites> | null>>;
   isVisible?: boolean;
   headerActions?: React.ReactNode;
