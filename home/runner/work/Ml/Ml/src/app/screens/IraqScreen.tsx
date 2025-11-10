@@ -220,6 +220,7 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
 
 
  const handleRemoveCrowned = useCallback((teamIdToRemove: number) => {
+    if (!setFavorites) return;
     setFavorites(prev => {
         if (!prev) return null;
         const newFavorites = JSON.parse(JSON.stringify(prev));
