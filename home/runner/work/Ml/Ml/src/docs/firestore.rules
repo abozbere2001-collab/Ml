@@ -3,76 +3,88 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- وظائف مساعدة ---
+    /** ========================= HELPER FUNCTIONS ========================= **/
     function isSignedIn() {
       return request.auth != null;
     }
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+
+    // This is the most direct way to grant admin privileges for development.
     function isAdmin() {
       return request.auth != null && request.auth.token.email == "sagralnarey@gmail.com";
     }
 
-    // --- قواعد المستخدمين ---
+    /** ========================= USERS ========================= **/
     match /users/{userId}/{document=**} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if isOwner(userId) || isAdmin();
     }
-    
-    // --- قواعد التوقعات ---
+
+    /** ========================= PREDICTIONS ========================= **/
     match /predictionFixtures/{fixtureId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
       allow read: if true;
+      // Allow create/update only if the user is the owner.
       allow write: if isOwner(userId);
     }
     match /leaderboard/{userId} {
       allow read: if true;
-      allow write: if isAdmin(); // Only admin can update leaderboards
+      // Only admins can write to the leaderboard.
+      allow write: if isAdmin();
     }
 
-    // --- قواعد الأخبار ---
+    /** ========================= NEWS ========================= **/
     match /news/{newsId} {
       allow read: if true;
-      allow write: if isAdmin(); // write includes create, update, and delete
+      allow write: if isAdmin(); // create, update, delete
     }
 
-    // --- قواعد التخصيص والبيانات العامة ---
-    match /leagueCustomizations/{leagueId} { 
+    /** ========================= CUSTOMIZATIONS & PUBLIC DATA ========================= **/
+    match /leagueCustomizations/{leagueId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /teamCustomizations/{teamId} { 
+    match /teamCustomizations/{teamId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /playerCustomizations/{playerId} { 
+    match /playerCustomizations/{playerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /coachCustomizations/{coachId} { 
+    match /coachCustomizations/{coachId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /countryCustomizations/{countryId} { 
+    match /countryCustomizations/{countryId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /continentCustomizations/{continentId} { 
+    match /continentCustomizations/{continentId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /matchCustomizations/{matchId} { 
+    match /matchCustomizations/{matchId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /iraqiLeagueTopScorers/{scorerId} { 
+    match /iraqiLeagueTopScorers/{scorerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /pinnedIraqiMatches/{matchId} { 
+    match /pinnedIraqiMatches/{matchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Fallback rule ---
+    // Deny all other writes by default
+    match /{path=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
