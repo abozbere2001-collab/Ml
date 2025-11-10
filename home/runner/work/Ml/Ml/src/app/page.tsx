@@ -11,7 +11,6 @@ import { FavoriteSelectionScreen } from '@/app/screens/FavoriteSelectionScreen';
 import { OnboardingHints } from '@/components/OnboardingHints';
 import type { Favorites } from '@/lib/types';
 
-
 export type ScreenKey = 'Welcome' | 'SignUp' | 'Matches' | 'Competitions' | 'AllCompetitions' | 'News' | 'Settings' | 'CompetitionDetails' | 'TeamDetails' | 'PlayerDetails' | 'AdminFavoriteTeamDetails' | 'Profile' | 'SeasonPredictions' | 'SeasonTeamSelection' | 'SeasonPlayerSelection' | 'AddEditNews' | 'ManageTopScorers' | 'MatchDetails' | 'NotificationSettings' | 'GeneralSettings' | 'ManagePinnedMatch' | 'PrivacyPolicy' | 'TermsOfService' | 'FavoriteSelection' | 'GoPro' | 'MyCountry' | 'Predictions';
 
 export type ScreenProps = {
@@ -88,4 +87,3 @@ export default function Home() {
         </AdProvider>
     );
 }
-

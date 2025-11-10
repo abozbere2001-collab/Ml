@@ -194,4 +194,3 @@ export function CompetitionsScreen({ navigate, goBack, canGoBack, favorites, set
         </div>
     );
 }
-

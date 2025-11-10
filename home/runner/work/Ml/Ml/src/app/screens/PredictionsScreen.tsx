@@ -537,4 +537,3 @@ export function PredictionsScreen({ navigate, goBack, canGoBack, favorites, setF
         </div>
     );
 }
-

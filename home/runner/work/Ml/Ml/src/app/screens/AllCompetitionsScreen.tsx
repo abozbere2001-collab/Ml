@@ -143,7 +143,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         if (customName) return customName;
         
         const hardcodedKey = `${type}s` as 'leagues' | 'teams' | 'countries' | 'continents';
-        const hardcodedName = hardcodedTranslations[hardcodedKey]?.[id];
+        const hardcodedName = hardcodedTranslations[hardcodedKey]?.[id as any];
         if (hardcodedName) return hardcodedName;
 
         return defaultName;
@@ -590,4 +590,3 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         </div>
     );
 }
-

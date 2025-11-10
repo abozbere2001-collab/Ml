@@ -138,7 +138,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   const getDisplayName = useCallback((type: 'team' | 'league', id: number, defaultName: string) => {
     if (!customNames) return defaultName;
     const customMap = type === 'team' ? customNames.teams : customNames.leagues;
-    return customMap?.get(id) || hardcodedTranslations[`${type}s`]?.[id] || defaultName;
+    return customMap?.get(id) || hardcodedTranslations[`${type}s`]?.[id as any] || defaultName;
   }, [customNames]);
 
 
