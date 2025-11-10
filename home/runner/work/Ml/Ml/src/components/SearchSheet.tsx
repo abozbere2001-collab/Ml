@@ -16,42 +16,35 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useDebounce } from '@/hooks/use-debounce';
 import type { ScreenProps } from '@/app/page';
 import { useAdmin, useAuth, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, writeBatch, deleteField, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { RenameDialog } from '@/components/RenameDialog';
 import { cn } from '@/lib/utils';
 import type { Favorites, Team, CrownedTeam } from '@/lib/types';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { errorEmitter } from '@/firebase/error-emitter';
 import { useToast } from '@/hooks/use-toast';
 import { POPULAR_TEAMS, POPULAR_LEAGUES } from '@/lib/popular-data';
 import { hardcodedTranslations } from '@/lib/hardcoded-translations';
-import { getLocalFavorites, setLocalFavorites } from '@/lib/local-favorites';
-
 
 const API_FOOTBALL_HOST = 'v3.football.api-sports.io';
 const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
 
-// --- Cache Logic ---
 const COMPETITIONS_CACHE_KEY = 'goalstack_all_competitions_cache_v1';
 const TEAMS_CACHE_KEY = 'goalstack_national_teams_cache_v1';
 interface Cache<T> {
     data: T;
-    lastFetched: number;
+    timestamp: number;
 }
 const getCachedData = <T,>(key: string): T | null => {
     if (typeof window === 'undefined') return null;
     try {
-        const cachedData = localStorage.getItem(key);
-        if (!cachedData) return null;
-        const parsed = JSON.parse(cachedData) as Cache<T>;
-        return parsed.data;
+        const cachedItem = localStorage.getItem(key);
+        if (!cachedItem) return null;
+        const { data } = JSON.parse(cachedItem) as Cache<T>;
+        return data;
     } catch (error) {
         return null;
     }
 };
 
-
-// --- Types ---
 interface TeamResult {
   team: { id: number; name: string; logo: string; national?: boolean; };
 }
@@ -83,7 +76,6 @@ const normalizeArabic = (text: string) => {
     .trim()
     .toLowerCase();
 };
-
 
 const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onCrownToggle, onResultClick, onRename, isAdmin }: { item: SearchItemOriginal, itemType: ItemType, isFavorited: boolean, isCrowned: boolean, onFavoriteToggle: (item: SearchItemOriginal, type: ItemType) => void, onCrownToggle: (item: SearchItemOriginal) => void, onResultClick: () => void, onRename: () => void, isAdmin: boolean }) => {
   return (
@@ -141,7 +133,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     return customMap?.get(id) || hardcodedTranslations[`${type}s`]?.[id as any] || defaultName;
   }, [customNames]);
 
-
   const localSearchIndex = useMemo(() => {
     if (!customNames) return [];
     
@@ -189,7 +180,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     return index;
   }, [customNames, getDisplayName]);
 
-
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open) {
@@ -211,7 +201,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     const seen = new Set<string>();
     const normalizedQuery = normalizeArabic(query);
 
-    // 1. Search local index (leagues and national teams)
     localSearchIndex.forEach(item => {
         const normalizedDisplayName = normalizeArabic(item.name);
         const normalizedOriginalName = normalizeArabic(item.originalName);
@@ -224,7 +213,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         }
     });
 
-    // 2. Search translated club teams from Firestore
     if (db) {
         try {
             const teamsCustomSnap = await getDocs(collection(db, 'teamCustomizations'));
@@ -262,8 +250,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         }
     }
 
-
-    // 3. Search API for additional results
     const apiSearchPromises = [
       fetch(`https://${API_FOOTBALL_HOST}/teams?search=${encodeURIComponent(query)}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.ok ? res.json() : { response: [] }),
       fetch(`https://${API_FOOTBALL_HOST}/leagues?search=${encodeURIComponent(query)}`, { headers: { 'x-rapidapi-key': API_KEY } }).then(res => res.ok ? res.json() : { response: [] })
@@ -309,7 +295,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }
   }, [getDisplayName, localSearchIndex, db]);
 
-
   useEffect(() => {
     if (debouncedSearchTerm && isOpen) {
       handleSearch(debouncedSearchTerm);
@@ -318,46 +303,31 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     }
   }, [debouncedSearchTerm, handleSearch, isOpen]);
 
-    const handleFavorite = useCallback((item: SearchItemOriginal, itemType: ItemType) => {
-        if (!setFavorites) return;
-        const itemId = item.id;
-    
-        if (!user) { // Guest mode logic
-            const isPopular = itemType === 'teams'
-                ? POPULAR_TEAMS.some(t => t.id === itemId)
-                : POPULAR_LEAGUES.some(l => l.id === itemId);
-    
-            if (!isPopular) {
-                toast({
-                    title: 'ميزة للمستخدمين المسجلين',
-                    description: 'تفضيل هذا العنصر متاح فقط للمستخدمين المسجلين. يمكنك تفضيل الفرق والبطولات الشائعة كزائر.',
-                });
-                return;
-            }
-        }
-    
-        setFavorites(prev => {
-            if (!prev) return null;
-            const newFavorites = JSON.parse(JSON.stringify(prev));
-            if (!newFavorites[itemType]) {
-                newFavorites[itemType] = {};
-            }
-    
-            const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
-    
-            if (isCurrentlyFavorited) {
-                delete newFavorites[itemType]![itemId];
-            } else {
-                const favData = itemType === 'leagues'
-                    ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
-                    : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
-                newFavorites[itemType]![itemId] = favData as any;
-            }
-            return newFavorites;
-        });
-        
-    }, [user, setFavorites, toast]);
-
+  const handleFavorite = useCallback((item: SearchItemOriginal, itemType: ItemType) => {
+      if (!setFavorites) return;
+      const itemId = item.id;
+  
+      setFavorites(prev => {
+          if (!prev) return null;
+          const newFavorites = JSON.parse(JSON.stringify(prev));
+          if (!newFavorites[itemType]) {
+              newFavorites[itemType] = {};
+          }
+  
+          const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
+  
+          if (isCurrentlyFavorited) {
+              delete newFavorites[itemType]![itemId];
+          } else {
+              const favData = itemType === 'leagues'
+                  ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
+                  : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
+              newFavorites[itemType]![itemId] = favData as any;
+          }
+          return newFavorites;
+      });
+      
+  }, [setFavorites]);
 
   const handleOpenCrownDialog = (team: SearchItemOriginal) => {
     if (!user) {
@@ -375,7 +345,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     });
   };
 
-
   const handleResultClick = (result: SearchableItem) => {
     if (result.type === 'teams') {
       navigate('TeamDetails', { teamId: result.id });
@@ -391,7 +360,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   };
   
   const handleSaveRenameOrNote = (type: RenameType, id: string | number, newName: string, newNote: string = '') => {
-    if (!renameItem || !db || !onCustomNameChange) return;
+    if (!renameItem || !db || !onCustomNameChange || !setFavorites) return;
     const { purpose, originalData, originalName } = renameItem;
 
     if (purpose === 'rename' && isAdmin) {
@@ -403,7 +372,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             deleteDoc(docRef); 
         }
         onCustomNameChange();
-    } else if (purpose === 'crown' && user && setFavorites) {
+    } else if (purpose === 'crown' && user) {
         const teamId = Number(id);
         
         setFavorites(prev => {
@@ -463,7 +432,6 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     if(itemsToDisplay.length === 0 && !debouncedSearchTerm) {
         return <p className="text-muted-foreground text-center pt-8">لا توجد عناصر شائعة لعرضها.</p>;
     }
-
 
     return (
         <div className="space-y-2">
