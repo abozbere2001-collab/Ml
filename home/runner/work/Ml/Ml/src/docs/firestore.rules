@@ -1,29 +1,27 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- Helper Functions ---
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
+    
+    // --- الدالة المساعدة للتحقق من المدير ---
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == "sagralnarey@gmail.com";
+      return request.auth != null && request.auth.token.email == "sagralnarey@gmail.com";
     }
 
-    // --- Admin-specific Overrides ---
-    // The admin has full read/write access to everything.
+    // --- القاعدة العامة للمدير ---
+    // المدير له صلاحيات القراءة والكتابة على كل شيء.
     match /{document=**} {
       allow read, write: if isAdmin();
     }
-    
-    // --- Public & User-Specific Rules for non-admins ---
 
-    // Publicly readable collections
+    // --- قواعد المستخدمين العاديين والزوار ---
+
+    // المستخدمون المسجلون يمكنهم القراءة والكتابة على بياناتهم الخاصة فقط
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    // أي شخص (زائر أو مستخدم) يمكنه قراءة البيانات العامة
     match /news/{newsId} {
       allow read: if true;
     }
@@ -57,17 +55,14 @@ service cloud.firestore {
     match /predictionFixtures/{fixtureId} {
       allow read: if true;
     }
-    match /leaderboard/{userId} {
+     match /leaderboard/{userId} {
       allow read: if true;
     }
 
-    // User-specific data
-    match /users/{userId}/{document=**} {
-      allow read, write: if isOwner(userId);
-    }
+    // المستخدمون المسجلون يمكنهم كتابة توقعاتهم
     match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
       allow read: if true;
-      allow write: if isOwner(userId);
+      allow write: if request.auth.uid == userId;
     }
   }
 }
