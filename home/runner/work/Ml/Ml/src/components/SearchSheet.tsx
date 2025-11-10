@@ -228,10 +228,12 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         if (isCurrentlyFavorited) {
             delete newFavorites[type]![itemId];
         } else {
-            const favData = type === 'leagues'
-                ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true } as FavoriteLeague
-                : { name: (item as SearchTeam).name, teamId: itemId, logo: item.logo, type: (item as SearchTeam).national ? 'National' : 'Club', notificationsEnabled: true } as FavoriteTeam;
-            newFavorites[type]![itemId] = favData as any;
+             if (type === 'leagues') {
+                newFavorites.leagues![itemId] = { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true };
+            } else {
+                const teamItem = item as SearchTeam;
+                newFavorites.teams![itemId] = { name: teamItem.name, teamId: itemId, logo: teamItem.logo, type: teamItem.national ? 'National' : 'Club', notificationsEnabled: true };
+            }
         }
         return newFavorites;
     });
@@ -344,3 +346,5 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     </Sheet>
   );
 }
+
+    
