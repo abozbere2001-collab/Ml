@@ -1,0 +1,50 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- وظائف مساعدة ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "sagralnarey@gmail.com";
+    }
+
+    // --- قواعد المستخدمين ---
+    match /users/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // --- قواعد التوقعات ---
+    match /predictionFixtures/{fixtureId} {
+      allow get, list: if true;
+    }
+    match /predictionFixtures/{fixtureId}/userPredictions/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    match /leaderboard/{userId} {
+      allow get, list: if true;
+    }
+
+    // --- قواعد الأخبار ---
+    match /news/{newsId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --- قواعد التخصيص والبيانات العامة (قراءة فقط للجميع) ---
+    match /leagueCustomizations/{leagueId} { allow get, list: if true; }
+    match /teamCustomizations/{teamId} { allow get, list: if true; }
+    match /playerCustomizations/{playerId} { allow get, list: if true; }
+    match /coachCustomizations/{coachId} { allow get, list: if true; }
+    match /countryCustomizations/{countryId} { allow get, list: if true; }
+    match /continentCustomizations/{continentId} { allow get, list: if true; }
+    match /matchCustomizations/{matchId} { allow get, list: if true; }
+    match /iraqiLeagueTopScorers/{scorerId} { allow get, list: if true; }
+    match /pinnedIraqiMatches/{matchId} { allow get, list: if true; }
+  }
+}
