@@ -391,7 +391,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   };
   
   const handleSaveRenameOrNote = (type: RenameType, id: string | number, newName: string, newNote: string = '') => {
-    if (!renameItem || !db) return;
+    if (!renameItem || !db || !onCustomNameChange) return;
     const { purpose, originalData, originalName } = renameItem;
 
     if (purpose === 'rename' && isAdmin) {
@@ -402,7 +402,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         } else {
             deleteDoc(docRef); 
         }
-        if (onCustomNameChange) onCustomNameChange();
+        onCustomNameChange();
     } else if (purpose === 'crown' && user && setFavorites) {
         const teamId = Number(id);
         
