@@ -36,48 +36,45 @@ service cloud.firestore {
     }
 
     /** ========================= NEWS ========================= **/
-    match /news {
-      allow create: if isAdmin();
-    }
     match /news/{newsId} {
       allow read: if true;
-      allow update, delete: if isAdmin();
+      allow write: if isAdmin(); // write includes create, update, and delete
     }
 
     /** ========================= CUSTOMIZATIONS & PUBLIC DATA ========================= **/
-    match /leagueCustomizations/{leagueId} {
+    match /leagueCustomizations/{leagueId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /teamCustomizations/{teamId} {
+    match /teamCustomizations/{teamId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /playerCustomizations/{playerId} {
+    match /playerCustomizations/{playerId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /coachCustomizations/{coachId} {
+    match /coachCustomizations/{coachId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /countryCustomizations/{countryId} {
+    match /countryCustomizations/{countryId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /continentCustomizations/{continentId} {
+    match /continentCustomizations/{continentId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /matchCustomizations/{matchId} {
+    match /matchCustomizations/{matchId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /iraqiLeagueTopScorers/{scorerId} {
+    match /iraqiLeagueTopScorers/{scorerId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
-    match /pinnedIraqiMatches/{matchId} {
+    match /pinnedIraqiMatches/{matchId} { 
       allow read: if true;
       allow write: if isAdmin();
     }
