@@ -61,11 +61,11 @@ export function SettingsScreen({ navigate, goBack, canGoBack, favorites, setFavo
         canGoBack={canGoBack} 
         actions={
           <div className="flex items-center gap-1">
-              <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
+              {onCustomNameChange && setFavorites && <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                   <Button variant="ghost" size="icon">
                       <Search className="h-5 w-5" />
                   </Button>
-              </SearchSheet>
+              </SearchSheet>}
               <ProfileButton/>
           </div>
         }

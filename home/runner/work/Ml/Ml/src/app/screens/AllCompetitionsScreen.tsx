@@ -331,10 +331,10 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
     };
 
     const handleSaveRenameOrNote = (type: RenameType, id: string | number, newName: string, newNote: string = '') => {
-        if (!renameItem || !db) return;
+        if (!renameItem || !db || !onCustomNameChange || !setFavorites) return;
         const { purpose, originalData, originalName } = renameItem;
     
-        if (purpose === 'rename' && isAdmin && onCustomNameChange) {
+        if (purpose === 'rename' && isAdmin) {
             const collectionName = `${type}Customizations`;
             const docRef = doc(db, collectionName, String(id));
             const data = { customName: newName };
@@ -346,7 +346,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 errorEmitter.emit('permission-error', new FirestorePermissionError({ path: docRef.path, operation: 'write', requestResourceData: data }));
             });
     
-        } else if (purpose === 'crown' && user && setFavorites) {
+        } else if (purpose === 'crown' && user) {
             const teamId = Number(id);
             setFavorites(prev => {
                 if (!prev) return null;
@@ -523,11 +523,11 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 canGoBack={canGoBack} 
                 actions={
                   <div className="flex items-center gap-1">
-                      <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
+                      {onCustomNameChange && setFavorites && <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                           <Button variant="ghost" size="icon">
                               <Search className="h-5 w-5" />
                           </Button>
-                      </SearchSheet>
+                      </SearchSheet>}
                       {isAdmin && (
                         <>
                             <Button size="icon" variant="ghost" onClick={handleAdminRefresh}>

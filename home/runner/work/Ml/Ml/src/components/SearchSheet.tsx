@@ -19,7 +19,7 @@ import { useAdmin, useAuth, useFirestore } from '@/firebase';
 import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { RenameDialog } from '@/components/RenameDialog';
 import { cn } from '@/lib/utils';
-import type { Favorites, Team, FavoriteTeam, FavoriteLeague } from '@/lib/types';
+import type { Favorites, Team } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { POPULAR_TEAMS, POPULAR_LEAGUES } from '@/lib/popular-data';
 import { hardcodedTranslations } from '@/lib/hardcoded-translations';
@@ -346,5 +346,3 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
     </Sheet>
   );
 }
-
-    
