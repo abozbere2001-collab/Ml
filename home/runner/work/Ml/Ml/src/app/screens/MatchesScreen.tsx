@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -331,7 +330,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         setError(null);
 
         try {
-            const res = await fetch(`https://v3.football.api-sports.io/fixtures?date=${dateKey}`, { 
+            const res = await fetch(`https://${API_FOOTBALL_HOST}/fixtures?date=${dateKey}`, { 
                 signal: abortSignal,
                 headers: { 'x-rapidapi-key': API_KEY || '' },
              });
@@ -379,7 +378,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
         if (liveFixtureIds.length === 0) return;
         
         try {
-            const res = await fetch(`https://v3.football.api-sports.io/fixtures?ids=${liveFixtureIds.join('-')}`, { 
+            const res = await fetch(`https://${API_FOOTBALL_HOST}/fixtures?ids=${liveFixtureIds.join('-')}`, { 
                 signal: abortSignal,
                 headers: { 'x-rapidapi-key': API_KEY || '' },
             });
@@ -447,7 +446,7 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
   
   const allFixturesForDay = matchesCache.get(selectedDateKey) || [];
 
-  if (customNames === null) {
+  if (customNames === null || favorites === null) {
       return (
         <div className="flex h-full flex-col bg-background">
             <ScreenHeader title="" canGoBack={false} onBack={() => {}} />
@@ -507,5 +506,3 @@ export function MatchesScreen({ navigate, goBack, canGoBack, isVisible, favorite
     </div>
   );
 }
-
-    

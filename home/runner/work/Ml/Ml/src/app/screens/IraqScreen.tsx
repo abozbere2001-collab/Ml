@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -235,7 +234,7 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
     setSelectedTeamId(teamId);
   }
   
-  if (!user) {
+  if (!user || !setFavorites || !onCustomNameChange) {
     return (
        <div className="flex h-full flex-col bg-background">
           <ScreenHeader title="ملعبي" onBack={goBack} canGoBack={canGoBack} />
@@ -259,11 +258,11 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
         canGoBack={canGoBack}
         actions={
           <div className="flex items-center gap-1">
-              {onCustomNameChange && setFavorites && <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
+              <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                   <Button variant="ghost" size="icon">
                       <Search className="h-5 w-5" />
                   </Button>
-              </SearchSheet>}
+              </SearchSheet>
               <ProfileButton />
           </div>
         }
@@ -293,5 +292,3 @@ export function IraqScreen({ navigate, goBack, canGoBack, favorites, setFavorite
     </div>
   );
 }
-
-    

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
@@ -38,7 +37,7 @@ interface Cache<T> {
     data: T;
     lastFetched: number;
 }
-const getCachedData = <T>(key: string): T | null => {
+const getCachedData = <T,>(key: string): T | null => {
     if (typeof window === 'undefined') return null;
     try {
         const cachedData = localStorage.getItem(key);
@@ -115,7 +114,7 @@ const ItemRow = ({ item, itemType, isFavorited, isCrowned, onFavoriteToggle, onC
 }
 
 
-export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps & { children: React.ReactNode}) {
+export function SearchSheet({ children, navigate, initialItemType, favorites, customNames, setFavorites, onCustomNameChange }: ScreenProps & { children: React.ReactNode, initialItemType?: ItemType }) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
@@ -315,6 +314,7 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
   }, [debouncedSearchTerm, handleSearch, isOpen]);
 
     const handleFavorite = useCallback((item: SearchItemOriginal, itemType: ItemType) => {
+        if (!setFavorites) return;
         const itemId = item.id;
     
         if (!user) { // Guest mode logic
@@ -331,27 +331,26 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             }
         }
     
-        if (setFavorites) {
-            setFavorites(prev => {
-                if (!prev) return null;
-                const newFavorites = JSON.parse(JSON.stringify(prev));
-                if (!newFavorites[itemType]) {
-                    newFavorites[itemType] = {};
-                }
+        setFavorites(prev => {
+            if (!prev) return null;
+            const newFavorites = JSON.parse(JSON.stringify(prev));
+            if (!newFavorites[itemType]) {
+                newFavorites[itemType] = {};
+            }
+    
+            const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
+    
+            if (isCurrentlyFavorited) {
+                delete newFavorites[itemType]![itemId];
+            } else {
+                const favData = itemType === 'leagues'
+                    ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
+                    : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
+                newFavorites[itemType]![itemId] = favData as any;
+            }
+            return newFavorites;
+        });
         
-                const isCurrentlyFavorited = !!newFavorites[itemType]?.[itemId];
-        
-                if (isCurrentlyFavorited) {
-                    delete newFavorites[itemType]![itemId];
-                } else {
-                    const favData = itemType === 'leagues'
-                        ? { name: item.name, leagueId: itemId, logo: item.logo, notificationsEnabled: true }
-                        : { name: (item as Team).name, teamId: itemId, logo: item.logo, type: (item as Team).national ? 'National' : 'Club' };
-                    newFavorites[itemType]![itemId] = favData as any;
-                }
-                return newFavorites;
-            });
-        }
     }, [user, setFavorites, toast]);
 
 
@@ -360,13 +359,14 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
         toast({ title: 'مستخدم زائر', description: 'يرجى تسجيل الدخول لاستخدام هذه الميزة.' });
         return;
     }
+    if (!favorites) return;
     setRenameItem({
         id: team.id,
         name: getDisplayName('team', team.id, team.name),
         type: 'crown',
         purpose: 'crown',
         originalData: team,
-        note: favorites?.crownedTeams?.[team.id]?.note || '',
+        note: favorites.crownedTeams?.[team.id]?.note || '',
     });
   };
 
@@ -398,24 +398,22 @@ export function SearchSheet({ children, navigate, initialItemType, favorites, cu
             deleteDoc(docRef); 
         }
         if (onCustomNameChange) onCustomNameChange();
-    } else if (purpose === 'crown' && user) {
+    } else if (purpose === 'crown' && user && setFavorites) {
         const teamId = Number(id);
         
-        if (setFavorites) {
-            setFavorites(prev => {
-                if (!prev) return null;
-                const newFavorites = JSON.parse(JSON.stringify(prev));
-                if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
-                const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
+        setFavorites(prev => {
+            if (!prev) return null;
+            const newFavorites = JSON.parse(JSON.stringify(prev));
+            if (!newFavorites.crownedTeams) newFavorites.crownedTeams = {};
+            const isCurrentlyCrowned = !!newFavorites.crownedTeams?.[teamId];
 
-                if (isCurrentlyCrowned) {
-                    delete newFavorites.crownedTeams[teamId];
-                } else {
-                    newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
-                }
-                return newFavorites;
-            });
-        }
+            if (isCurrentlyCrowned) {
+                delete newFavorites.crownedTeams[teamId];
+            } else {
+                newFavorites.crownedTeams[teamId] = { teamId, name: (originalData as Team).name, logo: (originalData as Team).logo, note: newNote };
+            }
+            return newFavorites;
+        });
     }
     setRenameItem(null);
   };

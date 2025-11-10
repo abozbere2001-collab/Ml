@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -500,7 +499,7 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         ));
     };
 
-    if (!favorites || !customNames) {
+    if (!favorites || !customNames || !setFavorites || !onCustomNameChange) {
          return (
             <div className="flex h-full flex-col bg-background">
                 <ScreenHeader 
@@ -523,11 +522,11 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
                 canGoBack={canGoBack} 
                 actions={
                   <div className="flex items-center gap-1">
-                      {onCustomNameChange && setFavorites && <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
+                      <SearchSheet navigate={navigate} favorites={favorites} customNames={customNames} setFavorites={setFavorites} onCustomNameChange={onCustomNameChange}>
                           <Button variant="ghost" size="icon">
                               <Search className="h-5 w-5" />
                           </Button>
-                      </SearchSheet>}
+                      </SearchSheet>
                       {isAdmin && (
                         <>
                             <Button size="icon" variant="ghost" onClick={handleAdminRefresh}>
@@ -591,5 +590,3 @@ export function AllCompetitionsScreen({ navigate, goBack, canGoBack, favorites, 
         </div>
     );
 }
-
-    

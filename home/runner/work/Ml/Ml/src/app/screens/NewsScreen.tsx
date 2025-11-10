@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -182,5 +181,3 @@ export function NewsScreen({ navigate, goBack, canGoBack, favorites, setFavorite
     </div>
   );
 }
-
-    
